@@ -1,4 +1,4 @@
-import MatchCard from './components/MatchCard';
+import MatchCard from './components/matchcard';
 
 function App() {
   // Mock data: facciamo finta che questi dati arrivino da Supabase

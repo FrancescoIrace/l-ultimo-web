@@ -1,27 +1,21 @@
+import { useEffect, useState } from 'react';
+import { supabase } from './lib/supabase';
 import MatchCard from './components/matchcard';
 
 function App() {
-  // Mock data: facciamo finta che questi dati arrivino da Supabase
-  const matches = [
-    {
-      id: 1,
-      sport: 'Padel',
-      title: 'Doppio ignorante',
-      datetime: '2026-04-20T18:30:00',
-      location: 'Padel Club Arena',
-      current_players: 3,
-      max_players: 4
-    },
-    {
-      id: 2,
-      sport: 'Calcetto',
-      title: 'Sfida Scapoli vs Ammogliati',
-      datetime: '2026-04-21T21:00:00',
-      location: 'Campetti Comunali',
-      current_players: 10,
-      max_players: 10
+  const [matches, setMatches] = useState([]);
+
+  useEffect(() => {
+    async function getMatches() {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .order('datetime', { ascending: true });
+      
+      if (data) setMatches(data);
     }
-  ];
+    getMatches();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">

@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase';
 import Auth from './pages/Auth';
 import MatchCard from './components/MatchCard';
 import CreateMatch from './pages/CreateMatch';
+import MatchSkeleton from './components/MatchSkeleton';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -42,7 +43,8 @@ function App() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'matches' },
         () => {
-          fetchMatches();}
+          fetchMatches();
+        }
       )
       .subscribe();
 
@@ -81,13 +83,14 @@ function App() {
             </h2>
 
             {loading ? (
-              <p className="text-center text-slate-400 mt-10">Caricamento partite...</p>
+              <div className="grid gap-4">
+                {/* Ne mostriamo 3 o 4 per riempire la pagina */}
+                {[1, 2, 3].map(n => <MatchSkeleton key={n} />)}
+              </div>
             ) : (
               <div className="grid gap-4">
                 {matches.length > 0 ? (
-                  matches.map(match => (
-                    <MatchCard key={match.id} match={match} />
-                  ))
+                  matches.map(match => <MatchCard key={match.id} match={match} user={session.user} />)
                 ) : (
                   <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
                 )}

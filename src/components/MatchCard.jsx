@@ -73,6 +73,7 @@ export default function MatchCard({ match, user }) {
       .eq('id', match.id);
 
     if (error) alert("Errore nella cancellazione");
+    else alert("Partita annullata correttamente!");
   };
 
   return (

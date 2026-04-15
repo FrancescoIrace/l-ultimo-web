@@ -92,7 +92,15 @@ function App() {
                 {matches.length > 0 ? (
                   matches.map(match => <MatchCard key={match.id} match={match} user={session.user} />)
                 ) : (
-                  <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
+                  <>
+                    <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
+                    <button
+                      onClick={() => navigate('/organizza')}
+                      className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                    >
+                      Organizza una partita
+                    </button>
+                  </>
                 )}
               </div>
             )}

@@ -7,12 +7,24 @@ import CreateMatch from './pages/CreateMatch';
 
 function App() {
   const [session, setSession] = useState(null);
-  const [matches, setMatches] = useState([]); // Stato per le partite
-  const [loading, setLoading] = useState(true); // Stato per il caricamento
-  const navigate = useNavigate(); // Inizializza il navigatore
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  // 1. Definiamo fetchMatches fuori dagli useEffect così è usabile ovunque
+  async function fetchMatches() {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .order('datetime', { ascending: true });
+
+    if (error) console.error('Errore:', error);
+    else setMatches(data);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    // 1. Gestione Sessione
+    // 2. Gestione Sessione
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -21,21 +33,23 @@ function App() {
       setSession(session);
     });
 
-    // 2. Recupero Partite dal Database
-    async function fetchMatches() {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .order('datetime', { ascending: true });
-
-      if (error) console.error('Errore caricamento partite:', error);
-      else setMatches(data);
-      setLoading(false);
-    }
-
+    // 3. Caricamento iniziale e Realtime
     fetchMatches();
 
-    return () => subscription.unsubscribe();
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'matches' },
+        () => {
+          fetchMatches();}
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Se non c'è sessione, mostra Auth

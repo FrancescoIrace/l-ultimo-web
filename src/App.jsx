@@ -5,6 +5,7 @@ import Auth from './pages/Auth';
 import MatchCard from './components/MatchCard';
 import CreateMatch from './pages/CreateMatch';
 import MatchSkeleton from './components/MatchSkeleton';
+import NotFound from './pages/404';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -108,38 +109,21 @@ function App() {
                 )}
               </div>
             )}
+
+
+            {/* Floating Action Button */}
+            <button
+              onClick={() => navigate('/organizza')}
+              className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-light hover:bg-blue-700 transition-transform active:scale-95 cursor-pointer"
+            >
+              +
+            </button>
           </main>
         } />
         <Route path="/organizza" element={<CreateMatch />} />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
-
-      {/* <main className="max-w-md mx-auto p-4 pb-24">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-          Partite vicino a te
-        </h2>
-        
-        {loading ? (
-          <p className="text-center text-slate-400 mt-10">Caricamento partite...</p>
-        ) : (
-          <div className="grid gap-4">
-            {matches.length > 0 ? (
-              matches.map(match => (
-                <MatchCard key={match.id} match={match} />
-              ))
-            ) : (
-              <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
-            )}
-          </div>
-        )}
-      </main> */}
-
-      {/* Floating Action Button */}
-      <button
-        onClick={() => navigate('/organizza')}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-light hover:bg-blue-700 transition-transform active:scale-95 cursor-pointer"
-      >
-        +
-      </button>
     </div>
   );
 }

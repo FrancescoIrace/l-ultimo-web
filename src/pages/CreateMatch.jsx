@@ -60,6 +60,13 @@ export default function CreateMatch() {
 
     return (
         <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
+            <button
+                    onClick={() => navigate('/')}
+                    type="button"
+                    className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                >
+                    TORNA INDIETRO
+                </button>
             <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase">Organizza Match</h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -124,10 +131,11 @@ export default function CreateMatch() {
 
                 <button
                     disabled={loading}
-                    className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
                 >
                     {loading ? 'Creazione in corso...' : 'PUBBLICA PARTITA'}
                 </button>
+                
             </form>
         </div>
     );

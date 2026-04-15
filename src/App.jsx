@@ -94,12 +94,16 @@ function App() {
                 ) : (
                   <>
                     <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
+
                     <button
+                      disabled={loading}
                       onClick={() => navigate('/organizza')}
-                      className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                      className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
                     >
-                      Organizza una partita
+                      {loading ? 'Caricamento...' : 'Organizza una partita'}
                     </button>
+
+
                   </>
                 )}
               </div>

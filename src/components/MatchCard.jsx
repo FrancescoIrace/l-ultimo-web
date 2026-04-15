@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users } from 'lucide-react';
+import { Calendar, MapPin, Users, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 
@@ -109,6 +109,13 @@ export default function MatchCard({ match, user }) {
         <div className="flex items-center gap-2">
           <Users size={16} />
           <span className="font-semibold">{match.current_players} / {match.max_players} Giocatori</span>
+          {/* <span className={`text-xs font-medium ${isFull ? 'text-red-500' : 'text-green-500'}`}>
+            {isFull ? 'PARTITA PIENA' : 'POSTI DISPONIBILI'}
+          </span> */}
+        </div>
+        <div className="flex items-center gap-2">
+          <Pencil size={16} />
+          <span className="font-semibold">{match.description}</span>
         </div>
       </div>
 

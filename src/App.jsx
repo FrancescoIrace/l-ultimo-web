@@ -6,6 +6,7 @@ import MatchCard from './components/MatchCard';
 import CreateMatch from './pages/CreateMatch';
 import MatchSkeleton from './components/MatchSkeleton';
 import NotFound from './pages/404';
+import MatchDetail from './pages/MatchDetail';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -121,6 +122,8 @@ function App() {
           </main>
         } />
         <Route path="/organizza" element={<CreateMatch />} />
+
+        <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 
 export default function MatchCard({ match, user }) {
   const [isJoined, setIsJoined] = useState(false);
   const isFull = match.current_players >= match.max_players;
   const isCreator = match.creator_id === user.id;
+  const navigate = useNavigate();
 
   const date = new Date(match.datetime).toLocaleDateString('it-IT', {
     weekday: 'long',
@@ -77,7 +79,7 @@ export default function MatchCard({ match, user }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative" onClick={() => navigate(`/match/${match.id}`)}>
       {/* Badge Organizzatore */}
       {isCreator && (
         <span className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
@@ -93,7 +95,7 @@ export default function MatchCard({ match, user }) {
         </span>
       </div>
 
-      <h3 className="text-lg font-bold text-slate-800 mb-2 uppercase tracking-wide">
+      <h3 className="text-lg font-bold text-slate-800 mb-2 uppercase tracking-wide cursor-pointer hover:border-blue-300 transition-all">
         {match.title || `Partita di ${match.sport}`}
       </h3>
 
@@ -109,9 +111,6 @@ export default function MatchCard({ match, user }) {
         <div className="flex items-center gap-2">
           <Users size={16} />
           <span className="font-semibold">{match.current_players} / {match.max_players} Giocatori</span>
-          {/* <span className={`text-xs font-medium ${isFull ? 'text-red-500' : 'text-green-500'}`}>
-            {isFull ? 'PARTITA PIENA' : 'POSTI DISPONIBILI'}
-          </span> */}
         </div>
         <div className="flex items-center gap-2">
           <Pencil size={16} />
@@ -119,18 +118,11 @@ export default function MatchCard({ match, user }) {
         </div>
       </div>
 
-      {/* <button className={`w-full mt-4 py-2 rounded-lg font-bold transition-colors ${isFull
-          ? 'bg-orange-500 text-white hover:bg-orange-600'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
-        }`}>
-        {isFull ? 'Mettiti in lista d\'attesa' : 'Unisciti alla partita'}
-      </button> */}
-
       <div className="flex justify-between items-center mt-6">
         {/* Se sei il creatore, magari vuoi un tasto rosso piccolo per cancellare */}
         {isCreator && (
           <button
-            onClick={handleDelete}
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
             className="text-xs text-red-400 font-bold hover:text-red-600 transition-colors"
           >
             Annulla Partita
@@ -138,7 +130,7 @@ export default function MatchCard({ match, user }) {
         )}
 
         <button
-          onClick={handleJoin}
+          onClick={(e) => { e.stopPropagation(); handleJoin(); }}
           disabled={isFull && !isJoined}
           className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 ${isJoined
             ? 'bg-green-100 text-green-600 border border-green-200'

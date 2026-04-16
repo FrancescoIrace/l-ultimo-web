@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
     const [match, setMatch] = useState(null);
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function getDetails() {
@@ -33,32 +35,62 @@ export default function MatchDetail({ user }) {
         getDetails();
     }, [id]);
 
+    const handleLeave = async () => {
+        if (match.creator_id === user.id) {
+            alert("Sei l'organizzatore, Non puoi uscire dalla partita a meno che non passi la partita a un altro giocatore. Per annullare la partita usa il pulsante dedicato.");
+            return;
+        }
+        if (!confirm("Vuoi davvero abbandonare la partita?")) return;
+
+        // 1. Rimuovi dai partecipanti
+        const { error: partError } = await supabase
+            .from('participants')
+            .delete()
+            .eq('match_id', id)
+            .eq('user_id', user.id);
+
+        if (!partError) {
+            // 2. Decrementa il contatore in matches
+            await supabase
+                .from('matches')
+                .update({ current_players: match.current_players - 1 })
+                .eq('id', id);
+
+            window.location.reload(); // Semplice refresh per aggiornare la UI
+        }
+    };
+
+    const handleDeleteMatch = async () => {
+        if (!confirm("Sei l'organizzatore. Vuoi annullare definitivamente la partita?")) return;
+
+        const { error } = await supabase
+            .from('matches')
+            .delete()
+            .eq('id', id);
+
+        if (!error) navigate('/');
+    };
+
     if (loading) return <div className="p-10 text-center">Caricamento...</div>;
     if (!match) return <div className="p-10 text-center">Partita non trovata.</div>;
 
     return (
         <div className="max-w-md mx-auto p-4">
+            <button
+                onClick={() => navigate('/')}
+                type="button"
+                className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+            >
+                TORNA INDIETRO
+            </button>
             <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
             <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                 <p className="text-slate-600">📍 {match.location}</p>
                 <p className="text-slate-600">⏰ {new Date(match.datetime).toLocaleString()}</p>
+                <p className="text-slate-600">📝 {match.description}</p>
             </div>
 
             <h3 className="font-bold text-lg mb-4">Giocatori ({participants.length}/{match.max_players})</h3>
-
-            {/* <div className="space-y-2">
-                {participants.map((p, index) => (
-                    <div key={p.id} className="flex items-center gap-3 p-3 bg-white border rounded-xl">
-                        <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center font-bold text-xs">
-                            {index + 1}
-                        </div>
-                        <p className="font-medium text-slate-700">{p.profiles?.username || `Utente ${p.user_id.slice(0, 5)}...`}</p>
-                        {p.user_id === match.creator_id && (
-                            <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md font-bold">ORG</span>
-                        )}
-                    </div>
-                ))}
-            </div> */}
 
             {/* Sezione Partecipanti nel return */}
             <div className="space-y-3">
@@ -97,6 +129,42 @@ export default function MatchDetail({ user }) {
                         )}
                     </div>
                 ))}
+            </div>
+            {/* BOTTONI VARI */}
+            <div className="mt-10 pt-6 border-t border-slate-100">
+                {participants.some(p => p.user_id === user.id) ? (
+                    <button
+                        onClick={handleLeave}
+                        className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        ABBANDONA PARTITA
+                    </button>
+                ) : (
+                    <button
+                        disabled={participants.length >= match.max_players}
+                        className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}
+                    </button>
+                )}
+
+                {user.id === match.creator_id && (
+                    <>
+                        <button
+                            onClick={() => { navigate(`/modifica/${match.id}`) }}
+                            className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            Modifica Partita (Admin)
+                        </button>
+                        <button
+                            onClick={handleDeleteMatch}
+                            className="w-full mt-4 cursor-pointer bg-red-50 text-red-600 border border-red-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-red-200 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            Annulla Partita (Admin)
+                        </button>
+                    </>
+
+                )}
             </div>
         </div>
     );

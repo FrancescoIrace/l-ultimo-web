@@ -123,6 +123,8 @@ function App() {
         } />
         <Route path="/organizza" element={<CreateMatch />} />
 
+        <Route path="/modifica/:id" element={<CreateMatch />} />
+
         <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
 
         <Route path="*" element={<NotFound />} />

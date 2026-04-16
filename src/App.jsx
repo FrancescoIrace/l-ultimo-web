@@ -7,6 +7,7 @@ import CreateMatch from './pages/CreateMatch';
 import MatchSkeleton from './components/MatchSkeleton';
 import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
+import Profile from './pages/Profile';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -70,11 +71,18 @@ function App() {
         </button>
 
         <button
+          onClick={() => navigate('/profile')}
+          className="text-xs text-blue-500 font-bold border border-blue-200 px-3 py-1 rounded-full hover:bg-blue-50"
+        >
+          PROFILO
+        </button>
+
+        {/* <button
           onClick={() => supabase.auth.signOut()}
           className="text-xs text-red-500 font-bold border border-red-200 px-3 py-1 rounded-full hover:bg-red-50"
         >
           LOGOUT
-        </button>
+        </button> */}
       </header>
 
       <Routes>
@@ -126,6 +134,8 @@ function App() {
         <Route path="/modifica/:id" element={<CreateMatch />} />
 
         <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
+
+        <Route path="/profile" element={<Profile session={session} />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

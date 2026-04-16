@@ -86,7 +86,10 @@ export default function CreateMatch() {
         const { data: updatedMatch, error: matchError } = await supabase
             .from('matches')
             .update({
-                ...formData
+                title: formData.title,
+                location: formData.location,
+                datetime: formData.datetime,
+                description: formData.description,
             })
             .eq('id', id)
             .select()
@@ -296,6 +299,7 @@ export default function CreateMatch() {
                         placeholder="Descrizione della partita"
                         maxLength={300}
                         className="w-full h-50 resize-none p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                        value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                 </div>

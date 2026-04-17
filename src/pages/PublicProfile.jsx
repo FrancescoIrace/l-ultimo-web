@@ -7,6 +7,8 @@ export default function PublicProfile() {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [reviews, setReviews] = useState([]);
+    const [avgRating, setAvgRating] = useState(0);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -26,7 +28,44 @@ export default function PublicProfile() {
             setLoading(false);
         }
 
-        if (id) getPublicProfile();
+        async function getProfileStats() {
+            const { data, error } = await supabase
+                .from('reviews')
+                .select('rating')
+                .eq('target_id', id);
+
+            if (data && data.length > 0) {
+                const sum = data.reduce((acc, curr) => acc + curr.rating, 0);
+                const average = (sum / data.length).toFixed(1);
+                setAvgRating(average);
+                setTotalReviews(data.length);
+            }
+        }
+
+        async function fetchReviews() {
+            const { data, error } = await supabase
+                .from('reviews')
+                .select(`
+                    rating,
+                    comment,
+                    created_at,
+                    reviewer:reviewer_id ( username, avatar_url )
+                `)
+                .eq('target_id', id)
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                setReviews(data);
+                const sum = data.reduce((acc, r) => acc + r.rating, 0);
+                setAvgRating(data.length > 0 ? (sum / data.length).toFixed(1) : 0);
+            }
+        }
+
+        if (id) {
+            getPublicProfile();
+            getProfileStats();
+            fetchReviews();
+        }
     }, [id, navigate]);
 
     if (loading) return <div className="p-10 text-center font-black">CARICAMENTO...</div>;
@@ -71,9 +110,31 @@ export default function PublicProfile() {
             </div>
 
             {/* Qui in futuro caricheremo le recensioni */}
-            <div className="mt-10 border-t border-slate-100 pt-6">
+            {/* <div className="mt-10 border-t border-slate-100 pt-6">
                 <h3 className="font-black uppercase text-sm text-slate-400 mb-4">Cosa dicono di {profile?.username}</h3>
                 <p className="text-slate-300 text-sm italic">Ancora nessuna recensione.</p>
+            </div> */}
+
+            {/* Media Voti */}
+            <div className="flex items-center gap-2 mb-6 bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
+                <span className="text-3xl font-black text-yellow-600">{avgRating}</span>
+                <div>
+                    <p className="text-[10px] font-black uppercase text-yellow-700">Valutazione Media</p>
+                    <p className="text-xs text-yellow-600 font-bold">{reviews.length} recensioni ricevute</p>
+                </div>
+            </div>
+
+            {/* Lista Commenti */}
+            <div className="space-y-4">
+                {reviews.map((rev, index) => (
+                    <div key={index} className="border-b border-slate-100 pb-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="font-black text-yellow-500">{'★'.repeat(rev.rating)}</span>
+                            <span className="text-[10px] font-black uppercase text-slate-400">da {rev.reviewer.username}</span>
+                        </div>
+                        <p className="text-sm text-slate-600 italic">"{rev.comment}"</p>
+                    </div>
+                ))}
             </div>
         </div>
     );

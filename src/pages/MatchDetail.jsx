@@ -10,6 +10,26 @@ export default function MatchDetail({ user }) {
     const [loading, setLoading] = useState(true);
     const [isJoined, setIsJoined] = useState(false);
     const navigate = useNavigate();
+    const isMatchFinished = match ? new Date(match.datetime) < new Date() : false;
+    const [selectedPlayer, setSelectedPlayer] = useState(null); // Memorizza il profilo da votare
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [rating, setRating] = useState(5);
+    const [comment, setComment] = useState('');
+
+    // Funzione per aprire la modal
+    const openReviewModal = (player,id_target) => {
+        setSelectedPlayer({ ...player, id_target });
+        setIsModalOpen(true);
+    };
+
+    // Funzione per chiudere e resettare
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedPlayer(null);
+        setRating(5);
+        setComment('');
+    };
+
 
     useEffect(() => {
         async function getDetails() {
@@ -99,104 +119,200 @@ export default function MatchDetail({ user }) {
         }
     };
 
+    const submitReview = async (targetId, rating, comment) => {
+        const { error } = await supabase
+            .from('reviews')
+            .insert({
+                reviewer_id: user.id,
+                target_id: targetId,
+                match_id: match.id,
+                rating: rating,
+                comment: comment
+            });
+
+        if (error) {
+            if (error.code === '23505') {
+                alert("Hai già recensito questo giocatore per questa partita!");
+            } else {
+                alert("Errore: " + error.message);
+            }
+        } else {
+            alert("Recensione inviata!");
+        }
+    };
+
     if (loading) return <div className="p-10 text-center">Caricamento...</div>;
     if (!match) return <div className="p-10 text-center">Partita non trovata.</div>;
 
     return (
-        <div className="max-w-md mx-auto p-4">
-            <button
-                onClick={() => navigate('/')}
-                type="button"
-                className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
-            >
-                TORNA INDIETRO
-            </button>
-            <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
-            <div className="bg-blue-50 p-4 rounded-2xl mb-6">
-                <p className="text-slate-600">📍 {match.location}</p>
-                <p className="text-slate-600">⏰ {new Date(match.datetime).toLocaleString()}</p>
-                <p className="text-slate-600">📝 {match.description}</p>
-            </div>
+        <>
+            <div className="max-w-md mx-auto p-4">
+                <button
+                    onClick={() => navigate('/')}
+                    type="button"
+                    className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                >
+                    TORNA INDIETRO
+                </button>
+                <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
+                <div className="bg-blue-50 p-4 rounded-2xl mb-6">
+                    <p className="text-slate-600">📍 {match.location}</p>
+                    <p className="text-slate-600">⏰ {new Date(match.datetime).toLocaleString()}</p>
+                    <p className="text-slate-600">📝 {match.description}</p>
+                </div>
 
-            <h3 className="font-bold text-lg mb-4">Giocatori ({participants.length}/{match.max_players})</h3>
+                <h3 className="font-bold text-lg mb-4">Giocatori ({participants.length}/{match.max_players})</h3>
 
-            {/* Sezione Partecipanti nel return */}
-            <div className="space-y-3">
-                {participants.map((p, index) => (
-                    
-                    <div
-                        key={p.id}
-                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${p.user_id === user.id ? 'border-blue-200 bg-blue-50' : 'border-slate-100 bg-white'
-                            }`}
-                        onClick={() => {(p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
-                    >
-                        <div className="flex items-center gap-3">
-                            {/* Avatar o Iniziale */}
-                            <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden">
-                                {p.profiles?.avatar_url ? (
-                                    <img src={p.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    p.profiles?.username?.charAt(0).toUpperCase() || '?'
+                {/* Sezione Partecipanti nel return */}
+                <div className="space-y-3">
+                    {participants.map((p, index) => (
+
+                        <div
+                            key={p.id}
+                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${p.user_id === user.id ? 'border-blue-200 bg-blue-50 ' : 'border-slate-100 bg-white'
+                                }`}
+                            onClick={() => { (p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
+                        >
+                            <div className="flex items-center gap-4">
+                                {/* Avatar o Iniziale */}
+                                <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden">
+                                    {p.profiles?.avatar_url ? (
+                                        <img src={p.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                                    ) : (
+                                        p.profiles?.username?.charAt(0).toUpperCase() || '?'
+                                    )}
+                                </div>
+
+                                <div>
+                                    <p className="font-bold text-slate-800">
+                                        {p.profiles?.username || 'Utente anonimo'}
+                                        {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                                        {p.profiles?.gender === 'M' ? 'Uomo' : p.profiles?.gender === 'F' ? 'Donna' : 'Player'}
+                                    </p>
+                                </div>
+
+                                {/* Bottone Feedback: appare solo se il match è finito E non sono io */}
+                                {isMatchFinished && p.user_id !== user.id && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles,p.user_id); }} // Una funzione che apre un form
+                                        className="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full"
+                                    >
+                                        VOTA
+                                    </button>
                                 )}
                             </div>
 
-                            <div>
-                                <p className="font-bold text-slate-800">
-                                    {p.profiles?.username || 'Utente anonimo'}
-                                    {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
-                                </p>
-                                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-                                    {p.profiles?.gender === 'M' ? 'Uomo' : p.profiles?.gender === 'F' ? 'Donna' : 'Player'}
-                                </p>
+                            {/* Tag Organizzatore */}
+                            {p.user_id === match.creator_id && (
+                                <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-2xl uppercase shadow-sm relative -top-6 -right-4">
+                                    Organizzatore
+                                </span>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                {/* BOTTONI VARI */}
+                <div className="mt-10 pt-6 border-t border-slate-100">
+                    {participants.some(p => p.user_id === user.id) ? (
+                        <button
+                            onClick={handleLeave}
+                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            ABBANDONA PARTITA
+                        </button>
+                    ) : (
+                        <button
+                            disabled={participants.length >= match.max_players}
+                            onClick={handleJoin}
+                            className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}
+                        </button>
+                    )}
+
+                    {user.id === match.creator_id && (
+                        <>
+                            <button
+                                onClick={() => { navigate(`/modifica/${match.id}`) }}
+                                className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                Modifica Partita (Admin)
+                            </button>
+                            <button
+                                onClick={handleDeleteMatch}
+                                className="w-full mt-4 cursor-pointer bg-red-50 text-red-600 border border-red-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-red-200 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                Annulla Partita (Admin)
+                            </button>
+                        </>
+
+                    )}
+                </div>
+            </div>
+
+            {isModalOpen && (
+                <>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+
+                            {/* Header Modal */}
+                            <div className="text-center mb-6">
+                                <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest mb-2">Lascia un feedback a</p>
+                                <h3 className="text-xl font-black uppercase">{selectedPlayer?.username}</h3>
+                            </div>
+
+                            {/* Selezione Stelle (Temporanea in attesa del componente figo) */}
+                            <div className="mb-6">
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Voto</label>
+                                <select
+                                    value={rating}
+                                    onChange={(e) => setRating(Number(e.target.value))}
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-yellow-500"
+                                >
+                                    <option value="5">★★★★★ (Eccellente)</option>
+                                    <option value="4">★★★★☆ (Ottimo)</option>
+                                    <option value="3">★★★☆☆ (Buono)</option>
+                                    <option value="2">★★☆☆☆ (Sufficiente)</option>
+                                    <option value="1">★☆☆☆☆ (Pessimo)</option>
+                                </select>
+                            </div>
+
+                            {/* Commento */}
+                            <div className="mb-6">
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Commento</label>
+                                <textarea
+                                    rows="3"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder={`Com'è andata la partita con ${selectedPlayer?.username}?`}
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold text-sm resize-none"
+                                />
+                            </div>
+
+                            {/* Azioni */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={closeModal}
+                                    className="flex-1 py-4 bg-slate-100 text-slate-600 font-black rounded-2xl uppercase text-[10px] tracking-widest"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        submitReview(selectedPlayer?.id_target, rating, comment);
+                                        closeModal();
+                                    }}
+                                    className="flex-1 py-4 bg-blue-600 text-white font-black rounded-2xl uppercase text-[10px] tracking-widest shadow-lg shadow-blue-200"
+                                >
+                                    Invia
+                                </button>
                             </div>
                         </div>
-
-                        {/* Tag Organizzatore */}
-                        {p.user_id === match.creator_id && (
-                            <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-lg uppercase">
-                                Organizzatore
-                            </span>
-                        )}
                     </div>
-                ))}
-            </div>
-            {/* BOTTONI VARI */}
-            <div className="mt-10 pt-6 border-t border-slate-100">
-                {participants.some(p => p.user_id === user.id) ? (
-                    <button
-                        onClick={handleLeave}
-                        className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        ABBANDONA PARTITA
-                    </button>
-                ) : (
-                    <button
-                        disabled={participants.length >= match.max_players}
-                        onClick={handleJoin}
-                        className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}
-                    </button>
-                )}
-
-                {user.id === match.creator_id && (
-                    <>
-                        <button
-                            onClick={() => { navigate(`/modifica/${match.id}`) }}
-                            className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            Modifica Partita (Admin)
-                        </button>
-                        <button
-                            onClick={handleDeleteMatch}
-                            className="w-full mt-4 cursor-pointer bg-red-50 text-red-600 border border-red-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-red-200 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            Annulla Partita (Admin)
-                        </button>
-                    </>
-
-                )}
-            </div>
-        </div>
+                </>
+            )}
+        </>
     );
 }

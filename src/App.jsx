@@ -8,6 +8,7 @@ import MatchSkeleton from './components/MatchSkeleton';
 import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
 import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -136,6 +137,8 @@ function App() {
         <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
 
         <Route path="/profile" element={<Profile session={session} />} />
+
+        <Route path="/profile/:id" element={<PublicProfile />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

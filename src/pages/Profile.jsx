@@ -69,52 +69,6 @@ export default function Profile({ session }) {
         }
     }, [session]);
 
-    // useEffect(() => {
-    //     if (!session?.user) return;
-
-    //     async function getProfileData() {
-    //         setLoading(true);
-
-    //         // 1. Recupera dati del profilo
-    //         const { data: profileData } = await supabase
-    //             .from('profiles')
-    //             .select('*')
-    //             .eq('id', session.user.id)
-    //             .single();
-
-    //         setProfile(profileData);
-    //         setEditData(profileData); // Pre-compila il form con i dati attuali del profilo
-
-    //         // 2. Recupera le partite a cui l'utente partecipa
-    //         const { data: matchesData } = await supabase
-    //             .from('participants')
-    //             .select(`
-    //              match_id,
-    //              matches (
-    //              id,
-    //              title,
-    //              sport,
-    //              datetime,
-    //              location
-    //             )
-    //           `)
-    //             .eq('user_id', session.user.id);
-
-    //         setMyMatches(matchesData || []);
-
-    //         // 3. Recupera le partite create dall'utente
-    //         const { data: createdMatchesData } = await supabase
-    //             .from('matches')
-    //             .select('*')
-    //             .eq('creator_id', session.user.id);
-
-    //         setMyCreatedMatches(createdMatchesData || []);
-    //         setLoading(false);
-    //     }
-
-    //     getProfileData();
-    // }, [session]);
-
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -123,10 +77,12 @@ export default function Profile({ session }) {
             .from('profiles')
             .update({
                 username: editData.username,
+                full_name: editData.full_name,
                 province: editData.province,
                 zip_code: editData.zip_code,
                 gender: editData.gender,
-                updated_at: new Date()
+                updated_at: new Date(),
+                avatar_url: editData.avatar_url
             })
             .eq('id', session.user.id);
 
@@ -159,15 +115,15 @@ export default function Profile({ session }) {
             // Creiamo una NUOVA variabile per il file compresso
             const compressedFile = await imageCompression(originalFile, options);
 
-            // Prepariamo il percorso (ID utente + timestamp per evitare duplicati)
-            const fileExt = compressedFile.name.split('.').pop();
-            const fileName = `${session.user.id}/${Date.now()}.${fileExt}`;
-
+            // Usiamo un nome fisso per l'utente, così ogni upload sovrascrive il precedente
+            // Esempio: "ID_UTENTE/avatar.png"
+            const fileName = `${session.user.id}/avatar.png`;
             // 1. Upload del file COMPRESSO
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
-                .upload(fileName, compressedFile);
-
+                .upload(fileName, compressedFile, {
+                    upsert: true // <--- FONDAMENTALE: permette di sovrascrivere il file esistente
+                });
             if (uploadError) throw uploadError;
 
             // 2. Ottieni l'URL pubblico
@@ -175,12 +131,23 @@ export default function Profile({ session }) {
                 .from('avatars')
                 .getPublicUrl(fileName);
 
+            // Aggiungiamo ?t=timestamp per forzare il browser a mostrare la nuova immagine 
+            // anche se il nome del file è identico
+            const finalUrl = `${publicUrl}?t=${Date.now()}`;
+
+            // SALVA NELLO STATO L'URL PULITO
+            setEditData(prev => ({
+                ...prev,
+                avatar_url: publicUrl
+            }));
+
             // 3. Aggiorna lo stato per l'anteprima
-            setEditData({ ...editData, avatar_url: publicUrl });
+            // setEditData({ ...editData, avatar_url: finalUrl });
 
         } catch (error) {
             alert("Errore caricamento immagine: " + error.message);
         } finally {
+            alert("Immagine caricata con successo!");
             setLoading(false);
         }
     };
@@ -200,6 +167,13 @@ export default function Profile({ session }) {
                     {/* --- SEZIONE PROFILO --- */}
 
                     {/* Header Profilo */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        type="button"
+                        className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        TORNA INDIETRO
+                    </button>
                     <div className="flex flex-col items-center mb-8">
                         <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-white shadow-lg">
                             {profile?.avatar_url ? (
@@ -305,10 +279,22 @@ export default function Profile({ session }) {
                         {/* Foto */}
                         <div className="flex flex-col items-center mb-6">
                             <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
-                                {editData.avatar_url ? (
-                                    <img src={editData.avatar_url} className="w-full h-full object-cover" />
+                                {/* {profile.avatar_url ? (
+                                    <img src={} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-slate-400">📸</div>
+                                )} */}
+                                {editData.avatar_url ? (
+                                    <img
+                                        // src={editData.avatar_url}
+                                        src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
+                                        className="w-full h-full object-cover"
+                                        alt="Anteprima avatar"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
+                                        {editData.username?.charAt(0).toUpperCase() || '?'}
+                                    </div>
                                 )}
                             </div>
                             <label className="cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-100">
@@ -333,15 +319,37 @@ export default function Profile({ session }) {
                             />
                         </div>
 
+                        {/* Full Name */}
+                        <div>
+                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                            <input
+                                className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                value={editData.full_name ?? ''}
+                                onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                            />
+                        </div>
+
                         {/* Provincia e CAP */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Provincia</label>
-                                <input
+                                {/* <input
                                     className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                     value={editData.province ?? ''}
                                     onChange={(e) => setEditData({ ...editData, province: e.target.value })}
-                                />
+                                /> */}
+                                <select
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold uppercase tracking-wider cursor-pointer"
+                                    value={editData.province ?? ''}
+                                    onChange={(e) => setEditData({ ...editData, province: e.target.value })}
+                                >
+                                    <option value="NAPOLI">Napoli</option>
+                                    <option value="CASERTA">Caserta</option>
+                                    <option value="SALERNO">Salerno</option>
+                                    <option value="AVELLINO">Avellino</option>
+                                    <option value="BENEVENTO">Benevento</option>
+                                    <option value="ALTRO">Altro</option>
+                                </select>
                             </div>
                             <div>
                                 <label className="text-[10px] font-black uppercase text-slate-400 ml-2">CAP</label>

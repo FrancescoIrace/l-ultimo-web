@@ -8,6 +8,7 @@ export default function MatchDetail({ user }) {
     const [match, setMatch] = useState(null);
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isJoined, setIsJoined] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -20,6 +21,15 @@ export default function MatchDetail({ user }) {
                 .single();
 
             setMatch(matchData);
+            if (matchData) {
+                const { data: participantData } = await supabase
+                    .from('participants')
+                    .select('*')
+                    .eq('match_id', matchData.id)
+                    .eq('user_id', user.id)
+                    .single();
+                setIsJoined(!!participantData);
+            }
 
             // 2. Partecipanti + Dati del Profilo (JOIN)
             const { data: partData, error: partError } = await supabase
@@ -71,6 +81,24 @@ export default function MatchDetail({ user }) {
         if (!error) navigate('/');
     };
 
+    const handleJoin = async () => {
+        const { error: partError } = await supabase
+            .from('participants')
+            .insert([{ match_id: match.id, user_id: user.id }]);
+
+        if (!partError) {
+            await supabase
+                .from('matches')
+                .update({ current_players: match.current_players + 1 })
+                .eq('id', match.id);
+
+            alert("Iscritto con successo!");
+            setIsJoined(true);
+        } else {
+            alert("Errore durante l'iscrizione: " + partError.message);
+        }
+    };
+
     if (loading) return <div className="p-10 text-center">Caricamento...</div>;
     if (!match) return <div className="p-10 text-center">Partita non trovata.</div>;
 
@@ -95,10 +123,12 @@ export default function MatchDetail({ user }) {
             {/* Sezione Partecipanti nel return */}
             <div className="space-y-3">
                 {participants.map((p, index) => (
+                    
                     <div
                         key={p.id}
                         className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${p.user_id === user.id ? 'border-blue-200 bg-blue-50' : 'border-slate-100 bg-white'
                             }`}
+                        onClick={() => {(p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                     >
                         <div className="flex items-center gap-3">
                             {/* Avatar o Iniziale */}
@@ -142,6 +172,7 @@ export default function MatchDetail({ user }) {
                 ) : (
                     <button
                         disabled={participants.length >= match.max_players}
+                        onClick={handleJoin}
                         className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50"
                     >
                         {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}

@@ -24,25 +24,27 @@ function App() {
       .select('*')
       .order('datetime', { ascending: true });
 
-    if (error) console.error('Errore:', error);
-    else setMatches(data);
-    setLoading(false);
+    if (error) { console.error('Errore:', error); }
+    else {
+      setMatches(data);
+      setLoading(false);
+    }
   }
 
-  //Recupero url dell'avatar
-  async function getUrlAvatar() {
-    const { data: url } = await supabase
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    supabase
       .from('profiles')
       .select('avatar_url')
       .eq('id', session.user.id)
-      .single();
-      if (url) {
-        setSession(prev => ({
-          ...prev,
-          avatar_url: url.avatar_url
-        }));
-      }
-  }
+      .single()
+      .then(({ data }) => {
+        if (data?.avatar_url) {
+          setSession(prev => ({ ...prev, avatar_url: data.avatar_url }));
+        }
+      });
+  }, [session?.user?.id]);
 
   useEffect(() => {
     // 2. Gestione Sessione
@@ -55,7 +57,6 @@ function App() {
     });
 
     // 3. Caricamento iniziale e Realtime
-    getUrlAvatar();
     fetchMatches();
 
     const channel = supabase
@@ -95,6 +96,7 @@ function App() {
           {/* <CircleUser size={76} strokeWidth={1.75} /> */}
           <div className="">
             {session.avatar_url ? (
+              console.log(session.avatar_url) ||
               <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
             ) : (
               session.username?.charAt(0).toUpperCase()

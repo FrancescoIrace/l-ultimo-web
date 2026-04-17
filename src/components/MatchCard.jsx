@@ -30,7 +30,6 @@ export default function MatchCard({ match, user }) {
         .single();
 
       if (data) {
-        console.log(data);
         setIsJoined(true);
       }
     }

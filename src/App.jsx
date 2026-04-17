@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import { Plus, CircleUser } from 'lucide-react';
 import Auth from './pages/Auth';
 import MatchCard from './components/MatchCard';
 import CreateMatch from './pages/CreateMatch';
@@ -28,6 +29,21 @@ function App() {
     setLoading(false);
   }
 
+  //Recupero url dell'avatar
+  async function getUrlAvatar() {
+    const { data: url } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', session.user.id)
+      .single();
+      if (url) {
+        setSession(prev => ({
+          ...prev,
+          avatar_url: url.avatar_url
+        }));
+      }
+  }
+
   useEffect(() => {
     // 2. Gestione Sessione
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,6 +55,7 @@ function App() {
     });
 
     // 3. Caricamento iniziale e Realtime
+    getUrlAvatar();
     fetchMatches();
 
     const channel = supabase
@@ -65,17 +82,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10">
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 cursor-pointer">
-          <h1 className="text-2xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
+      <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform active:scale-95">
+          <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
           {/* <h1 className="text-2xl font-black text-green-600 tracking-tighter">InCampo</h1> */}
         </button>
 
         <button
           onClick={() => navigate('/profile')}
-          className="text-xs text-blue-500 font-bold border border-blue-200 px-3 py-1 rounded-full hover:bg-blue-50"
+          className="mr-3 text-blue-500 font-bold border border-blue-600 border-2 rounded-full hover:bg-blue-50 active:scale-95 transition-all ease-in-out"
         >
-          PROFILO
+          {/* <CircleUser size={76} strokeWidth={1.75} /> */}
+          <div className="">
+            {session.avatar_url ? (
+              <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
+            ) : (
+              session.username?.charAt(0).toUpperCase()
+            )}
+          </div>
         </button>
 
         {/* <button
@@ -88,7 +112,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={
-          <main className="max-w-md mx-auto p-4 pb-24">
+          <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
               Partite vicino a te
             </h2>
@@ -124,10 +148,11 @@ function App() {
             {/* Floating Action Button */}
             <button
               onClick={() => navigate('/organizza')}
-              className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-light hover:bg-blue-700 transition-transform active:scale-95 cursor-pointer"
+              className="fixed bottom-6 right-6 w-[80px] h-20 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center font-light hover:bg-blue-700 transition-transform active:scale-90 cursor-pointer"
             >
-              +
+              <Plus size={60} strokeWidth={2.5} className='active:animate-spin' />
             </button>
+
           </main>
         } />
         <Route path="/organizza" element={<CreateMatch />} />

@@ -17,7 +17,7 @@ export default function MatchDetail({ user }) {
     const [comment, setComment] = useState('');
 
     // Funzione per aprire la modal
-    const openReviewModal = (player,id_target) => {
+    const openReviewModal = (player, id_target) => {
         setSelectedPlayer({ ...player, id_target });
         setIsModalOpen(true);
     };
@@ -157,7 +157,7 @@ export default function MatchDetail({ user }) {
                 <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                     <p className="text-slate-600">📍 {match.location}</p>
-                    <p className="text-slate-600">⏰ {new Date(match.datetime).toLocaleString()}</p>
+                    <p className="text-slate-600 capitalize">⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long' })}</p>
                     <p className="text-slate-600">📝 {match.description}</p>
                 </div>
 
@@ -169,7 +169,7 @@ export default function MatchDetail({ user }) {
 
                         <div
                             key={p.id}
-                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${p.user_id === user.id ? 'border-blue-200 bg-blue-50 ' : 'border-slate-100 bg-white'
+                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-95 transition-all cursor-pointer  ${p.user_id === user.id ? 'border-blue-200 bg-blue-50 ' : 'border-slate-100 bg-white'
                                 }`}
                             onClick={() => { (p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                         >
@@ -196,7 +196,7 @@ export default function MatchDetail({ user }) {
                                 {/* Bottone Feedback: appare solo se il match è finito E non sono io */}
                                 {isMatchFinished && p.user_id !== user.id && (
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles,p.user_id); }} // Una funzione che apre un form
+                                        onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles, p.user_id); }} // Una funzione che apre un form
                                         className="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full"
                                     >
                                         VOTA
@@ -264,7 +264,7 @@ export default function MatchDetail({ user }) {
                             </div>
 
                             {/* Selezione Stelle (Temporanea in attesa del componente figo) */}
-                            <div className="mb-6">
+                            {/* <div className="mb-6">
                                 <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Voto</label>
                                 <select
                                     value={rating}
@@ -277,6 +277,37 @@ export default function MatchDetail({ user }) {
                                     <option value="2">★★☆☆☆ (Sufficiente)</option>
                                     <option value="1">★☆☆☆☆ (Pessimo)</option>
                                 </select>
+                            </div> */}
+
+                            <div className="flex flex-col items-center mb-6">
+                                <label className="text-[10px] font-black uppercase text-slate-400 mb-2">Valutazione</label>
+                                <div className="flex gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setRating(star)}
+                                            className="focus:outline-none transition-transform active:scale-90"
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                                className={`w-10 h-10 transition-colors ${star <= rating ? 'text-yellow-400' : 'text-slate-200'
+                                                    }`}
+                                            >
+                                                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="mt-2 text-md font-bold text-slate-400 italic">
+                                    {rating === 5 && "Eccellente! 🏆"}
+                                    {rating === 4 && "Ottimo compagno 👏"}
+                                    {rating === 3 && "Buona partita 👍"}
+                                    {rating === 2 && "Poteva andare meglio 😕"}
+                                    {rating === 1 && "Esperienza negativa 👎"}
+                                </p>
                             </div>
 
                             {/* Commento */}

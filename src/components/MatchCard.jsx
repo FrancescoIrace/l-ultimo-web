@@ -79,7 +79,7 @@ export default function MatchCard({ match, user }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative" onClick={() => navigate(`/match/${match.id}`)}>
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all" onClick={() => navigate(`/match/${match.id}`)}>
       {/* Badge Organizzatore */}
       {isCreator && (
         <span className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">

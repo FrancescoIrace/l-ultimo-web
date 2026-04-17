@@ -9,6 +9,7 @@ export default function PublicProfile() {
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState([]);
     const [avgRating, setAvgRating] = useState(0);
+    const [totalReviews, setTotalReviews] = useState(0);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -49,7 +50,7 @@ export default function PublicProfile() {
                     rating,
                     comment,
                     created_at,
-                    reviewer:reviewer_id ( username, avatar_url )
+                    reviewer:reviewer_id ( username, avatar_url, id )
                 `)
                 .eq('target_id', id)
                 .order('created_at', { ascending: false });
@@ -58,6 +59,7 @@ export default function PublicProfile() {
                 setReviews(data);
                 const sum = data.reduce((acc, r) => acc + r.rating, 0);
                 setAvgRating(data.length > 0 ? (sum / data.length).toFixed(1) : 0);
+                setTotalReviews(data.length);
             }
         }
 
@@ -120,7 +122,7 @@ export default function PublicProfile() {
                 <span className="text-3xl font-black text-yellow-600">{avgRating}</span>
                 <div>
                     <p className="text-[10px] font-black uppercase text-yellow-700">Valutazione Media</p>
-                    <p className="text-xs text-yellow-600 font-bold">{reviews.length} recensioni ricevute</p>
+                    <p className="text-xs text-yellow-600 font-bold">{totalReviews} recensioni ricevute</p>
                 </div>
             </div>
 
@@ -130,9 +132,16 @@ export default function PublicProfile() {
                     <div key={index} className="border-b border-slate-100 pb-4">
                         <div className="flex items-center gap-2 mb-1">
                             <span className="font-black text-yellow-500">{'★'.repeat(rev.rating)}</span>
-                            <span className="text-[10px] font-black uppercase text-slate-400">da {rev.reviewer.username}</span>
+                            <span className="text-[10px] font-black uppercase text-slate-400">
+                                da
+                                <span onClick={() => navigate(`/profile/${rev.reviewer.id}`)}
+                                    className="text-blue-600 cursor-pointer hover:underline ml-1">
+                                    {rev.reviewer.username}
+                                </span>
+                            </span>
                         </div>
                         <p className="text-sm text-slate-600 italic">"{rev.comment}"</p>
+                        <span className="text-[10px] text-slate-400">{new Date(rev.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                 ))}
             </div>

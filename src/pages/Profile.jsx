@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
+import {AccordionItem, AccordionCreatedMatches} from '../components/MatchesAccordion';
 
 export default function Profile({ session }) {
     const navigate = useNavigate();
@@ -207,35 +208,39 @@ export default function Profile({ session }) {
 
                     {/* Le Mie Partite */}
                     <div className="mb-8">
-                        <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-blue-600">Le mie prossime sfide</h3>
+                        <AccordionItem title={"Prossime Partite"} matches={myMatches.filter((item) => new Date(item.matches.datetime) > new Date())} isOpen={true} titleColor="text-blue-600" />
+                        {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-blue-600">Le mie prossime sfide</h3>
                         <div className="space-y-3">
                             {myMatches.length > 0 ? (
-                                myMatches.map((item) => (
-                                    <div
-                                        key={item.matches.id}
-                                        onClick={() => navigate(`/match/${item.matches.id}`)}
-                                        className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
-                                                <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
+                                myMatches
+                                    .filter((item) => new Date(item.matches.datetime) > new Date())
+                                    .map((item) => (
+                                        <div
+                                            key={item.matches.id}
+                                            onClick={() => navigate(`/match/${item.matches.id}`)}
+                                            className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
+                                                    <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
+                                                </div>
+                                                <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
+                                                    {item.matches.sport}
+                                                </span>
                                             </div>
-                                            <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
-                                                {item.matches.sport}
-                                            </span>
                                         </div>
-                                    </div>
-                                ))
+                                    ))
                             ) : (
                                 <p className="text-slate-400 text-sm italic">Non sei ancora iscritto a nessuna partita.</p>
                             )}
-                        </div>
+                        </div> */}
                     </div>
 
                     {/*Partite Create */}
                     <div className="mb-8">
-                        <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">partite create</h3>
+                        <AccordionCreatedMatches title={"Partite Create"} matches={myCreatedMatches} isOpen={false} isCreatedMatches={true} />
+                        {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">partite create</h3>
                         <div className="space-y-3">
                             {myCreatedMatches.length > 0 ? (
                                 myCreatedMatches.map((item) => (
@@ -258,7 +263,38 @@ export default function Profile({ session }) {
                             ) : (
                                 <p className="text-slate-400 text-sm italic">Non hai ancora creato nessuna partita.</p>
                             )}
-                        </div>
+                        </div> */}
+                    </div>
+
+                    {/*Partite Passate */}
+                    <div className="mb-8">
+                        {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">partite passate</h3> */}
+                            <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" />
+                        {/* <div className="space-y-3">
+                            {myMatches.length > 0 ? (
+                                myMatches
+                                    .filter((item) => new Date(item.matches.datetime) < new Date())
+                                    .map((item) => (
+                                        <div
+                                            key={item.matches.id}
+                                            onClick={() => navigate(`/match/${item.matches.id}`)}
+                                            className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
+                                                    <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
+                                                </div>
+                                                <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
+                                                    {item.matches.sport}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))
+                            ) : (
+                                <p className="text-slate-400 text-sm italic">Non hai partecipato ancora a nessuna partita.</p>
+                            )}
+                        </div> */}
                     </div>
 
                     {/* Pulsanti Azione */}

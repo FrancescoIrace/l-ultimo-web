@@ -82,94 +82,97 @@ function App() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 bg-slate-50">
-      <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform active:scale-95">
-          <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
-          {/* <h1 className="text-2xl font-black text-green-600 tracking-tighter">InCampo</h1> */}
-        </button>
+    <>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"></meta>
+      <div className="w-full max-w-md mx-auto px-4 bg-slate-50">
+        <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform active:scale-95">
+            <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
+            {/* <h1 className="text-2xl font-black text-green-600 tracking-tighter">InCampo</h1> */}
+          </button>
 
-        <button
-          onClick={() => navigate('/profile')}
-          className="mr-3 text-blue-500 font-bold border border-blue-600 border-2 rounded-full hover:bg-blue-50 active:scale-95 transition-all ease-in-out"
-        >
-          {/* <CircleUser size={76} strokeWidth={1.75} /> */}
-          <div className="">
-            {session.avatar_url ? (
-              console.log(session.avatar_url) ||
-              <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
-            ) : (
-              session.username?.charAt(0).toUpperCase()
-            )}
-          </div>
-        </button>
+          <button
+            onClick={() => navigate('/profile')}
+            className="mr-3 text-blue-500 font-bold border border-blue-600 border-2 rounded-full hover:bg-blue-50 active:scale-95 transition-all ease-in-out"
+          >
+            {/* <CircleUser size={76} strokeWidth={1.75} /> */}
+            <div className="">
+              {session.avatar_url ? (
+                console.log(session.avatar_url) ||
+                <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
+              ) : (
+                session.username?.charAt(0).toUpperCase()
+              )}
+            </div>
+          </button>
 
-        {/* <button
+          {/* <button
           onClick={() => supabase.auth.signOut()}
           className="text-xs text-red-500 font-bold border border-red-200 px-3 py-1 rounded-full hover:bg-red-50"
         >
           LOGOUT
         </button> */}
-      </header>
+        </header>
 
-      <Routes>
-        <Route path="/" element={
-          <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-              Partite vicino a te
-            </h2>
+        <Routes>
+          <Route path="/" element={
+            <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
+              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
+                Partite vicino a te
+              </h2>
 
-            {loading ? (
-              <div className="grid gap-4">
-                {/* Ne mostriamo 3 o 4 per riempire la pagina */}
-                {[1, 2, 3].map(n => <MatchSkeleton key={n} />)}
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {matches.length > 0 ? (
-                  matches.map(match => <MatchCard key={match.id} match={match} user={session.user} />)
-                ) : (
-                  <>
-                    <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
+              {loading ? (
+                <div className="grid gap-4">
+                  {/* Ne mostriamo 3 o 4 per riempire la pagina */}
+                  {[1, 2, 3].map(n => <MatchSkeleton key={n} />)}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {matches.length > 0 ? (
+                    matches.map(match => <MatchCard key={match.id} match={match} user={session.user} />)
+                  ) : (
+                    <>
+                      <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
 
-                    <button
-                      disabled={loading}
-                      onClick={() => navigate('/organizza')}
-                      className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      {loading ? 'Caricamento...' : 'Organizza una partita'}
-                    </button>
-
-
-                  </>
-                )}
-              </div>
-            )}
+                      <button
+                        disabled={loading}
+                        onClick={() => navigate('/organizza')}
+                        className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        {loading ? 'Caricamento...' : 'Organizza una partita'}
+                      </button>
 
 
-            {/* Floating Action Button */}
-            <button
-              onClick={() => navigate('/organizza')}
-              className="fixed bottom-6 right-6 w-[80px] h-20 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center font-light hover:bg-blue-700 transition-transform active:scale-90 cursor-pointer"
-            >
-              <Plus size={60} strokeWidth={2.5} className='active:animate-spin' />
-            </button>
+                    </>
+                  )}
+                </div>
+              )}
 
-          </main>
-        } />
-        <Route path="/organizza" element={<CreateMatch />} />
 
-        <Route path="/modifica/:id" element={<CreateMatch />} />
+              {/* Floating Action Button */}
+              <button
+                onClick={() => navigate('/organizza')}
+                className="fixed bottom-6 right-6 w-[80px] h-20 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center font-light hover:bg-blue-700 transition-transform active:scale-90 cursor-pointer"
+              >
+                <Plus size={60} strokeWidth={2.5} className='active:animate-spin' />
+              </button>
 
-        <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
+            </main>
+          } />
+          <Route path="/organizza" element={<CreateMatch />} />
 
-        <Route path="/profile" element={<Profile session={session} />} />
+          <Route path="/modifica/:id" element={<CreateMatch />} />
 
-        <Route path="/profile/:id" element={<PublicProfile />} />
+          <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
+          <Route path="/profile" element={<Profile session={session} />} />
+
+          <Route path="/profile/:id" element={<PublicProfile />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </>
   );
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Loader } from 'lucide-react';
+import { Loader, Calendar } from 'lucide-react';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -16,6 +16,7 @@ export default function MatchDetail({ user }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
+    const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
 
     // Funzione per aprire la modal
     const openReviewModal = (player, id_target) => {
@@ -31,6 +32,23 @@ export default function MatchDetail({ user }) {
         setComment('');
     };
 
+
+    useEffect(() => {
+        // Chiudi il menu del calendario se si clicca fuori
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.calendar-menu-btn') && !e.target.closest('.calendar-menu')) {
+                setIsCalendarMenuOpen(false);
+            }
+        };
+
+        if (isCalendarMenuOpen) {
+            document.addEventListener('click', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [isCalendarMenuOpen]);
 
     useEffect(() => {
         async function getDetails() {
@@ -142,6 +160,56 @@ export default function MatchDetail({ user }) {
         }
     };
 
+    // Funzioni per salvare nel calendario
+    const generateGoogleCalendarUrl = () => {
+        if (!match) return '';
+        const startTime = new Date(match.datetime).toISOString().replace(/-|:|\.\d{3}/g, '');
+        const endTime = new Date(new Date(match.datetime).getTime() + 90 * 60000).toISOString().replace(/-|:|\.\d{3}/g, ''); // +90 minuti
+
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: match.title,
+            details: `${match.description}\n📍 ${match.location}`,
+            location: match.location,
+            dates: `${startTime}/${endTime}`
+        });
+
+        return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    };
+
+    const downloadICalendar = () => {
+        if (!match) return;
+
+        const startTime = new Date(match.datetime);
+        const endTime = new Date(startTime.getTime() + 90 * 60000); // +90 minuti
+
+        const formatICalDate = (date) => {
+            return date.toISOString().replace(/-|:|\.\d{3}/g, '');
+        };
+
+        const icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//L'Ultimo//L'Ultimo App//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${match.id}@lultimo.app
+DTSTAMP:${formatICalDate(new Date())}
+DTSTART:${formatICalDate(startTime)}
+DTEND:${formatICalDate(endTime)}
+SUMMARY:${match.title}
+DESCRIPTION:${match.description}
+LOCATION:${match.location}
+END:VEVENT
+END:VCALENDAR`;
+
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icalContent));
+        element.setAttribute('download', `${match.title.replace(/\s+/g, '_')}.ics`);
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    };
+
     if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
     if (!match) return <div className="p-10 text-center">Partita non trovata <button onClick={() => navigate('/')} className="text-blue-500 underline">Torna alla Home</button></div>;
 
@@ -158,7 +226,38 @@ export default function MatchDetail({ user }) {
                 <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                     <p className="text-slate-600">📍 {match.location}</p>
-                    <p className="text-slate-600 capitalize">⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long' })}</p>
+                    <div className="relative calendar-menu-btn">
+                        <button
+                            onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
+                            className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
+                        >
+                            <span>⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long' })}</span>
+                            <Calendar size={16} className="text-blue-500" />
+                        </button>
+
+                        {isCalendarMenuOpen && (
+                            <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg z-20 min-w-max calendar-menu">
+                                <button
+                                    onClick={() => {
+                                        window.open(generateGoogleCalendarUrl(), '_blank');
+                                        setIsCalendarMenuOpen(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 first:rounded-t-2xl"
+                                >
+                                    📅 Aggiungi a Google Calendar
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        downloadICalendar();
+                                        setIsCalendarMenuOpen(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 last:rounded-b-2xl border-t border-slate-100"
+                                >
+                                    📥 Scarica file .ics
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <p className="text-slate-600">📝 {match.description}</p>
                 </div>
 

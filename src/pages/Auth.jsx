@@ -31,7 +31,15 @@ export default function Auth() {
       : await supabase.auth.signInWithPassword({ email, password });
 
     if (error) alert(error.message);
-    else alert(isSignUp ? 'Controlla la mail per confermare!' : 'Loggato con successo!');
+    else {
+      if (isSignUp) {
+        // Salva un flag per mostrare l'alert di installazione app al primo accesso
+        localStorage.setItem('newUserRegistered', 'true');
+        alert('Controlla la mail per confermare!');
+      } else {
+        alert('Loggato con successo!');
+      }
+    }
     setLoading(false);
   };
 

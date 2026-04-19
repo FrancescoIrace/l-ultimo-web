@@ -47,7 +47,15 @@ function App() {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    // 2. Gestione Sessione
+    // Mostra alert per i nuovi registrati al primo accesso
+    if (session?.user?.id && localStorage.getItem('newUserRegistered') === 'true') {
+      alert('👋 Benvenuto! Per la miglior esperienza con l\'app, ti consigliamo di salvarla sulla homepage del tuo smartphone.\n\n📱 Su iPhone: Premi il bottone Condividi → Aggiungi alla schermata iniziale\n\n🤖 Su Android: Premi il menù (≡) → Installa app');
+      localStorage.removeItem('newUserRegistered');
+    }
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    // Gestione Sessione
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -56,9 +64,19 @@ function App() {
       setSession(session);
     });
 
-    // 3. Caricamento iniziale e Realtime
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Caricamento partite quando la sessione è disponibile
+    if (!session?.user?.id) return;
+
+    // Caricamento iniziale
     fetchMatches();
 
+    // Realtime subscription
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -71,10 +89,9 @@ function App() {
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [session?.user?.id]);
 
   // Se non c'è sessione, mostra Auth
   if (!session) {
@@ -100,8 +117,8 @@ function App() {
               {session.avatar_url ? (
                 <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-bold text-slate-600">
-                  {session.username?.charAt(0).toUpperCase()}
+                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-semibold text-slate-600">
+                  {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>

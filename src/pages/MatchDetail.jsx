@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { Loader } from 'lucide-react';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -141,8 +142,8 @@ export default function MatchDetail({ user }) {
         }
     };
 
-    if (loading) return <div className="p-10 text-center">Caricamento...</div>;
-    if (!match) return <div className="p-10 text-center">Partita non trovata.</div>;
+    if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+    if (!match) return <div className="p-10 text-center">Partita non trovata <button onClick={() => navigate('/')} className="text-blue-500 underline">Torna alla Home</button></div>;
 
     return (
         <>

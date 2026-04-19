@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import {AccordionItem, AccordionCreatedMatches} from '../components/MatchesAccordion';
+import { Loader } from 'lucide-react';
 
 export default function Profile({ session }) {
     const navigate = useNavigate();
@@ -159,7 +160,7 @@ export default function Profile({ session }) {
     };
 
     // if (loading) return <div className="p-10 text-center uppercase font-black">Caricamento...</div>;
-    if (loading && !isEditing) return <div className="p-10 text-center font-black">CARICAMENTO...</div>;
+    if (loading && !isEditing) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
 
     return (
         <div className="max-w-md mx-auto p-6 min-h-screen bg-white">

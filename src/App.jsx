@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { Plus, CircleUser } from 'lucide-react';
+import { Plus, CircleUser,Loader } from 'lucide-react';
 import Auth from './pages/Auth';
 import MatchCard from './components/MatchCard';
 import CreateMatch from './pages/CreateMatch';
@@ -98,10 +98,11 @@ function App() {
             {/* <CircleUser size={76} strokeWidth={1.75} /> */}
             <div className="">
               {session.avatar_url ? (
-                console.log(session.avatar_url) ||
                 <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
               ) : (
-                session.username?.charAt(0).toUpperCase()
+                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-bold text-slate-600">
+                  {session.username?.charAt(0).toUpperCase()}
+                </div>
               )}
             </div>
           </button>

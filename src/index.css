@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@keyframes customSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-spin {
+  animation: customSpin 1.8s linear infinite;
+}

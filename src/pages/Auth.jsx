@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -11,6 +12,7 @@ export default function Auth() {
   const [province, setProvince] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [dataConsent, setDataConsent] = useState(false);
+  const navigate = useNavigate();
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -36,8 +38,10 @@ export default function Auth() {
         // Salva un flag per mostrare l'alert di installazione app al primo accesso
         localStorage.setItem('newUserRegistered', 'true');
         alert('Controlla la mail per confermare!');
+        navigate('/dashboard');
       } else {
         alert('Loggato con successo!');
+        navigate('/dashboard');
       }
     }
     setLoading(false);

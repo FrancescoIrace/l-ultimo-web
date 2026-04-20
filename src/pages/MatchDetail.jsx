@@ -20,6 +20,9 @@ export default function MatchDetail({ user }) {
 
     // Funzione per aprire la modal
     const openReviewModal = (player, id_target) => {
+        //Controlliamo se l'utente che sta per recensiere ha partecipato alla partita (per sicurezza, anche se il pulsante è nascosto in caso contrario)
+        const participated = participants.some(p => p.user_id === user.id);
+        if (!participated) return;
         setSelectedPlayer({ ...player, id_target });
         setIsModalOpen(true);
     };
@@ -164,7 +167,7 @@ export default function MatchDetail({ user }) {
     const generateGoogleCalendarUrl = () => {
         if (!match) return '';
         const startTime = new Date(match.datetime).toISOString().replace(/-|:|\.\d{3}/g, '');
-        const endTime = new Date(new Date(match.datetime).getTime() + 90 * 60000).toISOString().replace(/-|:|\.\d{3}/g, ''); // +90 minuti
+        const endTime = new Date(new Date(match.datetime).getTime() + 60 * 60000).toISOString().replace(/-|:|\.\d{3}/g, ''); // +60 minuti
 
         const params = new URLSearchParams({
             action: 'TEMPLATE',
@@ -315,18 +318,30 @@ END:VCALENDAR`;
                 </div>
                 {/* BOTTONI VARI */}
                 <div className="mt-10 pt-6 border-t border-slate-100">
+                    {match.datetime && new Date(match.datetime) < new Date() && (
+                        <>
+                        <div className='mb-2 text-center bg-yellow-50 border border-slate-200 rounded-2xl italic text-sm'>
+                            <label>
+                            Questa partita è già avvenuta. Se hai partecipato, lascia un feedback agli altri giocatori!
+                        </label>
+                        </div>
+                        </>
+                        
+                    )}
+
                     {participants.some(p => p.user_id === user.id) ? (
                         <button
                             onClick={handleLeave}
-                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                            disabled={isMatchFinished}
+                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 disabled:hover:cursor-not-allowed0"
                         >
                             ABBANDONA PARTITA
                         </button>
                     ) : (
                         <button
-                            disabled={participants.length >= match.max_players}
+                            disabled={participants.length >= match.max_players || isMatchFinished}
                             onClick={handleJoin}
-                            className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50"
+                            className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50 disabled:hover:cursor-not-allowed"
                         >
                             {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}
                         </button>
@@ -337,6 +352,7 @@ END:VCALENDAR`;
                             <button
                                 onClick={() => { navigate(`/modifica/${match.id}`) }}
                                 className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                disabled={isMatchFinished}
                             >
                                 Modifica Partita (Admin)
                             </button>

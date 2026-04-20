@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
+import LocationPicker from '../components/LocationPicker';
 
 
 
@@ -14,6 +15,8 @@ export default function CreateMatch() {
         title: '',
         datetime: '',
         location: '',
+        location_lat: null,
+        location_lng: null,
         max_players: 10, // Default per Calcetto
         description: ''
     });
@@ -61,6 +64,11 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
+        // Converti la data locale in UTC correttamente
+        const localDate = new Date(formData.datetime);
+        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
+        const datetimeUTC = utcDate.toISOString();
+
         // 1. Inseriamo la partita
         // .select() alla fine ci permette di ricevere indietro i dati appena creati
         const { data: newMatch, error: matchError } = await supabase
@@ -68,6 +76,7 @@ export default function CreateMatch() {
             .insert([
                 {
                     ...formData,
+                    datetime: datetimeUTC, // Usa la data convertita in UTC
                     current_players: 1, // L'organizzatore è il primo
                     creator_id: (await supabase.auth.getUser()).data.user.id // Assicuriamoci di passare l'ID
                 }
@@ -106,13 +115,20 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
+        // Converti la data locale in UTC correttamente
+        const localDate = new Date(formData.datetime);
+        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
+        const datetimeUTC = utcDate.toISOString();
+
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase
             .from('matches')
             .update({
                 title: formData.title,
                 location: formData.location,
-                datetime: formData.datetime,
+                location_lat: formData.location_lat,
+                location_lng: formData.location_lng,
+                datetime: datetimeUTC, // Usa la data convertita in UTC
                 description: formData.description,
             })
             .eq('id', id)
@@ -182,6 +198,7 @@ export default function CreateMatch() {
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Quando</label>
                             <input
                                 type="datetime-local"
+                                lang="it-IT"
                                 required
                                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                                 value={formData.datetime ? formData.datetime.slice(0, 16) : ''} // Formatta per input datetime-local
@@ -203,17 +220,10 @@ export default function CreateMatch() {
                     </div>
 
                     {/* LUOGO E DESCRIZIONE */}
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dove</label>
-                        <input
-                            type="text"
-                            required
-                            placeholder="Nome del centro sportivo"
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        />
-                    </div>
+                    <LocationPicker 
+                        value={formData}
+                        onChange={(locationData) => setFormData({ ...formData, ...locationData })}
+                    />
 
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
@@ -287,6 +297,7 @@ export default function CreateMatch() {
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Quando</label>
                         <input
                             type="datetime-local"
+                            lang="it-IT"
                             //la data passata non è selezionabile
                             min={new Date().toISOString().slice(0, 16)}
                             required
@@ -310,16 +321,10 @@ export default function CreateMatch() {
                 </div>
 
                 {/* LUOGO E DESCRIZIONE */}
-                <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Dove</label>
-                    <input
-                        type="text"
-                        required
-                        placeholder="Nome del centro sportivo"
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    />
-                </div>
+                <LocationPicker 
+                    value={formData}
+                    onChange={(locationData) => setFormData({ ...formData, ...locationData })}
+                />
 
                 <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>

@@ -19,6 +19,7 @@ export default function MatchDetail({ user }) {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
+    const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
 
     // Funzione per aprire la modal
     const openReviewModal = (player, id_target) => {
@@ -39,21 +40,24 @@ export default function MatchDetail({ user }) {
 
 
     useEffect(() => {
-        // Chiudi il menu del calendario se si clicca fuori
+        // Chiudi i menu se si clicca fuori
         const handleClickOutside = (e) => {
             if (!e.target.closest('.calendar-menu-btn') && !e.target.closest('.calendar-menu')) {
                 setIsCalendarMenuOpen(false);
             }
+            if (!e.target.closest('.location-menu-btn') && !e.target.closest('.location-menu')) {
+                setIsLocationMenuOpen(false);
+            }
         };
 
-        if (isCalendarMenuOpen) {
+        if (isCalendarMenuOpen || isLocationMenuOpen) {
             document.addEventListener('click', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('click', handleClickOutside);
         };
-    }, [isCalendarMenuOpen]);
+    }, [isCalendarMenuOpen, isLocationMenuOpen]);
 
     useEffect(() => {
         async function getDetails() {
@@ -177,11 +181,12 @@ export default function MatchDetail({ user }) {
         if (!match) return '';
         const startTime = new Date(match.datetime).toISOString().replace(/-|:|\.\d{3}/g, '');
         const endTime = new Date(new Date(match.datetime).getTime() + 60 * 60000).toISOString().replace(/-|:|\.\d{3}/g, ''); // +60 minuti
+        const dettagli = `INFORMAZIONI DELLA PARTITA:\n 📅 ${match.datetime}\n📝 ${match.description}\n📍 ${match.location}`;
 
         const params = new URLSearchParams({
             action: 'TEMPLATE',
             text: match.title,
-            details: `${match.description}\n📍 ${match.location}`,
+            details: dettagli,
             location: match.location,
             dates: `${startTime}/${endTime}`
         });
@@ -222,6 +227,28 @@ export default function MatchDetail({ user }) {
         document.body.removeChild(element);
     };
 
+    // Funzioni per aprire il navigatore
+    const generateGoogleMapsUrl = () => {
+        if (!match) return '';
+        if (match.location_lat && match.location_lng) {
+            return `https://www.google.com/maps/search/?api=1&query=${match.location_lat},${match.location_lng}`;
+        }
+        return `https://www.google.com/maps/search/${encodeURIComponent(match.location)}`;
+    };
+
+    const generateAppleMapsUrl = () => {
+        if (!match) return '';
+        if (match.location_lat && match.location_lng) {
+            return `https://maps.apple.com/?q=${match.location}&ll=${match.location_lat},${match.location_lng}`;
+        }
+        return `https://maps.apple.com/?q=${encodeURIComponent(match.location)}`;
+    };
+
+    const generateGeoSchemeUrl = () => {
+        if (!match || !match.location_lat || !match.location_lng) return '';
+        return `geo:${match.location_lat},${match.location_lng}?q=${encodeURIComponent(match.location)}`;
+    };
+
     if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
     if (!match) return <div className="p-10 text-center">Partita non trovata <button onClick={() => navigate('/')} className="text-blue-500 underline">Torna alla Home</button></div>;
 
@@ -237,8 +264,50 @@ export default function MatchDetail({ user }) {
                 </button>
                 <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
-                    <p className="text-slate-600">📍 {match.location}</p>
-                    <div className="relative calendar-menu-btn">
+                    <div className="relative location-menu-btn mb-3">
+                        <button
+                            onClick={() => setIsLocationMenuOpen(!isLocationMenuOpen)}
+                            className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
+                        >
+                            <span>📍 {match.location}</span>
+                            {(match.location_lat && match.location_lng) && <span className="text-xs text-blue-500">↗</span>}
+                        </button>
+
+                        {isLocationMenuOpen && (match.location_lat && match.location_lng) && (
+                            <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg z-20 min-w-max location-menu">
+                                <button
+                                    onClick={() => {
+                                        window.open(generateGoogleMapsUrl(), '_blank');
+                                        setIsLocationMenuOpen(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 first:rounded-t-2xl"
+                                >
+                                    🗺️ Apri su Google Maps
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        window.open(generateAppleMapsUrl(), '_blank');
+                                        setIsLocationMenuOpen(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 border-t border-slate-100"
+                                >
+                                    🍎 Apri su Apple Maps
+                                </button>
+                                {generateGeoSchemeUrl() && (
+                                    <button
+                                        onClick={() => {
+                                            window.location.href = generateGeoSchemeUrl();
+                                            setIsLocationMenuOpen(false);
+                                        }}
+                                        className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 last:rounded-b-2xl border-t border-slate-100"
+                                    >
+                                        📍 Apri Navigatore
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <div className="relative calendar-menu-btn mb-3">
                         <button
                             onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
                             className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
@@ -270,7 +339,7 @@ export default function MatchDetail({ user }) {
                             </div>
                         )}
                     </div>
-                    <p className="text-slate-600">📝 {match.description}</p>
+                    <p className="text-slate-600 mb-3">📝 {match.description}</p>
                 </div>
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({participants.length}/{match.max_players})</h3>

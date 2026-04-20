@@ -220,7 +220,7 @@ END:VCALENDAR`;
         <>
             <div className="max-w-md mx-auto p-4">
                 <button
-                        onClick={() => navigate(-1)}
+                        onClick={() => navigate('/')}
                     type="button"
                     className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
                 >

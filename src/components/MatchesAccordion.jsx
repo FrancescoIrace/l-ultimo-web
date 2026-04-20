@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 function AccordionItem({ title, matches, isOpen, titleColor }) {
     const [open, setOpen] = useState(isOpen);
     const navigate = useNavigate();
-    
+
     return (
         <div className="border-b border-slate-200">
             <button
@@ -49,6 +49,8 @@ function AccordionItem({ title, matches, isOpen, titleColor }) {
 
 function AccordionCreatedMatches({ title, matches, isOpen }) {
     const [open, setOpen] = useState(isOpen);
+    const navigate = useNavigate();
+
     return (
         <div className="border-b border-slate-200">
             <button

@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 
+
+
 export default function CreateMatch() {
     const { id } = useParams(); // Se c'è un ID, siamo in modalità modifica
     const navigate = useNavigate();
@@ -12,8 +14,30 @@ export default function CreateMatch() {
         title: '',
         datetime: '',
         location: '',
-        max_players: 10
+        max_players: 10, // Default per Calcetto
+        description: ''
     });
+
+    const SPORT_MAX_PLAYERS = {
+        'Calcetto': 10,
+        'Calcio a 7': 14,
+        'Calcio a 11': 22,
+        'Padel': 4,
+        'Basket (3vs3)': 6,
+        'Basket (5vs5)': 10,
+        'Tennis singolo': 2,
+        'Tennis doppio': 4,
+        'Volley': 12
+    };
+
+    const handleSportChange = (e) => {
+        const selectedSport = e.target.value;
+        setFormData({
+            ...formData,
+            sport: selectedSport,
+            max_players: SPORT_MAX_PLAYERS[selectedSport]
+        });
+    };
 
     // 1. Se c'è un ID, carichiamo i dati attuali dal DB
     useEffect(() => {
@@ -126,7 +150,7 @@ export default function CreateMatch() {
                             disabled
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
                             value={formData.sport}
-                            onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
+                            onChange={handleSportChange}  // ← NUOVO
                         >
                             <option>Calcetto</option>
                             <option>Calcio a 7</option>
@@ -232,7 +256,7 @@ export default function CreateMatch() {
                     <select
                         className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.sport}
-                        onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
+                        onChange={handleSportChange}
                     >
                         <option>Calcetto</option>
                         <option>Calcio a 7</option>
@@ -263,16 +287,20 @@ export default function CreateMatch() {
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Quando</label>
                         <input
                             type="datetime-local"
+                            //la data passata non è selezionabile
+                            min={new Date().toISOString().slice(0, 16)}
                             required
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                             onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
                         />
                     </div>
                     <div>
+                        {/* Il numero di giocatori cambia in base allo sport (principalmente), quindi sull'onchange della select dello sport */}
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Giocatori Totali</label>
                         <input
                             type="number"
                             required
+                            disabled
                             min="2"
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.max_players}

@@ -10,11 +10,13 @@ import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
+import WelcomeModal from './components/WelcomeModal';
 
 function App() {
   const [session, setSession] = useState(null);
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
 
   // 1. Definiamo fetchMatches fuori dagli useEffect così è usabile ovunque
@@ -52,6 +54,21 @@ function App() {
       alert('👋 Benvenuto! Per la miglior esperienza con l\'app, ti consigliamo di salvarla sulla homepage del tuo smartphone.\n\n📱 Su iPhone: Premi il bottone Condividi → Aggiungi alla schermata iniziale\n\n🤖 Su Android: Premi il menù (≡) → Installa app');
       localStorage.removeItem('newUserRegistered');
     }
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    // Mostra il welcome modal una volta al giorno
+    // if (!session?.user?.id) return;
+
+    // const today = new Date().toDateString();
+    // const lastWelcomeDay = localStorage.getItem('lastWelcomeDay');
+
+    // // Se è un nuovo giorno o non è mai stato mostrato, mostra il modal
+    // if (lastWelcomeDay !== today) {
+    //   setShowWelcome(true);
+    //   localStorage.setItem('lastWelcomeDay', today);
+    // }
+    setShowWelcome(true); // Per ora lo mostriamo sempre, poi limitiamo a 1 volta al giorno
   }, [session?.user?.id]);
 
   useEffect(() => {
@@ -100,6 +117,12 @@ function App() {
 
   return (
     <>
+      {showWelcome && (
+        <WelcomeModal 
+          onClose={() => setShowWelcome(false)}
+          username={session.user?.user_metadata?.username || 'Giocatore'}
+        />
+      )}
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"></meta>
       <div className="w-full max-w-md mx-auto px-4 bg-slate-50">
         <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">

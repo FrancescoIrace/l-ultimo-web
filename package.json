@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "generate-commits": "node scripts/generateCommits.js",
+    "dev": "npm run generate-commits && vite",
+    "build": "npm run generate-commits && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

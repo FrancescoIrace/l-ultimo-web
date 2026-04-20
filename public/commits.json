@@ -1,0 +1,52 @@
+[
+  {
+    "date": "20 aprile 2026",
+    "title": "Add logica cambio numero giocatori in base allo sport",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "20 aprile 2026",
+    "title": "Blocco bottoni se il player non ha partecipato al match",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "20 aprile 2026",
+    "title": "HotFix click su partita da profilo corretto con import mancante",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "19 aprile 2026",
+    "title": "Add Aggiunta a calendar + messaggio nuovi iscritti + FIX BUG",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "19 aprile 2026",
+    "title": "Add Loading rotation su profilo e dettagli match",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "18 aprile 2026",
+    "title": "Add metaTag",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "18 aprile 2026",
+    "title": "Fix visivo smartphone",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "18 aprile 2026",
+    "title": "Fix + DEPLOY vercel",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "18 aprile 2026",
+    "title": "Add Accordion per la visualizzazione delle liste di partite nel profilo utente",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "18 aprile 2026",
+    "title": "Fix caricamento url avatar (use effect separato)",
+    "description": "Modifica all'app"
+  }
+]

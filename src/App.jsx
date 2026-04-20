@@ -57,18 +57,20 @@ function App() {
   }, [session?.user?.id]);
 
   useEffect(() => {
+    //DEBUG: mostra il welcome modal a ogni accesso (per testarlo)
+    // setShowWelcome(true);
+    
     // Mostra il welcome modal una volta al giorno
-    // if (!session?.user?.id) return;
+    if (!session?.user?.id) return;
 
-    // const today = new Date().toDateString();
-    // const lastWelcomeDay = localStorage.getItem('lastWelcomeDay');
+    const today = new Date().toDateString();
+    const lastWelcomeDay = localStorage.getItem('lastWelcomeDay');
 
-    // // Se è un nuovo giorno o non è mai stato mostrato, mostra il modal
-    // if (lastWelcomeDay !== today) {
-    //   setShowWelcome(true);
-    //   localStorage.setItem('lastWelcomeDay', today);
-    // }
-    setShowWelcome(true); // Per ora lo mostriamo sempre, poi limitiamo a 1 volta al giorno
+    // Se è un nuovo giorno o non è mai stato mostrato, mostra il modal
+    if (lastWelcomeDay !== today) {
+      setShowWelcome(true);
+      localStorage.setItem('lastWelcomeDay', today);
+    }
   }, [session?.user?.id]);
 
   useEffect(() => {

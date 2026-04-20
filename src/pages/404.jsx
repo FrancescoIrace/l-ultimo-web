@@ -7,7 +7,7 @@ export default function NotFound() {
                     404 - Pagina non trovata
                 </h2>
                 <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('./')}
                     className="mt-4 bg-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-blue-700 transition-colors"
                 >
                     Torna alla Home

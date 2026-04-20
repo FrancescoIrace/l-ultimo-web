@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Calendar } from 'lucide-react';
+import { useAlert } from '../components/AlertComponent';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -11,6 +12,7 @@ export default function MatchDetail({ user }) {
     const [loading, setLoading] = useState(true);
     const [isJoined, setIsJoined] = useState(false);
     const navigate = useNavigate();
+    const { alert, success, error, confirm, confirmDangerous } = useAlert();
     const isMatchFinished = match ? new Date(match.datetime) < new Date() : false;
     const [selectedPlayer, setSelectedPlayer] = useState(null); // Memorizza il profilo da votare
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,38 +91,44 @@ export default function MatchDetail({ user }) {
 
     const handleLeave = async () => {
         if (match.creator_id === user.id) {
-            alert("Sei l'organizzatore, Non puoi uscire dalla partita a meno che non passi la partita a un altro giocatore. Per annullare la partita usa il pulsante dedicato.");
+            error("Sei l'organizzatore, Non puoi uscire dalla partita a meno che non passi la partita a un altro giocatore. Per annullare la partita usa il pulsante dedicato.");
             return;
         }
-        if (!confirm("Vuoi davvero abbandonare la partita?")) return;
+        confirmDangerous("Vuoi davvero abbandonare la partita?", async () => {
+            // 1. Rimuovi dai partecipanti
+            const { error: partError } = await supabase
+                .from('participants')
+                .delete()
+                .eq('match_id', id)
+                .eq('user_id', user.id);
 
-        // 1. Rimuovi dai partecipanti
-        const { error: partError } = await supabase
-            .from('participants')
-            .delete()
-            .eq('match_id', id)
-            .eq('user_id', user.id);
+            if (!partError) {
+                // 2. Decrementa il contatore in matches
+                await supabase
+                    .from('matches')
+                    .update({ current_players: match.current_players - 1 })
+                    .eq('id', id);
 
-        if (!partError) {
-            // 2. Decrementa il contatore in matches
-            await supabase
-                .from('matches')
-                .update({ current_players: match.current_players - 1 })
-                .eq('id', id);
-
-            window.location.reload(); // Semplice refresh per aggiornare la UI
-        }
+                success('Hai abbandonato la partita!');
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        });
     };
 
     const handleDeleteMatch = async () => {
-        if (!confirm("Sei l'organizzatore. Vuoi annullare definitivamente la partita?")) return;
+        confirmDangerous("Sei l'organizzatore. Vuoi annullare definitivamente la partita?", async () => {
+            const { error: deleteError } = await supabase
+                .from('matches')
+                .delete()
+                .eq('id', id);
 
-        const { error } = await supabase
-            .from('matches')
-            .delete()
-            .eq('id', id);
-
-        if (!error) navigate('/');
+            if (!deleteError) {
+                success('Partita annullata!');
+                setTimeout(() => navigate('/'), 1000);
+            } else {
+                error('Errore durante l\'annullamento della partita');
+            }
+        });
     };
 
     const handleJoin = async () => {
@@ -134,15 +142,16 @@ export default function MatchDetail({ user }) {
                 .update({ current_players: match.current_players + 1 })
                 .eq('id', match.id);
 
-            alert("Iscritto con successo!");
-            setIsJoined(true);
+            success("Iscritto con successo!");
+            setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert("Errore durante l'iscrizione: " + partError.message);
+            error("Errore durante l'iscrizione: " + partError.message);
         }
     };
 
+
     const submitReview = async (targetId, rating, comment) => {
-        const { error } = await supabase
+        const { error: reviewError } = await supabase
             .from('reviews')
             .insert({
                 reviewer_id: user.id,
@@ -152,14 +161,14 @@ export default function MatchDetail({ user }) {
                 comment: comment
             });
 
-        if (error) {
-            if (error.code === '23505') {
-                alert("Hai già recensito questo giocatore per questa partita!");
+        if (reviewError) {
+            if (reviewError.code === '23505') {
+                error("Hai già recensito questo giocatore per questa partita!");
             } else {
-                alert("Errore: " + error.message);
+                error("Errore: " + reviewError.message);
             }
         } else {
-            alert("Recensione inviata!");
+            success("Recensione inviata!");
         }
     };
 
@@ -191,19 +200,19 @@ export default function MatchDetail({ user }) {
         };
 
         const icalContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//L'Ultimo//L'Ultimo App//EN
-CALSCALE:GREGORIAN
-BEGIN:VEVENT
-UID:${match.id}@lultimo.app
-DTSTAMP:${formatICalDate(new Date())}
-DTSTART:${formatICalDate(startTime)}
-DTEND:${formatICalDate(endTime)}
-SUMMARY:${match.title}
-DESCRIPTION:${match.description}
-LOCATION:${match.location}
-END:VEVENT
-END:VCALENDAR`;
+        VERSION:2.0
+        PRODID:-//L'Ultimo//L'Ultimo App//EN
+        CALSCALE:GREGORIAN
+        BEGIN:VEVENT
+        UID:${match.id}@lultimo.app
+        DTSTAMP:${formatICalDate(new Date())}
+        DTSTART:${formatICalDate(startTime)}
+        DTEND:${formatICalDate(endTime)}
+        SUMMARY:${match.title}
+        DESCRIPTION:${match.description}
+        LOCATION:${match.location}
+        END:VEVENT
+        END:VCALENDAR`;
 
         const element = document.createElement('a');
         element.setAttribute('href', 'data:text/calendar;charset=utf-8,' + encodeURIComponent(icalContent));
@@ -220,7 +229,7 @@ END:VCALENDAR`;
         <>
             <div className="max-w-md mx-auto p-4">
                 <button
-                        onClick={() => navigate('/')}
+                    onClick={() => navigate('/')}
                     type="button"
                     className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
                 >
@@ -320,13 +329,13 @@ END:VCALENDAR`;
                 <div className="mt-10 pt-6 border-t border-slate-100">
                     {match.datetime && new Date(match.datetime) < new Date() && (
                         <>
-                        <div className='mb-2 text-center bg-yellow-50 border border-slate-200 rounded-2xl italic text-sm'>
-                            <label>
-                            Questa partita è già avvenuta. Se hai partecipato, lascia un feedback agli altri giocatori!
-                        </label>
-                        </div>
+                            <div className='mb-2 text-center bg-yellow-50 border border-slate-200 rounded-2xl italic text-sm'>
+                                <label>
+                                    Questa partita è già avvenuta. Se hai partecipato, lascia un feedback agli altri giocatori!
+                                </label>
+                            </div>
                         </>
-                        
+
                     )}
 
                     {participants.some(p => p.user_id === user.id) ? (
@@ -378,22 +387,6 @@ END:VCALENDAR`;
                                 <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest mb-2">Lascia un feedback a</p>
                                 <h3 className="text-xl font-black uppercase">{selectedPlayer?.username}</h3>
                             </div>
-
-                            {/* Selezione Stelle (Temporanea in attesa del componente figo) */}
-                            {/* <div className="mb-6">
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Voto</label>
-                                <select
-                                    value={rating}
-                                    onChange={(e) => setRating(Number(e.target.value))}
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-yellow-500"
-                                >
-                                    <option value="5">★★★★★ (Eccellente)</option>
-                                    <option value="4">★★★★☆ (Ottimo)</option>
-                                    <option value="3">★★★☆☆ (Buono)</option>
-                                    <option value="2">★★☆☆☆ (Sufficiente)</option>
-                                    <option value="1">★☆☆☆☆ (Pessimo)</option>
-                                </select>
-                            </div> */}
 
                             <div className="flex flex-col items-center mb-6">
                                 <label className="text-[10px] font-black uppercase text-slate-400 mb-2">Valutazione</label>

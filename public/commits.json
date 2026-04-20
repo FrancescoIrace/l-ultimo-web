@@ -1,52 +1,52 @@
 [
   {
     "date": "20 aprile 2026",
-    "title": "Add logica cambio numero giocatori in base allo sport",
+    "title": "Fix redirect",
     "description": "Modifica all'app"
   },
   {
     "date": "20 aprile 2026",
-    "title": "Blocco bottoni se il player non ha partecipato al match",
+    "title": ".",
     "description": "Modifica all'app"
   },
   {
     "date": "20 aprile 2026",
-    "title": "HotFix click su partita da profilo corretto con import mancante",
+    "title": "Hot fix",
     "description": "Modifica all'app"
   },
   {
-    "date": "19 aprile 2026",
-    "title": "Add Aggiunta a calendar + messaggio nuovi iscritti + FIX BUG",
+    "date": "20 aprile 2026",
+    "title": "Fix start url",
     "description": "Modifica all'app"
   },
   {
-    "date": "19 aprile 2026",
-    "title": "Add Loading rotation su profilo e dettagli match",
+    "date": "20 aprile 2026",
+    "title": ".",
     "description": "Modifica all'app"
   },
   {
-    "date": "18 aprile 2026",
-    "title": "Add metaTag",
+    "date": "20 aprile 2026",
+    "title": "Fix ritorno ad svg",
     "description": "Modifica all'app"
   },
   {
-    "date": "18 aprile 2026",
-    "title": "Fix visivo smartphone",
+    "date": "20 aprile 2026",
+    "title": "HotFix - Creazione Manifest.json",
     "description": "Modifica all'app"
   },
   {
-    "date": "18 aprile 2026",
-    "title": "Fix + DEPLOY vercel",
+    "date": "20 aprile 2026",
+    "title": "Fix bugs",
     "description": "Modifica all'app"
   },
   {
-    "date": "18 aprile 2026",
-    "title": "Add Accordion per la visualizzazione delle liste di partite nel profilo utente",
+    "date": "20 aprile 2026",
+    "title": "TEST \"Cambio logo e icone\"",
     "description": "Modifica all'app"
   },
   {
-    "date": "18 aprile 2026",
-    "title": "Fix caricamento url avatar (use effect separato)",
+    "date": "20 aprile 2026",
+    "title": "Add Messaggio di benvenuto con ultimi aggiornamenti dell'app",
     "description": "Modifica all'app"
   }
 ]

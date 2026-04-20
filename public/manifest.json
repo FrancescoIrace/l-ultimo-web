@@ -3,19 +3,19 @@
   "name": "Ultimo - Prenota Partite",
   "icons": [
     {
-      "src": "/favicon.png?v=2",
+      "src": "/favicon.svg?v=2",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "/logo-192.png?v=2",
-      "type": "image/png",
+      "src": "/logo-192.svg?v=2",
+      "type": "image/svg+xml",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo-512.png?v=2",
-      "type": "image/png",
+      "src": "/logo-512.svg?v=2",
+      "type": "image/svg+xml",
       "sizes": "512x512"
     }
   ],

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Zap, MapPin, Trophy, User, LogOut } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PWADashboard({ user, onLogout }) {
@@ -43,11 +43,11 @@ export default function PWADashboard({ user, onLogout }) {
           </button>
 
           <button
-            onClick={() => navigate('/leaderboard')}
+            onClick={() => navigate('/trova-amici')}
             className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
           >
-            <Trophy size={24} />
-            Classifica
+            <UserPlus size={24} />
+            Trova amici
           </button>
         </div>
 

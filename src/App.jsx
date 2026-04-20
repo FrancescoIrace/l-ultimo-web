@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Auth from './pages/Auth';
 import CreateMatch from './pages/CreateMatch';
+import FindFriends from './pages/FindFriends';
 import Home from './pages/Home';
 import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
@@ -134,6 +135,7 @@ function App() {
 
           <Route path="/profile/:id" element={<PublicProfile />} />
 
+          <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
           <Route path="/demo-pwa" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
           <Route path="/PWADashboard" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
 

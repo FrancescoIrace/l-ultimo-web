@@ -27,7 +27,7 @@ export default function PWADashboard({ user, onLogout }) {
           </button>
 
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/partite')}
             className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
           >
             <MapPin size={24} />

@@ -123,6 +123,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home session={session} isPWA={isPWA} />} />
+          <Route path="/partite" element={<Home session={session} isPWA={false} />} />
           <Route path="/organizza" element={<CreateMatch />} />
 
           <Route path="/modifica/:id" element={<CreateMatch />} />

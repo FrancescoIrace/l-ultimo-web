@@ -221,6 +221,7 @@ function App() {
           <Route path="/profile/:id" element={<PublicProfile />} />
 
           <Route path="/demo-pwa" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
+          <Route path="/PWADashboard" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

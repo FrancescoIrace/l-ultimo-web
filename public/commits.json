@@ -1,6 +1,16 @@
 [
   {
     "date": "21 aprile 2026",
+    "title": "fix bugs",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Fix pagina 404",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
     "title": "Add funzione di ricerca su mappa della location + json centri sportivi + apertura mappe",
     "description": "Modifica all'app"
   },
@@ -37,16 +47,6 @@
   {
     "date": "20 aprile 2026",
     "title": "Fix ritorno ad svg",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": "HotFix - Creazione Manifest.json",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": "Fix bugs",
     "description": "Modifica all'app"
   }
 ]

@@ -113,6 +113,12 @@ export default function MatchCard({ match, user }) {
           <MapPin size={16} />
           <span>{match.location}</span>
         </div>
+        {match.distance != null && (
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>Distanza:</span>
+            <span className="font-semibold">{match.distance.toFixed(1)} km</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Users size={16} />
           <span className="font-semibold">{match.current_players} / {match.max_players} Giocatori</span>

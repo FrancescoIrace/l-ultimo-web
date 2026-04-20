@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Plus } from 'lucide-react';
@@ -6,27 +6,46 @@ import MatchCard from '../components/MatchCard';
 import MatchSkeleton from '../components/MatchSkeleton';
 import PWADashboard from './PWADashboard';
 
+const EARTH_RADIUS_KM = 6371;
+
+const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_KM * c;
+};
+
 export default function Home({ session, isPWA }) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locationAllowed, setLocationAllowed] = useState(false);
+  const [position, setPosition] = useState(null);
+  const [showNearby, setShowNearby] = useState(true);
+  const [radiusKm, setRadiusKm] = useState(20);
+  const [locationError, setLocationError] = useState('');
   const navigate = useNavigate();
+
+  const fetchMatches = async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .order('datetime', { ascending: true });
+
+    if (error) {
+      console.error('Errore:', error);
+    } else {
+      setMatches(data || []);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!session?.user?.id) return;
-
-    const fetchMatches = async () => {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*')
-        .order('datetime', { ascending: true });
-
-      if (error) {
-        console.error('Errore:', error);
-      } else {
-        setMatches(data);
-      }
-      setLoading(false);
-    };
 
     fetchMatches();
 
@@ -46,15 +65,116 @@ export default function Home({ session, isPWA }) {
     };
   }, [session?.user?.id]);
 
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocalizzazione non supportata dal browser.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPosition({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setLocationAllowed(true);
+        setLocationError('');
+      },
+      (error) => {
+        setLocationAllowed(false);
+        setLocationError('Attiva la geolocalizzazione per vedere le partite vicine.');
+        console.warn('Errore geolocalizzazione:', error.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  const distances = useMemo(() => {
+    if (!position) return [];
+
+    return matches
+      .map((match) => {
+        const lat = parseFloat(match.location_lat);
+        const lng = parseFloat(match.location_lng);
+
+        if (!lat || !lng) return null;
+
+        const distance = calculateDistanceKm(position.lat, position.lng, lat, lng);
+        return {
+          ...match,
+          distance,
+        };
+      })
+      .filter(Boolean);
+  }, [matches, position]);
+
+  const nearbyMatches = useMemo(() => {
+    if (!position) return [];
+    return distances
+      .filter((match) => match.distance <= radiusKm)
+      .sort((a, b) => a.distance - b.distance);
+  }, [distances, position, radiusKm]);
+
+  const matchList = useMemo(() => {
+    if (showNearby) {
+      return nearbyMatches;
+    }
+
+    return matches.map((match) => ({
+      ...match,
+      distance: distances.find((item) => item?.id === match.id)?.distance,
+    }));
+  }, [matches, nearbyMatches, showNearby, distances]);
+
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
   }
 
   return (
     <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
-      <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-        Partite vicino a te
-      </h2>
+      <div className="mb-4">
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+          Partite
+        </h2>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setShowNearby(true)}
+            className={`rounded-2xl py-3 text-sm font-bold transition-all ${showNearby ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+          >
+            Per distanza
+          </button>
+          <button
+            onClick={() => setShowNearby(false)}
+            className={`rounded-2xl py-3 text-sm font-bold transition-all ${!showNearby ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+          >
+            Tutte
+          </button>
+        </div>
+        {showNearby && (
+          <div className="mt-3 space-y-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-slate-700">Raggio</span>
+                <span className="text-sm text-slate-500">{radiusKm} km</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="100"
+                step="5"
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="mt-3 w-full"
+              />
+            </div>
+            <p className="text-xs text-slate-500">
+              {locationAllowed
+                ? `Mostro solo le partite entro ${radiusKm} km da te (${nearbyMatches.length} trovate).`
+                : locationError || 'Sto cercando la tua posizione...'}
+            </p>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="grid gap-4">
@@ -64,11 +184,26 @@ export default function Home({ session, isPWA }) {
         </div>
       ) : (
         <div className="grid gap-4">
-          {matches.length > 0 ? (
-            matches.map((match) => <MatchCard key={match.id} match={match} user={session.user} />)
+          {showNearby && !position && !loading ? (
+            <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
+              Attiva la geolocalizzazione per vedere le partite vicine o passa a "Tutte".
+            </div>
+          ) : matchList.length > 0 ? (
+            matchList.map((match) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                user={session.user}
+                extraInfo={match.distance != null ? `${match.distance.toFixed(1)} km` : undefined}
+              />
+            ))
           ) : (
             <>
-              <p className="text-center text-slate-500 mt-10">Nessuna partita trovata. Creane una tu!</p>
+              <p className="text-center text-slate-500 mt-10">
+                {showNearby
+                  ? 'Nessuna partita nelle vicinanze. Prova a mostrare tutte le partite.'
+                  : 'Nessuna partita trovata. Creane una tu!'}
+              </p>
 
               <button
                 disabled={loading}

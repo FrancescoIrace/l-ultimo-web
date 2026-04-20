@@ -1,0 +1,26 @@
+{
+  "short_name": "Ultimo",
+  "name": "Ultimo - Prenota Partite",
+  "icons": [
+    {
+      "src": "/favicon.png?v=2",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-192.png?v=2",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512.png?v=2",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff"
+}

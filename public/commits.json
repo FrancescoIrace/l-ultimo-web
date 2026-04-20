@@ -1,6 +1,31 @@
 [
   {
     "date": "21 aprile 2026",
+    "title": "Fix vari",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Fix bugs",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Add dashboard da PWA",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Fix import navigate in 404",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "fix bugs",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
     "title": "fix bugs",
     "description": "Modifica all'app"
   },
@@ -22,31 +47,6 @@
   {
     "date": "20 aprile 2026",
     "title": "Fix redirect",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": ".",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": "Hot fix",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": "Fix start url",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": ".",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 aprile 2026",
-    "title": "Fix ritorno ad svg",
     "description": "Modifica all'app"
   }
 ]

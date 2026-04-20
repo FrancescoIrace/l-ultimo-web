@@ -13,33 +13,6 @@ export default function PWADashboard({ user, onLogout }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-b-3xl shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-4xl font-black">L'ULTIMO</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full transition-colors"
-            >
-              <LogOut size={20} />
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center font-black text-blue-600 overflow-hidden">
-              {user?.user_metadata?.avatar_url ? (
-                <img src={user.user_metadata.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-              ) : (
-                user?.email?.charAt(0).toUpperCase() || '?'
-              )}
-            </div>
-            <div>
-              <p className="font-bold text-lg">{user?.user_metadata?.username || 'User'}</p>
-              <p className="text-blue-100 text-sm">{user?.email}</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="max-w-md mx-auto p-4 space-y-4 pb-20">

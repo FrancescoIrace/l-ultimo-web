@@ -38,10 +38,10 @@ export default function Auth() {
         // Salva un flag per mostrare l'alert di installazione app al primo accesso
         localStorage.setItem('newUserRegistered', 'true');
         alert('Controlla la mail per confermare!');
-        navigate('/dashboard');
+        navigate('/');
       } else {
         alert('Loggato con successo!');
-        navigate('/dashboard');
+        navigate('/');
       }
     }
     setLoading(false);

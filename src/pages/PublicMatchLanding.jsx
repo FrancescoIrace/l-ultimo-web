@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, MapPin, Users, Football } from 'lucide-react';
+import { Calendar, MapPin, Users, Football, LogIn, Smartphone, Link2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PublicMatchLanding() {
@@ -104,22 +104,37 @@ export default function PublicMatchLanding() {
         <h2 className="text-xl font-black mb-3">Per accedere a questa partita</h2>
         <p className="text-slate-700 mb-4">Devi essere registrato e usare l'app installata sul tuo dispositivo.</p>
         <ol className="list-decimal pl-5 space-y-3 text-slate-700">
-          <li>Registrati o effettua il login.</li>
-          <li>Installa l'app come Progressive Web App dalla schermata del browser.</li>
-          <li>Ritorna a questo link per partecipare o vedere tutti i dettagli.</li>
+          <li className="flex items-center gap-2">
+            <LogIn size={16} className="text-blue-600" />
+            Registrati o effettua il login.
+          </li>
+          <li className="flex items-center gap-2">
+            <Smartphone size={16} className="text-blue-600" />
+            Installa l'app come Progressive Web App dalla schermata del browser.
+          </li>
+          <li className="flex items-center gap-2">
+            <Link2 size={16} className="text-blue-600" />
+            Ritorna a questo link per partecipare o vedere tutti i dettagli.
+          </li>
         </ol>
         <div className="mt-6 space-y-3">
           <Link
             to="/login"
             className="block w-full text-center rounded-2xl bg-blue-600 py-3 text-white font-bold hover:bg-blue-700 transition-all"
           >
-            Vai al login
+            <span className="inline-flex items-center justify-center gap-2">
+              <LogIn size={16} />
+              Vai al login
+            </span>
           </Link>
           <Link
             to="/install-guide"
             className="block w-full text-center rounded-2xl border border-blue-600 py-3 text-blue-600 font-bold hover:bg-blue-100 transition-all"
           >
-            Guida all'installazione
+            <span className="inline-flex items-center justify-center gap-2">
+              <Smartphone size={16} />
+              Guida all'installazione
+            </span>
           </Link>
         </div>
       </div>

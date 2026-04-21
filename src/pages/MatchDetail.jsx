@@ -151,7 +151,8 @@ export default function MatchDetail({ user }) {
             setMatch(prev => (prev ? { ...prev, is_public: true } : prev));
         }
 
-        const shareBase = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT')} a ${match.location}.`;
+        //le icone vanno messe qui
+        const shareBase = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT').slice(0, -3)} a ${match.location}.`;
         const shareUrl = window.location.href;
 
         if (navigator.share) {

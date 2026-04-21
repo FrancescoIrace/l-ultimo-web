@@ -19,6 +19,30 @@ export default function MatchCard({ match, user }) {
     minute: '2-digit'
   });
 
+  // Calcola il tempo rimanente
+  const getTimeUntilMatch = () => {
+    const now = new Date();
+    const matchTime = new Date(match.datetime);
+    const diff = matchTime - now;
+    const hours = diff / (1000 * 60 * 60);
+    const days = Math.floor(hours / 24);
+
+    if (hours < 0) return null; // Non mostrare se la partita è passata
+
+    if (days >= 2) {
+      return `Tra ${days} giorni`;
+    } else if (days === 1) {
+      return 'Domani';
+    } else if (hours >= 12) {
+      return `Oggi (${Math.floor(hours)}h)`;
+    } else if (hours > 0) {
+      return `Tra ${Math.floor(hours)}h`;
+    }
+    return null;
+  };
+
+  const timeLabel = getTimeUntilMatch();
+
   // Controlliamo se l'utente è già tra i partecipanti al caricamento
   useEffect(() => {
 
@@ -82,7 +106,7 @@ export default function MatchCard({ match, user }) {
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all" onClick={() => navigate(`/match/${match.id}`)}>
       {/* Badge Organizzatore */}
       {isCreator && (
-        <span className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
+        <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
           TUO MATCH
         </span>
       )}
@@ -90,14 +114,14 @@ export default function MatchCard({ match, user }) {
         <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase">
           {match.sport}
         </div>
-        {isPast ? (
-          <span className="text-xs font-medium text-red-500">PARTITA PASSATA</span>
-        ) : (
-          <span className={`text-xs font-medium ${isFull ? 'text-red-500' : 'text-green-500'}`}>
-            {isFull ? 'PARTITA PIENA' : 'POSTI DISPONIBILI'}
-          </span>
-        )}
+        <div className="flex flex-col items-end gap-1">
+          {timeLabel && (
+            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
+              {timeLabel}
+            </span>
+          )}
 
+        </div>
       </div>
 
       <h3 className="text-lg font-bold text-slate-800 mb-2 uppercase tracking-wide cursor-pointer hover:border-blue-300 transition-all">
@@ -120,8 +144,15 @@ export default function MatchCard({ match, user }) {
           </div>
         )}
         <div className="flex items-center gap-2">
-          <Users size={16} />
-          <span className="font-semibold">{match.current_players} / {match.max_players} Giocatori</span>
+          <Users size={16} color={isFull ? 'red' : 'green'} />
+          <span className={`font-semibold ${isFull ? 'text-red-500' : 'text-green-500'}`}>{match.current_players} / {match.max_players} Giocatori  </span>
+          {/* {isPast ? (
+            <span className="text-[10px] font-medium text-red-500">PARTITA PASSATA </span>
+          ) : (
+            <span className={`text-[10px] font-medium ${isFull ? 'text-red-500' : 'text-green-500'}`}>
+              {isFull ? 'PARTITA PIENA' : 'POSTI DISPONIBILI'}
+            </span>
+          )} */}
         </div>
         <div className={`flex items-center gap-2 ${match.description ? '' : 'opacity-50 italic'}`}>
           <Pencil size={16} />
@@ -152,6 +183,7 @@ export default function MatchCard({ match, user }) {
               }`}
           >
             {isJoined ? '✓ GIÀ UNITO' : isFull ? 'PIENA' : 'UNISCITI'}
+
           </button>
 
         ) : (

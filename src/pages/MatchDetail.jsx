@@ -98,7 +98,24 @@ export default function MatchDetail({ user }) {
             error("Sei l'organizzatore, Non puoi uscire dalla partita a meno che non passi la partita a un altro giocatore. Per annullare la partita usa il pulsante dedicato.");
             return;
         }
-        confirmDangerous("Vuoi davvero abbandonare la partita?", async () => {
+
+        // Calcola il tempo rimanente prima della partita
+        const now = new Date();
+        const matchTime = new Date(match.datetime);
+        const timeUntilMatch = matchTime - now;
+        const hoursUntilMatch = timeUntilMatch / (1000 * 60 * 60);
+
+        // Determina il messaggio in base al tempo rimanente
+        let warningMessage = "Vuoi davvero abbandonare la partita?";
+        if (hoursUntilMatch <= 1) {
+            warningMessage = "⚠️ Manca meno di 1 ora alla partita! Sei sicuro di voler abbandonare?";
+        } else if (hoursUntilMatch <= 4) {
+            warningMessage = "⚠️ Mancano meno di 4 ore alla partita! Sei sicuro di voler abbandonare?";
+        } else if (hoursUntilMatch <= 8) {
+            warningMessage = "⚠️ Mancano meno di 8 ore alla partita! Sei sicuro di voler abbandonare?";
+        }
+
+        confirmDangerous(warningMessage, async () => {
             // 1. Rimuovi dai partecipanti
             const { error: partError } = await supabase
                 .from('participants')

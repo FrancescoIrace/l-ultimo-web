@@ -152,15 +152,14 @@ export default function MatchDetail({ user }) {
         }
 
         //le icone vanno messe qui
-        const shareBase = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT').slice(0, -3)} a ${match.location}.`;
-        const shareUrl = window.location.href;
+        const shareText = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT').slice(0, -3)} a ${match.location}.
+Scopri di più qui: ${window.location.href}`;
 
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: match.title,
-                    text: shareBase,
-                    url: shareUrl,
+                    text: shareText,
                 });
                 success('Link condiviso con successo!');
             } catch (shareError) {
@@ -172,13 +171,12 @@ export default function MatchDetail({ user }) {
         }
 
         const shareFallback = async () => {
-            const text = `${shareBase}\nScopri di più qui: ${shareUrl}`;
             try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    await navigator.clipboard.writeText(text);
+                    await navigator.clipboard.writeText(shareText);
                 } else {
                     const textarea = document.createElement('textarea');
-                    textarea.value = text;
+                    textarea.value = shareText;
                     textarea.style.position = 'fixed';
                     textarea.style.left = '-9999px';
                     document.body.appendChild(textarea);

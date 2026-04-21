@@ -27,6 +27,7 @@ export default function Home({ session, isPWA }) {
   const [position, setPosition] = useState(null);
   const [profileLocation, setProfileLocation] = useState(null);
   const [appSettings, setAppSettings] = useState(null);
+  const [geoLoading, setGeoLoading] = useState(true);
   const [usingManualPosition, setUsingManualPosition] = useState(false);
   const [showNearby, setShowNearby] = useState(true);
   const [radiusKm, setRadiusKm] = useState(20);
@@ -109,6 +110,7 @@ export default function Home({ session, isPWA }) {
         setLocationAllowed(true);
         setUsingManualPosition(true);
         setLocationError('Posizione impostata manualmente.');
+        setGeoLoading(false);
         return true;
       }
       return false;
@@ -124,6 +126,7 @@ export default function Home({ session, isPWA }) {
         setLocationAllowed(true);
         setUsingManualPosition(true);
         setLocationError('Usando la posizione del profilo come fallback.');
+        setGeoLoading(false);
         return true;
       }
       return false;
@@ -133,6 +136,7 @@ export default function Home({ session, isPWA }) {
       if (!tryProfileFallback()) {
         setLocationError('Geolocalizzazione non supportata dal browser.');
       }
+      setGeoLoading(false);
       return;
     }
 
@@ -145,6 +149,7 @@ export default function Home({ session, isPWA }) {
         setLocationAllowed(true);
         setLocationError('');
         setUsingManualPosition(false);
+        setGeoLoading(false);
       },
       (error) => {
         if (parsedSettings?.useGeolocation === false && setManualFromSettings(parsedSettings)) {
@@ -157,6 +162,7 @@ export default function Home({ session, isPWA }) {
 
         setLocationAllowed(false);
         setLocationError('Attiva la geolocalizzazione per vedere le partite vicine.');
+        setGeoLoading(false);
         console.warn('Errore geolocalizzazione:', error.message);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -250,7 +256,7 @@ export default function Home({ session, isPWA }) {
         )}
       </div>
 
-      {loading ? (
+      {(loading || geoLoading) ? (
         <div className="grid gap-4">
           {[1, 2, 3].map((n) => (
             <MatchSkeleton key={n} />

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function PrivacyPolicy() {
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white min-h-screen">
@@ -18,7 +20,7 @@ export default function PrivacyPolicy() {
         </p>
         <ul className="list-disc pl-5 text-slate-600 mt-3 space-y-1">
           <li>Email</li>
-          <li>Password (gestita in sicurezza da Supabase)</li>
+          <li>Password (gestita in sicurezza da <Link to="https://supabase.com" target="_blank" className='text-blue-600 underline' rel="noopener noreferrer">Supabase</Link>)</li>
           <li>Username</li>
           <li>Genere</li>
           <li>Posizione e coordinate</li>
@@ -33,7 +35,7 @@ export default function PrivacyPolicy() {
         </p>
         <ul className="list-disc pl-5 text-slate-600 mt-3 space-y-1">
           <li>gestire il tuo account e permettere il login</li>
-          <li>mostrare i match e gli utenti più vicini a te</li>
+          <li>mostrare le partite e gli utenti più vicini a te</li>
           <li>personalizzare il profilo e le preferenze</li>
           <li>fornire correttamente i servizi dell’app</li>
         </ul>

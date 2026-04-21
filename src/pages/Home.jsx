@@ -25,6 +25,9 @@ export default function Home({ session, isPWA }) {
   const [loading, setLoading] = useState(true);
   const [locationAllowed, setLocationAllowed] = useState(false);
   const [position, setPosition] = useState(null);
+  const [profileLocation, setProfileLocation] = useState(null);
+  const [appSettings, setAppSettings] = useState(null);
+  const [usingManualPosition, setUsingManualPosition] = useState(false);
   const [showNearby, setShowNearby] = useState(true);
   const [radiusKm, setRadiusKm] = useState(20);
   const [locationError, setLocationError] = useState('');
@@ -44,10 +47,26 @@ export default function Home({ session, isPWA }) {
     setLoading(false);
   };
 
+  const fetchProfileLocation = async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('location_lat, location_lng')
+      .eq('id', session.user.id)
+      .single();
+
+    if (!error && data?.location_lat && data?.location_lng) {
+      setProfileLocation({
+        lat: parseFloat(data.location_lat),
+        lng: parseFloat(data.location_lng),
+      });
+    }
+  };
+
   useEffect(() => {
     if (!session?.user?.id) return;
 
     fetchMatches();
+    fetchProfileLocation();
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -66,8 +85,54 @@ export default function Home({ session, isPWA }) {
   }, [session?.user?.id]);
 
   useEffect(() => {
+    if (position) return;
+
+    const stored = localStorage.getItem('appSettings');
+    let parsedSettings = null;
+
+    if (stored) {
+      try {
+        parsedSettings = JSON.parse(stored);
+        setAppSettings(parsedSettings);
+      } catch (error) {
+        console.warn('Errore lettura impostazioni app:', error);
+      }
+    }
+
+    const setManualFromSettings = (settings) => {
+      const manual = settings?.manualLocation;
+      if (manual?.location_lat && manual?.location_lng) {
+        setPosition({
+          lat: manual.location_lat,
+          lng: manual.location_lng,
+        });
+        setLocationAllowed(true);
+        setUsingManualPosition(true);
+        setLocationError('Posizione impostata manualmente.');
+        return true;
+      }
+      return false;
+    };
+
+    if (parsedSettings?.useGeolocation === false && setManualFromSettings(parsedSettings)) {
+      return;
+    }
+
+    const tryProfileFallback = () => {
+      if (profileLocation) {
+        setPosition(profileLocation);
+        setLocationAllowed(true);
+        setUsingManualPosition(true);
+        setLocationError('Usando la posizione del profilo come fallback.');
+        return true;
+      }
+      return false;
+    };
+
     if (!navigator.geolocation) {
-      setLocationError('Geolocalizzazione non supportata dal browser.');
+      if (!tryProfileFallback()) {
+        setLocationError('Geolocalizzazione non supportata dal browser.');
+      }
       return;
     }
 
@@ -79,15 +144,24 @@ export default function Home({ session, isPWA }) {
         });
         setLocationAllowed(true);
         setLocationError('');
+        setUsingManualPosition(false);
       },
       (error) => {
+        if (parsedSettings?.useGeolocation === false && setManualFromSettings(parsedSettings)) {
+          return;
+        }
+
+        if (tryProfileFallback()) {
+          return;
+        }
+
         setLocationAllowed(false);
         setLocationError('Attiva la geolocalizzazione per vedere le partite vicine.');
         console.warn('Errore geolocalizzazione:', error.message);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  }, []);
+  }, [profileLocation]);
 
   const distances = useMemo(() => {
     if (!position) return [];
@@ -169,8 +243,8 @@ export default function Home({ session, isPWA }) {
             </div>
             <p className="text-xs text-slate-500">
               {locationAllowed
-                ? `Mostro solo le partite entro ${radiusKm} km da te (${nearbyMatches.length} trovate).`
-                : locationError || 'Sto cercando la tua posizione...'}
+                ? `${usingManualPosition ? 'Usando posizione manuale. ' : ''}Mostro solo le partite entro ${radiusKm} km da te (${nearbyMatches.length} trovate).`
+                : locationError || 'Sto cercando la tua posizione...'}`
             </p>
           </div>
         )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate,Link } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Auth from './pages/Auth';
 import CreateMatch from './pages/CreateMatch';
@@ -9,6 +9,7 @@ import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
+import AppSettings from './pages/AppSettings';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
@@ -140,6 +141,7 @@ function App() {
           <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
 
           <Route path="/profile" element={<Profile session={session} />} />
+          <Route path="/settings" element={<AppSettings session={session} />} />
 
           <Route path="/profile/:id" element={<PublicProfile />} />
 

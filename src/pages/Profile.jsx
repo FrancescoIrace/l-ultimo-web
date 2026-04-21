@@ -30,7 +30,7 @@ export default function Profile({ session }) {
         favorite_sport: '',
     });
 
-        const handleSportChange = (e) => {
+    const handleSportChange = (e) => {
         const selectedSport = e.target.value;
         setEditData({
             ...editData,
@@ -207,12 +207,14 @@ export default function Profile({ session }) {
                             📍 {profile?.location || profile?.province}
                             {profile?.location ? ` (${profile?.zip_code})` : ''}
                         </p>
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="w-auto h-10 text-sm uppercase flex items-center justify-center p-2 mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            MODIFICA PROFILO
-                        </button>
+                        <div className="space-y-3 w-full flex flex-col items-center">
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="w-full h-10 text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                MODIFICA PROFILO
+                            </button>
+                        </div>
                     </div>
 
                     {/* Info Account */}
@@ -321,6 +323,12 @@ export default function Profile({ session }) {
 
                     {/* Pulsanti Azione */}
                     <div className="space-y-3">
+                        <button
+                            onClick={() => navigate('/settings')}
+                            className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-slate-600 text-white border border-slate-800 py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-700 transition-all active:scale-95"
+                        >
+                            IMPOSTAZIONI APP
+                        </button>
                         <button
                             onClick={handleLogout}
                             className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-100 transition-all uppercase tracking-widest text-xs"

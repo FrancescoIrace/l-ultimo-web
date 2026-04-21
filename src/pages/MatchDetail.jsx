@@ -151,14 +151,15 @@ export default function MatchDetail({ user }) {
             setMatch(prev => (prev ? { ...prev, is_public: true } : prev));
         }
 
-        const shareText = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT')} a ${match.location}. Scopri di più qui: ${window.location.href}`;
+        const shareBase = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT')} a ${match.location}.`;
+        const shareUrl = window.location.href;
 
         if (navigator.share) {
             try {
                 await navigator.share({
                     title: match.title,
-                    text: shareText,
-                    url: window.location.href,
+                    text: shareBase,
+                    url: shareUrl,
                 });
                 success('Link condiviso con successo!');
             } catch (shareError) {
@@ -170,7 +171,7 @@ export default function MatchDetail({ user }) {
         }
 
         const shareFallback = async () => {
-            const text = `${match.title} - ${new Date(match.datetime).toLocaleString('it-IT')} - ${match.location}\n${window.location.href}`;
+            const text = `${shareBase}\nScopri di più qui: ${shareUrl}`;
             try {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     await navigator.clipboard.writeText(text);

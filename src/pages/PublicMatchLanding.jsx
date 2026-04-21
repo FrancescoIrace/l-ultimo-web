@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Calendar, MapPin, Users, Football } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PublicMatchLanding() {
@@ -73,10 +74,22 @@ export default function PublicMatchLanding() {
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
         <h1 className="text-3xl font-black mb-4">{match.title || match.sport}</h1>
         <div className="space-y-3 text-sm text-slate-600">
-          <p><span className="font-bold">Sport:</span> {match.sport}</p>
-          <p><span className="font-bold">Quando:</span> {new Date(match.datetime).toLocaleString('it-IT', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-          <p><span className="font-bold">Dove:</span> {match.location}</p>
-          <p><span className="font-bold">Partecipanti:</span> {match.current_players}/{match.max_players}</p>
+          <div className="flex items-center gap-2">
+            <Football size={18} className="text-blue-600" />
+            <span><span className="font-bold">Sport:</span> {match.sport}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar size={18} className="text-blue-600" />
+            <span><span className="font-bold">Quando:</span> {new Date(match.datetime).toLocaleString('it-IT', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin size={18} className="text-blue-600" />
+            <span><span className="font-bold">Dove:</span> {match.location}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Users size={18} className="text-blue-600" />
+            <span><span className="font-bold">Partecipanti:</span> {match.current_players}/{match.max_players}</span>
+          </div>
         </div>
 
         {match.description && (

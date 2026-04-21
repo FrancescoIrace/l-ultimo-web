@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Zap, MapPin, UserPlus, User, LogOut } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut,Trophy, Puzzle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PWADashboard({ user, onLogout }) {
@@ -48,6 +48,22 @@ export default function PWADashboard({ user, onLogout }) {
           >
             <UserPlus size={24} />
             Trova amici
+          </button>
+
+          <button
+            onClick={() => navigate('/')}
+            className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
+          >
+            <Puzzle size={24} />
+            La tua squadra
+          </button>
+
+          <button
+            onClick={() => navigate('/')}
+            className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
+          >
+            <Trophy size={24} />
+            Tornei
           </button>
         </div>
 
@@ -98,7 +114,7 @@ export default function PWADashboard({ user, onLogout }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* <div className="grid grid-cols-3 gap-3">
           <div className="bg-blue-50 rounded-2xl p-3 text-center border border-blue-100">
             <p className="text-2xl font-black text-blue-600">5</p>
             <p className="text-xs text-slate-600 mt-1">Partite</p>
@@ -111,10 +127,10 @@ export default function PWADashboard({ user, onLogout }) {
             <p className="text-2xl font-black text-purple-600">12</p>
             <p className="text-xs text-slate-600 mt-1">Amici</p>
           </div>
-        </div>
+        </div> */}
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <h3 className="font-bold text-slate-800 mb-3">📅 Prossime Partite</h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
@@ -132,7 +148,9 @@ export default function PWADashboard({ user, onLogout }) {
               <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-bold">In attesa</span>
             </div>
           </div>
-        </div>
+        </div> */}
+
+
       </div>
     </div>
   );

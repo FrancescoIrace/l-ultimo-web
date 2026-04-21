@@ -100,7 +100,7 @@ function App() {
         />
       )}
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"></meta>
-      <div className="w-full max-w-md mx-auto px-4 bg-slate-50">
+      <div className="w-full max-w-md mx-auto bg-slate-50">
         <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform active:scale-95">
             <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>

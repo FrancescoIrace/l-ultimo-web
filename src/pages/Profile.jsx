@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
-import { AccordionItem, AccordionCreatedMatches } from '../components/MatchesAccordion';
+import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
 import { Loader } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
 
@@ -13,6 +13,7 @@ export default function Profile({ session }) {
     const [profile, setProfile] = useState(null);
     const [myMatches, setMyMatches] = useState([]);
     const [myCreatedMatches, setMyCreatedMatches] = useState([]);
+    const [myReviews, setMyReviews] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
 
     // Stato per il form di modifica
@@ -75,6 +76,24 @@ export default function Profile({ session }) {
             .eq('creator_id', session.user.id);
 
         setMyCreatedMatches(createdMatchesData || []);
+
+        // 4. Recupera le recensioni ricevute
+        const { data: reviewsData, error: reviewsError } = await supabase
+            .from('reviews')
+            .select(`
+                rating,
+                comment,
+                created_at,
+                reviewer:reviewer_id ( username, avatar_url, id )
+            `)
+            .eq('target_id', session.user.id)
+            .order('created_at', { ascending: false });
+
+        if (reviewsError) {
+            console.warn('Errore caricamento recensioni:', reviewsError.message);
+        }
+
+        setMyReviews(reviewsData || []);
         setLoading(false);
     }
 
@@ -211,14 +230,6 @@ export default function Profile({ session }) {
                             📍 {profile?.location || profile?.province}
                             {profile?.location ? ` (${profile?.zip_code})` : ''}
                         </p>
-                        <div className="space-y-3 w-full flex flex-col items-center">
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="w-full h-10 text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                MODIFICA PROFILO
-                            </button>
-                        </div>
                     </div>
 
                     {/* Info Account */}
@@ -233,106 +244,39 @@ export default function Profile({ session }) {
                             <span className="font-bold">{session.user.email}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-400 font-bold uppercase text-[10px]">Consenso dati</span>
-                            <span className={`font-bold ${hasConsentToDataProcessing ? 'text-green-600' : 'text-red-600'}`}>
-                                {hasConsentToDataProcessing ? 'Aderito' : 'Non aderito'}
-                            </span>
+                            <span className="text-slate-400 font-bold uppercase text-[10px]">Sport Preferito</span>
+                            <span className="font-bold">{profile?.favorite_sport}</span>
                         </div>
                     </div>
 
                     {/* Le Mie Partite */}
                     <div className="mb-8">
                         <AccordionItem title={"Prossime Partite"} matches={myMatches.filter((item) => new Date(item.matches.datetime) > new Date())} isOpen={true} titleColor="text-blue-600" />
-                        {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-blue-600">Le mie prossime sfide</h3>
-                        <div className="space-y-3">
-                            {myMatches.length > 0 ? (
-                                myMatches
-                                    .filter((item) => new Date(item.matches.datetime) > new Date())
-                                    .map((item) => (
-                                        <div
-                                            key={item.matches.id}
-                                            onClick={() => navigate(`/match/${item.matches.id}`)}
-                                            className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
-                                                    <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
-                                                </div>
-                                                <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
-                                                    {item.matches.sport}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))
-                            ) : (
-                                <p className="text-slate-400 text-sm italic">Non sei ancora iscritto a nessuna partita.</p>
-                            )}
-                        </div> */}
                     </div>
 
                     {/*Partite Create */}
                     <div className="mb-8">
                         <AccordionCreatedMatches title={"Partite Create"} matches={myCreatedMatches} isOpen={false} isCreatedMatches={true} />
-                        {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">partite create</h3>
-                        <div className="space-y-3">
-                            {myCreatedMatches.length > 0 ? (
-                                myCreatedMatches.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        onClick={() => navigate(`/match/${item.id}`)}
-                                        className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="font-black uppercase text-sm">{item.title || item.sport}</p>
-                                                <p className="text-xs text-slate-500">{new Date(item.datetime).toLocaleDateString()}</p>
-                                            </div>
-                                            <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
-                                                {item.sport}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-slate-400 text-sm italic">Non hai ancora creato nessuna partita.</p>
-                            )}
-                        </div> */}
                     </div>
 
                     {/*Partite Passate */}
                     <div className="mb-8">
-                        {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">partite passate</h3> */}
                         <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" />
-                        {/* <div className="space-y-3">
-                            {myMatches.length > 0 ? (
-                                myMatches
-                                    .filter((item) => new Date(item.matches.datetime) < new Date())
-                                    .map((item) => (
-                                        <div
-                                            key={item.matches.id}
-                                            onClick={() => navigate(`/match/${item.matches.id}`)}
-                                            className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
-                                                    <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
-                                                </div>
-                                                <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
-                                                    {item.matches.sport}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))
-                            ) : (
-                                <p className="text-slate-400 text-sm italic">Non hai partecipato ancora a nessuna partita.</p>
-                            )}
-                        </div> */}
+                    </div>
+
+                    {/*Recensioni ricevute*/}
+                    <div className="mb-8">
+                        <AccorditionReviews title={"Recensioni Ricevute"} reviews={myReviews.filter((item) => new Date(item.created_at) < new Date())} isOpen={false} />
                     </div>
 
                     {/* Pulsanti Azione */}
                     <div className="space-y-3">
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            MODIFICA PROFILO
+                        </button>
                         <button
                             onClick={() => navigate('/settings')}
                             className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-slate-600 text-white border border-slate-800 py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-700 transition-all active:scale-95"
@@ -341,7 +285,7 @@ export default function Profile({ session }) {
                         </button>
                         <button
                             onClick={handleLogout}
-                            className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-100 transition-all uppercase tracking-widest text-xs"
+                            className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl shadow-md border border-red-600 flex items-center justify-center hover:bg-red-100 transition-all uppercase tracking-widest text-xs"
                         >
                             Logout
                         </button>

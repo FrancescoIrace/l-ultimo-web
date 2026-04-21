@@ -57,7 +57,7 @@ function AccordionCreatedMatches({ title, matches, isOpen }) {
                 onClick={() => setOpen(!open)}
                 className="w-full flex justify-between items-center py-4 text-left font-bold text-sm uppercase tracking-wide"
             >
-                <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">{title}</h3>
+                <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-orange-400">{title}</h3>
 
                 <span className={`transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
             </button>
@@ -93,6 +93,51 @@ function AccordionCreatedMatches({ title, matches, isOpen }) {
     );
 }
 
+function AccorditionReviews({ title, reviews, isOpen }) {
+    const [open, setOpen] = useState(isOpen);
+    const navigate = useNavigate();
+    console.log(reviews);
+
+    return (
+        <div className="border-b border-slate-200">
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex justify-between items-center py-4 text-left font-bold text-sm uppercase tracking-wide"
+            >
+                <h3 className={`text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400`}>★ {title} ★</h3>
+
+                <span className={`transition-transform ${open ? 'rotate-180' : ''}`}>▼</span>
+            </button>
+            <div className={`grid transition-all duration-300 ease-in-out ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                    <div className="pb-4 text-sm text-slate-500 space-y-3">
+                        {reviews && reviews.length > 0 ? (
+                            reviews.map((rev, index) => (
+                                <div key={index} className="border-b border-slate-100 pb-4">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-black text-yellow-500">{'★'.repeat(rev.rating)}</span>
+                                        <span className="text-[10px] font-black uppercase text-slate-400">
+                                            da
+                                            <span onClick={() => navigate(`/profile/${rev.reviewer.id}`)}
+                                                className="text-blue-600 cursor-pointer hover:underline ml-1">
+                                                {rev.reviewer.username}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-600 italic">"{rev.comment}"</p>
+                                    <span className="text-[10px] text-slate-400">{new Date(rev.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                            ))
+                        ) : (
+                        <p>Nessuna recensione ricevuta.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function DefaultAccordion() {
     return (
         <div className="mb-8">
@@ -109,4 +154,4 @@ function DefaultAccordion() {
     );
 }
 
-export { DefaultAccordion, AccordionItem, AccordionCreatedMatches };
+export { DefaultAccordion, AccordionItem, AccordionCreatedMatches, AccorditionReviews };

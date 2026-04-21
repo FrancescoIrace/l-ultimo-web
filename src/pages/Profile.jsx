@@ -177,6 +177,10 @@ export default function Profile({ session }) {
         navigate('/');
     };
 
+    const hasConsentToDataProcessing = Boolean(
+        profile?.data_consent ?? session.user?.user_metadata?.data_consent
+    );
+
     // if (loading) return <div className="p-10 text-center uppercase font-black">Caricamento...</div>;
     if (loading && !isEditing) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
 
@@ -227,6 +231,12 @@ export default function Profile({ session }) {
                         <div className="flex justify-between">
                             <span className="text-slate-400 font-bold uppercase text-[10px]">Email</span>
                             <span className="font-bold">{session.user.email}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-400 font-bold uppercase text-[10px]">Consenso dati</span>
+                            <span className={`font-bold ${hasConsentToDataProcessing ? 'text-green-600' : 'text-red-600'}`}>
+                                {hasConsentToDataProcessing ? 'Aderito' : 'Non aderito'}
+                            </span>
                         </div>
                     </div>
 

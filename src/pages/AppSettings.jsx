@@ -161,7 +161,12 @@ export default function AppSettings({ session }) {
 
           <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <h2 className="text-xl font-bold mb-3">Privacy</h2>
-        <p className="text-sm text-slate-500 mt-2">Visualizza l'informativa sulla privacy <Link to="/privacy-policy" className='text-blue-600 underline'>qui</Link>.</p>
+        <p className="text-sm text-slate-500 mt-2">
+          Visualizza l'informativa sulla privacy{' '}
+          <Link to="/privacy-policy?from=settings" className="text-blue-600 underline">
+            qui
+          </Link>.
+        </p>
       </section>
 
       <section className="rounded-3xl border border-red-200 bg-red-50 p-5">

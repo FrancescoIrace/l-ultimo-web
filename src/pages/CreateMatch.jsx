@@ -67,9 +67,9 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
-        // Converti la data locale in UTC correttamente
+        // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
         const localDate = new Date(formData.datetime);
-        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
+        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
         const datetimeUTC = utcDate.toISOString();
         
         //Se il luogo non è stato selezionato, inseriamo la posizione salvata dall'utente (se presente)
@@ -145,9 +145,9 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
-        // Converti la data locale in UTC correttamente
+        // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
         const localDate = new Date(formData.datetime);
-        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
+        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
         const datetimeUTC = utcDate.toISOString();
 
         // 1. Aggiorniamo la partita esistente

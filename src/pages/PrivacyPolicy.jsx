@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export default function PrivacyPolicy() {
+     useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }, []);
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white min-h-screen">
       <button

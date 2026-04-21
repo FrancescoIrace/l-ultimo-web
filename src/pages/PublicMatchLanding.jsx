@@ -50,6 +50,7 @@ export default function PublicMatchLanding() {
         <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-center">
           <h1 className="text-2xl font-black mb-4">Partita non trovata</h1>
           <p className="text-slate-600">Controlla il link o torna sulla home per vedere altre partite.</p>
+          <p className="text-red-600">{error}</p>
         </div>
       </div>
     );

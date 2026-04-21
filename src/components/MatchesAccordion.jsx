@@ -96,7 +96,6 @@ function AccordionCreatedMatches({ title, matches, isOpen }) {
 function AccorditionReviews({ title, reviews, isOpen }) {
     const [open, setOpen] = useState(isOpen);
     const navigate = useNavigate();
-    console.log(reviews);
 
     return (
         <div className="border-b border-slate-200">

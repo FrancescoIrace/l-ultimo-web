@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useAlert } from '../components/AlertComponent';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import UserLocationInput from '../components/UserLocationInput';
 
@@ -10,6 +11,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const { alert, success, error } = useAlert();
   const [isSignUp, setIsSignUp] = useState(location.pathname === '/signup');
   const [gender, setGender] = useState('');
   const [dataConsent, setDataConsent] = useState(false);
@@ -79,9 +81,9 @@ export default function Auth() {
       })
       : await supabase.auth.signInWithPassword({ email, password });
 
-    const { error, data } = authData;
+    const { error: authError, data } = authData;
 
-    if (error) alert(error.message);
+    if (authError) error(authError.message == 'Invalid login credentials' ? 'Credenziali non valide' : authError.message);
     else {
       if (isSignUp) {
         const userId = data?.user?.id;
@@ -104,10 +106,10 @@ export default function Auth() {
         sessionStorage.removeItem('authFormDraft');
         // Salva un flag per mostrare l'alert di installazione app al primo accesso
         localStorage.setItem('newUserRegistered', 'true');
-        alert('Controlla la mail per confermare!');
+        success('Controlla la mail per confermare!');
         navigate('/');
       } else {
-        alert('Loggato con successo!');
+        success('Loggato con successo!');
         navigate('/');
       }
     }

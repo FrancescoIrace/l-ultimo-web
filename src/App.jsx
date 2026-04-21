@@ -83,13 +83,15 @@ function App() {
   // Se non c'è sessione, mostra Auth e consenti l'accesso alla privacy policy
   if (!session) {
     return (
-      <Routes>
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/install-guide" element={<InstallGuide />} />
-        <Route path="/signup" element={<Auth />} />
-        <Route path="/login" element={<Auth />} />
-        <Route path="*" element={<Auth />} />
-      </Routes>
+      <AlertProvider>
+        <Routes>
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/install-guide" element={<InstallGuide />} />
+          <Route path="/signup" element={<Auth />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="*" element={<Auth />} />
+        </Routes>
+      </AlertProvider>
     );
   }
 

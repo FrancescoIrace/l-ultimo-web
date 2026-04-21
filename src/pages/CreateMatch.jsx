@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import LocationPicker from '../components/LocationPicker';
+import { useAlert } from '../components/AlertComponent';
 
 
 
@@ -10,6 +11,7 @@ export default function CreateMatch() {
     const { id } = useParams(); // Se c'è un ID, siamo in modalità modifica
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const { success, error, alert } = useAlert();
     const [formData, setFormData] = useState({
         sport: 'Calcetto',
         title: '',
@@ -54,7 +56,7 @@ export default function CreateMatch() {
                     .single();
 
                 if (data) {
-                    console.log(data); setFormData(data);
+                 setFormData(data);
                 }
             }
             loadMatchData();
@@ -69,6 +71,32 @@ export default function CreateMatch() {
         const localDate = new Date(formData.datetime);
         const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000);
         const datetimeUTC = utcDate.toISOString();
+        
+        //Se il luogo non è stato selezionato, inseriamo la posizione salvata dall'utente (se presente)
+        let locationData = {};
+        if (formData.location_lat && formData.location_lng) {
+            locationData = {
+                location: formData.location,
+                location_lat: formData.location_lat,
+                location_lng: formData.location_lng,
+            };
+        } else {
+            const { data: userProfile } = await supabase
+                .from('profiles')
+                .select('location, location_lat, location_lng')
+                .eq('id', (await supabase.auth.getUser()).data.user.id)
+                .single();
+
+            if (userProfile) {
+                locationData = {
+                    location: userProfile.location,
+                    location_lat: userProfile.location_lat,
+                    location_lng: userProfile.location_lng,
+                };
+            }
+        }
+
+        console.log("Location da salvare:", locationData);
 
         // 1. Inseriamo la partita
         // .select() alla fine ci permette di ricevere indietro i dati appena creati
@@ -77,6 +105,7 @@ export default function CreateMatch() {
             .insert([
                 {
                     ...formData,
+                    ...locationData,
                     datetime: datetimeUTC, // Usa la data convertita in UTC
                     current_players: 1, // L'organizzatore è il primo
                     creator_id: (await supabase.auth.getUser()).data.user.id // Assicuriamoci di passare l'ID
@@ -107,8 +136,8 @@ export default function CreateMatch() {
             }
         }
 
-        alert("Partita organizzata! Sei già in lista.");
-        navigate('/');
+        success("Partita organizzata! Sei già in lista.");
+        navigate('/match/' + newMatch.id, {replace: true}, '', {timeout: 2000}); // ricarica la pagina dopo 1 secondo per vedere la nuova partita
         setLoading(false);
     };
 

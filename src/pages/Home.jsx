@@ -30,6 +30,7 @@ export default function Home({ session, isPWA }) {
   const [geoLoading, setGeoLoading] = useState(true);
   const [usingManualPosition, setUsingManualPosition] = useState(false);
   const [showNearby, setShowNearby] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [radiusKm, setRadiusKm] = useState(20);
   const [locationError, setLocationError] = useState('');
   const navigate = useNavigate();
@@ -195,16 +196,30 @@ export default function Home({ session, isPWA }) {
       .sort((a, b) => a.distance - b.distance);
   }, [distances, position, radiusKm]);
 
-  const matchList = useMemo(() => {
-    if (showNearby) {
-      return nearbyMatches;
-    }
+  const normalizeSearch = (value) =>
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9 ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    return matches.map((match) => ({
-      ...match,
-      distance: distances.find((item) => item?.id === match.id)?.distance,
-    }));
-  }, [matches, nearbyMatches, showNearby, distances]);
+  const matchList = useMemo(() => {
+    const baseList = showNearby
+      ? nearbyMatches
+      : matches.map((match) => ({
+          ...match,
+          distance: distances.find((item) => item?.id === match.id)?.distance,
+        }));
+
+    if (!searchQuery.trim()) return baseList;
+
+    const normalizedSearch = normalizeSearch(searchQuery);
+    return baseList.filter((match) =>
+      normalizeSearch(match.title || '').includes(normalizedSearch)
+    );
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -216,6 +231,14 @@ export default function Home({ session, isPWA }) {
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
           Partite
         </h2>
+        <div className="grid gap-2 mb-4">
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cerca per titolo partita"
+            className="w-full p-3 rounded-2xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setShowNearby(true)}

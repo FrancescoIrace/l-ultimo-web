@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Zap, MapPin, UserPlus, User, LogOut,Trophy, Puzzle } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PWADashboard({ user, onLogout }) {
@@ -17,7 +17,7 @@ export default function PWADashboard({ user, onLogout }) {
       {/* Main Content */}
       <div className="max-w-md mx-auto p-4 space-y-4 pb-20">
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3 mt-6">
+        <div className="grid grid-cols-2 gap-3 mt-6 relative">
           <button
             onClick={() => navigate('/organizza')}
             className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
@@ -50,21 +50,35 @@ export default function PWADashboard({ user, onLogout }) {
             Trova amici
           </button>
 
-          <button
-            onClick={() => navigate('/')}
-            className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
-          >
-            <Puzzle size={24} />
-            La tua squadra
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => navigate('/')}
+              disabled
+              className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
+            >
+              <Puzzle size={24} />
+              La tua squadra
+            </button>
+            <span className="absolute top-3 right-0 rotate-20 inline-flex rounded-full bg-rose-500 px-2 py-0.5 text-white text-[8px] font-bold shadow-md">
+              Work In Progress
+            </span>
+          </div>
 
-          <button
-            onClick={() => navigate('/')}
-            className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
-          >
-            <Trophy size={24} />
-            Tornei
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => navigate('/')}
+              disabled
+              className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
+            >
+              <Trophy size={24} />
+              Tornei
+            </button>
+            <span className="absolute top-3 right-0 rotate-20 inline-flex rounded-full bg-rose-500 px-2 py-0.5 text-white text-[8px] font-bold shadow-md">
+              Work In Progress
+            </span>
+          </div>
+
+          {/* Removed centered WIP badge */}
         </div>
 
         {/* Info Section */}
@@ -106,7 +120,7 @@ export default function PWADashboard({ user, onLogout }) {
             </div>
           </div>
           <button
-            onClick={() => window.open('https://www.google.com/maps/search/?api=1&query=45.4642%2C9.1900', '_blank')}
+            onClick={() => window.open('https://www.google.com/maps/search/?api=1&query=40.8161%2C14.3398', '_blank')}
             className="mt-4 inline-flex items-center justify-center rounded-full bg-white text-slate-900 px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-100 transition"
           >
             Apri in Maps

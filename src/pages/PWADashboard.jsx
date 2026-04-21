@@ -52,14 +52,14 @@ export default function PWADashboard({ user, onLogout }) {
         </div>
 
         {/* Info Section */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mt-8">
+        {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mt-8">
           <h2 className="font-bold text-slate-800 mb-3">🚀 App Installata</h2>
           <p className="text-xs text-slate-600 leading-relaxed">
             Stai utilizzando L'Ultimo come app nativa. La dashboard PWA ti permette accesso veloce a tutte le funzioni senza aprire il browser!
           </p>
-        </div>
+        </div> */}
 
-        {/* Example Ad Banner */}
+        {/* Banner esempio 1 */}
         <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
           <div className="flex items-start gap-4">
             <div className="flex-none rounded-3xl bg-white/10 p-3">
@@ -75,6 +75,24 @@ export default function PWADashboard({ user, onLogout }) {
             className="mt-4 inline-flex items-center justify-center rounded-full bg-white text-slate-900 px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-100 transition"
           >
             Scopri l'offerta
+          </button>
+        </div>
+
+        {/* Banner esempio 2 */}
+        <div className="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-3xl p-4 shadow-lg border border-yellow-100 mt-4 text-white">
+          <div className="flex items-start gap-4">
+            <div className="flex-none rounded-3xl bg-white/10 p-3">
+              <span className="text-xs uppercase tracking-[0.2em] font-bold text-white/80">Sponsorizzato</span>
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-sm">Fame post partita?</p>
+              <p className="text-xs text-white/80 mt-1">Corri a mangiare il Panino da *Nome Paninoteca*</p>
+            </div>
+          </div>
+          <button
+            onClick={() => window.open('https://www.example.com', '_blank')}
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-white text-slate-900 px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-100 transition"
+          >
           </button>
         </div>
 

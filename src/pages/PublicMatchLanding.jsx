@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, MapPin, Users, Football, LogIn, Smartphone, Link2 } from 'lucide-react';
+import { Calendar, MapPin, Users, LogIn, Smartphone, Link2, SportShoe } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function PublicMatchLanding() {
@@ -75,7 +75,7 @@ export default function PublicMatchLanding() {
         <h1 className="text-3xl font-black mb-4">{match.title || match.sport}</h1>
         <div className="space-y-3 text-sm text-slate-600">
           <div className="flex items-center gap-2">
-            <Football size={18} className="text-blue-600" />
+            <SportShoe size={18} className="text-blue-600" />
             <span><span className="font-bold">Sport:</span> {match.sport}</span>
           </div>
           <div className="flex items-center gap-2">

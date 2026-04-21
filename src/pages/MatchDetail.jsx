@@ -136,6 +136,21 @@ export default function MatchDetail({ user }) {
     };
 
     const handleShare = async () => {
+        if (!match?.is_public) {
+            const { error: publicError } = await supabase
+                .from('matches')
+                .update({ is_public: true })
+                .eq('id', match.id);
+
+            if (publicError) {
+                error('Non è stato possibile rendere la partita visibile pubblicamente.');
+                console.error('Errore impostazione is_public:', publicError);
+                return;
+            }
+
+            setMatch(prev => (prev ? { ...prev, is_public: true } : prev));
+        }
+
         const shareText = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT')} a ${match.location}. Scopri di più qui: ${window.location.href}`;
 
         if (navigator.share) {

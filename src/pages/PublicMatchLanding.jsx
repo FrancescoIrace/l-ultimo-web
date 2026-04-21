@@ -15,6 +15,7 @@ export default function PublicMatchLanding() {
         .from('matches')
         .select('id, title, sport, datetime, location, description, max_players, current_players')
         .eq('id', id)
+        .eq('is_public', true)
         .single();
 
       if (error) {

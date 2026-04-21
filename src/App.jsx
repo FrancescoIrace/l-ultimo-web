@@ -10,6 +10,7 @@ import MatchDetail from './pages/MatchDetail';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import AppSettings from './pages/AppSettings';
+import InstallGuide from './pages/InstallGuide';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
@@ -84,6 +85,7 @@ function App() {
     return (
       <Routes>
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/install-guide" element={<InstallGuide />} />
         <Route path="/signup" element={<Auth />} />
         <Route path="/login" element={<Auth />} />
         <Route path="*" element={<Auth />} />
@@ -147,6 +149,7 @@ function App() {
 
           <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/install-guide" element={<InstallGuide />} />
           <Route path="/demo-pwa" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
           <Route path="/PWADashboard" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
 

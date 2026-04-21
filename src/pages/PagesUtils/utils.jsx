@@ -10,6 +10,7 @@ function normalizeProfileData(data) {
         location: data?.location ?? '',
         location_lat: data?.location_lat ?? null,
         location_lng: data?.location_lng ?? null,
+        favorite_sport: data?.favorite_sport ?? '',
     };
 }
 

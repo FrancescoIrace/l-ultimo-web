@@ -36,6 +36,13 @@
       "type": "centro_sportivo"
     },
     {
+      "name": "Campo Moscato",
+      "address": "Via Marittima 12, Ercolano NA",
+      "lat": 40.8014,
+      "lng": 14.3451,
+      "type": "centro_sportivo"
+    },
+    {
       "name": "Calcetto Sirio 87",
       "address": "Via Vincenzo Mormone, San Giorgio a Cremano",
       "lat": 40.8423,
@@ -54,6 +61,13 @@
       "address": "Via Marconi 51, San Giorgio a Cremano",
       "lat": 40.8302,
       "lng": 14.3284,
+      "type": "centro_sportivo"
+    },
+    {
+      "name": "Centro Sportivo Jepson",
+      "address": "Via Cupa S. Marciano, Casoria NA",
+      "lat": 40.8865,
+      "lng": 14.3145,
       "type": "centro_sportivo"
     },
     {
@@ -159,6 +173,13 @@
       "address": "San Giorgio a Cremano",
       "lat": 40.8325,
       "lng": 14.3330,
+      "type": "centro_sportivo"
+    },
+    {
+      "name": "Campetto Parco a Mare",
+      "address": "Via Bagnara, Portici NA",
+      "lat": 40.8127,
+      "lng": 14.3335,
       "type": "centro_sportivo"
     }
   ]

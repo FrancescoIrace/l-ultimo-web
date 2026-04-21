@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
-import {AccordionItem, AccordionCreatedMatches} from '../components/MatchesAccordion';
+import { AccordionItem, AccordionCreatedMatches } from '../components/MatchesAccordion';
 import { Loader } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
 
@@ -26,8 +26,17 @@ export default function Profile({ session }) {
         location_lat: null,
         location_lng: null,
         updated_at: '',
-        avatar_url: ''
+        avatar_url: '',
+        favorite_sport: '',
     });
+
+        const handleSportChange = (e) => {
+        const selectedSport = e.target.value;
+        setEditData({
+            ...editData,
+            favorite_sport: selectedSport
+        });
+    };
 
     async function fetchAllData() {
         setLoading(true);
@@ -92,7 +101,8 @@ export default function Profile({ session }) {
                 location_lat: editData.location_lat,
                 location_lng: editData.location_lng,
                 updated_at: new Date(),
-                avatar_url: editData.avatar_url
+                avatar_url: editData.avatar_url,
+                favorite_sport: editData.favorite_sport
             })
             .eq('id', session.user.id);
 
@@ -194,8 +204,8 @@ export default function Profile({ session }) {
                         </div>
                         <h2 className="text-2xl font-black uppercase tracking-tight">{profile?.username}</h2>
                         <p className="text-slate-400 text-sm font-bold">
-                          📍 {profile?.location || profile?.province}
-                          {profile?.location ? ` (${profile?.zip_code})` : '' }
+                            📍 {profile?.location || profile?.province}
+                            {profile?.location ? ` (${profile?.zip_code})` : ''}
                         </p>
                         <button
                             onClick={() => setIsEditing(true)}
@@ -281,7 +291,7 @@ export default function Profile({ session }) {
                     {/*Partite Passate */}
                     <div className="mb-8">
                         {/* <h3 className="text-lg font-black uppercase mb-4 tracking-tighter text-yellow-400">partite passate</h3> */}
-                            <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" />
+                        <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" />
                         {/* <div className="space-y-3">
                             {myMatches.length > 0 ? (
                                 myMatches
@@ -401,6 +411,26 @@ export default function Profile({ session }) {
                                 <option value="M">Uomo</option>
                                 <option value="F">Donna</option>
                                 <option value="Other">Altro</option>
+                            </select>
+                        </div>
+
+                        {/* Sport preferito */}
+                        <div>
+                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
+                            <select
+                                className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                value={editData.favorite_sport ?? 'Calcetto'}
+                                onChange={(e) => handleSportChange(e)}
+                            >
+                                <option>Calcetto</option>
+                                <option>Calcio a 7</option>
+                                <option>Calcio a 11</option>
+                                <option>Padel</option>
+                                <option>Basket (3vs3)</option>
+                                <option>Basket (5vs5)</option>
+                                <option>Tennis singolo</option>
+                                <option>Tennis doppio</option>
+                                <option>Volley</option>
                             </select>
                         </div>
 

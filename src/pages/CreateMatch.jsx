@@ -26,6 +26,7 @@ export default function CreateMatch() {
         'Calcio a 7': 14,
         'Calcio a 11': 22,
         'Padel': 4,
+        'Basket (allenamento)': 2,
         'Basket (3vs3)': 6,
         'Basket (5vs5)': 10,
         'Tennis singolo': 2,
@@ -172,6 +173,7 @@ export default function CreateMatch() {
                             <option>Calcio a 7</option>
                             <option>Calcio a 11</option>
                             <option>Padel</option>
+                            <option>Basket (allenamento)</option>
                             <option>Basket (3vs3)</option>
                             <option>Basket (5vs5)</option>
                             <option>Tennis singolo</option>
@@ -220,7 +222,7 @@ export default function CreateMatch() {
                     </div>
 
                     {/* LUOGO E DESCRIZIONE */}
-                    <LocationPicker 
+                    <LocationPicker
                         value={formData}
                         onChange={(locationData) => setFormData({ ...formData, ...locationData })}
                     />
@@ -272,6 +274,7 @@ export default function CreateMatch() {
                         <option>Calcio a 7</option>
                         <option>Calcio a 11</option>
                         <option>Padel</option>
+                        <option>Basket (allenamento)</option>
                         <option>Basket (3vs3)</option>
                         <option>Basket (5vs5)</option>
                         <option>Tennis singolo</option>
@@ -321,7 +324,7 @@ export default function CreateMatch() {
                 </div>
 
                 {/* LUOGO E DESCRIZIONE */}
-                <LocationPicker 
+                <LocationPicker
                     value={formData}
                     onChange={(locationData) => setFormData({ ...formData, ...locationData })}
                 />

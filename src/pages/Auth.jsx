@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import UserLocationInput from '../components/UserLocationInput';
 
 export default function Auth() {
@@ -8,7 +8,9 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isSignUp, setIsSignUp] = useState(location.pathname === '/signup');
   const [gender, setGender] = useState('');
   const [dataConsent, setDataConsent] = useState(false);
   const [locationData, setLocationData] = useState({
@@ -18,7 +20,41 @@ export default function Auth() {
     location_lat: null,
     location_lng: null,
   });
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsSignUp(location.pathname === '/signup');
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const draft = sessionStorage.getItem('authFormDraft');
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        setEmail(parsed.email || '');
+        setPassword(parsed.password || '');
+        setUsername(parsed.username || '');
+        setGender(parsed.gender || '');
+        setLocationData(parsed.locationData || {
+          location: '',
+          province: '',
+          zip_code: '',
+          location_lat: null,
+          location_lng: null,
+        });
+        setDataConsent(parsed.dataConsent || false);
+      } catch (error) {
+        console.warn('Errore lettura bozza registrazione:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSignUp) return;
+    sessionStorage.setItem(
+      'authFormDraft',
+      JSON.stringify({ email, password, username, gender, locationData, dataConsent })
+    );
+  }, [isSignUp, email, password, username, gender, locationData, dataConsent]);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -65,6 +101,7 @@ export default function Auth() {
           if (profileError) console.warn('Errore salvataggio profilo:', profileError.message);
         }
 
+        sessionStorage.removeItem('authFormDraft');
         // Salva un flag per mostrare l'alert di installazione app al primo accesso
         localStorage.setItem('newUserRegistered', 'true');
         alert('Controlla la mail per confermare!');
@@ -128,15 +165,22 @@ export default function Auth() {
                 <p className="text-sm font-bold text-slate-700 mb-2">Posizione di base (opzionale)</p>
                 <UserLocationInput value={locationData} onChange={setLocationData} />
               </div>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={dataConsent}
-                  onChange={(e) => setDataConsent(e.target.checked)}
-                  required
-                />
-                Accetto il trattamento dei dati personali
-              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={dataConsent}
+                    onChange={(e) => setDataConsent(e.target.checked)}
+                    required
+                  />
+                  Accetto il trattamento dei dati personali
+                </label>
+                <p className="text-sm text-slate-500">
+                  <Link to="/privacy-policy" className="text-blue-600 underline">
+                    Leggi l'informativa sul trattamento dei dati
+                  </Link>
+                </p>
+              </div>
             </>
           )}
 
@@ -152,7 +196,7 @@ export default function Auth() {
         </form>
 
         <button
-          onClick={() => setIsSignUp(!isSignUp)}
+          onClick={() => navigate(isSignUp ? '/login' : '/signup')}
           className="w-full mt-4 text-sm text-slate-500 hover:underline"
         >
           {isSignUp ? 'Hai già un account? Accedi' : 'Nuovo su L\'Ultimo? Registrati'}

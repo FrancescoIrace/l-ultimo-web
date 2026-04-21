@@ -103,19 +103,13 @@ export default function PublicProfile() {
             <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase">Sport Preferito</p>
-                    <p className="font-bold text-slate-700">Padel</p> {/* Hardcoded per ora */}
+                    <p className="font-bold text-slate-700">{profile?.favorite_sport ?? 'Non definito'}</p> {/* Hardcoded per ora */}
                 </div>
                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase">Affidabilità</p>
                     <p className="font-bold text-green-600">100%</p> {/* Idea per recensioni */}
                 </div>
             </div>
-
-            {/* Qui in futuro caricheremo le recensioni */}
-            {/* <div className="mt-10 border-t border-slate-100 pt-6">
-                <h3 className="font-black uppercase text-sm text-slate-400 mb-4">Cosa dicono di {profile?.username}</h3>
-                <p className="text-slate-300 text-sm italic">Ancora nessuna recensione.</p>
-            </div> */}
 
             {/* Media Voti */}
             <div className="flex items-center gap-2 mb-6 bg-yellow-50 p-4 rounded-2xl border border-yellow-100">

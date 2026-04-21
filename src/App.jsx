@@ -9,6 +9,7 @@ import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
 import { AlertProvider } from './components/AlertComponent';
@@ -77,9 +78,16 @@ function App() {
 
 
 
-  // Se non c'è sessione, mostra Auth
+  // Se non c'è sessione, mostra Auth e consenti l'accesso alla privacy policy
   if (!session) {
-    return <Auth />;
+    return (
+      <Routes>
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/signup" element={<Auth />} />
+        <Route path="/login" element={<Auth />} />
+        <Route path="*" element={<Auth />} />
+      </Routes>
+    );
   }
 
   return (
@@ -136,6 +144,7 @@ function App() {
           <Route path="/profile/:id" element={<PublicProfile />} />
 
           <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/demo-pwa" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
           <Route path="/PWADashboard" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
 

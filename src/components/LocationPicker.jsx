@@ -148,13 +148,74 @@ export default function LocationPicker({ value, onChange }) {
     });
   };
 
+  const normalizeText = (text) =>
+    text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9 ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const compactText = (text) => normalizeText(text).replace(/\s+/g, '');
+
+  const levenshteinDistance = (a, b) => {
+    const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j - 1] + (a[j - 1] === b[i - 1] ? 0 : 1)
+        );
+      }
+    }
+    return matrix[b.length][a.length];
+  };
+
+  const fuzzyTokenMatch = (queryTokens, centerCombined) => {
+    const centerTokens = centerCombined.split(' ').filter(Boolean);
+    return queryTokens.every((queryToken) => {
+      if (queryToken.length < 3) return false;
+      return centerTokens.some((centerToken) => {
+        if (centerToken.includes(queryToken)) return true;
+        if (queryToken.length < 4 || centerToken.length < 4) return false;
+        if (Math.abs(centerToken.length - queryToken.length) > 1) return false;
+        return levenshteinDistance(queryToken, centerToken) <= 1;
+      });
+    });
+  };
+
   // Funzione per cercare nei centri sportivi locali
   const searchLocalCenters = (query) => {
-    const lowerQuery = query.toLowerCase();
-    return sportsCenters.filter(center =>
-      center.name.toLowerCase().includes(lowerQuery) ||
-      center.address.toLowerCase().includes(lowerQuery)
-    ).slice(0, 5); // Restituisci max 5 risultati
+    const normalizedQuery = normalizeText(query);
+    const compactQuery = compactText(query);
+    const queryTokens = normalizedQuery.split(' ').filter(Boolean);
+
+    return sportsCenters
+      .map((center) => {
+        const centerName = normalizeText(center.name);
+        const centerAddress = normalizeText(center.address);
+        const centerCombined = `${centerName} ${centerAddress}`;
+        const centerCompact = compactText(centerCombined);
+
+        const exactMatch =
+          centerCombined.includes(normalizedQuery) ||
+          centerCompact.includes(compactQuery);
+
+        const tokenMatch = queryTokens.every((token) => centerCombined.includes(token));
+        const fuzzyMatch = fuzzyTokenMatch(queryTokens, centerCombined);
+
+        return {
+          center,
+          score: exactMatch ? 3 : tokenMatch ? 2 : fuzzyMatch ? 1 : 0,
+        };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((item) => item.center);
   };
 
   // Gestore per la ricerca senza form

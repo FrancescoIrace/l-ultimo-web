@@ -59,6 +59,25 @@ export default function PWADashboard({ user, onLogout }) {
           </p>
         </div>
 
+        {/* Example Ad Banner */}
+        <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
+          <div className="flex items-start gap-4">
+            <div className="flex-none rounded-3xl bg-white/10 p-3">
+              <span className="text-xs uppercase tracking-[0.2em] font-bold text-white/80">Sponsorizzato</span>
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-sm">Nuove scarpe da calcetto</p>
+              <p className="text-xs text-white/80 mt-1">Sconto 20% per utenti PWA: comfort e grip perfetto per ogni partita.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => window.open('https://www.example.com', '_blank')}
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-white text-slate-900 px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-100 transition"
+          >
+            Scopri l'offerta
+          </button>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-blue-50 rounded-2xl p-3 text-center border border-blue-100">

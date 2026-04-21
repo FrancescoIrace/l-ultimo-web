@@ -200,7 +200,7 @@ export default function Auth() {
         <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-slate-700">
           <p className="font-bold text-slate-900 mb-2">Per la migliore esperienza</p>
           <p>Installa l'app come Progressive Web App invece di usarla nel browser web. In questo modo avrai un accesso più rapido, notifiche migliori e un layout ottimizzato per il telefono.</p>
-          <p className="mt-3 text-slate-600">Vuoi una guida passo-passo? <Link to="/install-guide" className="text-blue-600 underline">Vai alla guida di installazione</Link>.</p>
+          <p className="mt-3 text-slate-600">Vuoi una guida step by step? <Link to="/install-guide" className="text-blue-600 underline">Vai alla guida di installazione</Link>.</p>
         </div>
 
         <button

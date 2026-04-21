@@ -90,9 +90,10 @@ export default function PWADashboard({ user, onLogout }) {
             </div>
           </div>
           <button
-            onClick={() => window.open('https://www.example.com', '_blank')}
+            onClick={() => window.open('https://www.google.com/maps/search/?api=1&query=45.4642%2C9.1900', '_blank')}
             className="mt-4 inline-flex items-center justify-center rounded-full bg-white text-slate-900 px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-100 transition"
           >
+            Apri in Maps
           </button>
         </div>
 

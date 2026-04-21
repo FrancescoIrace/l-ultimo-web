@@ -135,6 +135,49 @@ export default function MatchDetail({ user }) {
         });
     };
 
+    const handleShare = async () => {
+        const shareText = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT')} a ${match.location}. Scopri di più qui: ${window.location.href}`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: match.title,
+                    text: shareText,
+                    url: window.location.href,
+                });
+                success('Link condiviso con successo!');
+            } catch (shareError) {
+                if (shareError.name !== 'AbortError') {
+                    error('Impossibile condividere al momento.');
+                }
+            }
+            return;
+        }
+
+        const shareFallback = async () => {
+            const text = `${match.title} - ${new Date(match.datetime).toLocaleString('it-IT')} - ${match.location}\n${window.location.href}`;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                }
+                success('Link copiato negli appunti!');
+            } catch (copyError) {
+                error('Copia non riuscita. Prova manualmente.');
+            }
+        };
+
+        await shareFallback();
+    };
+
     const handleJoin = async () => {
         const { error: partError } = await supabase
             .from('participants')
@@ -424,6 +467,13 @@ export default function MatchDetail({ user }) {
                             {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}
                         </button>
                     )}
+
+                    <button
+                        onClick={handleShare}
+                        className="w-full mt-4 cursor-pointer bg-slate-100 text-slate-800 py-4 rounded-2xl font-bold border border-slate-300 shadow-sm hover:bg-slate-200 transition-all active:scale-95"
+                    >
+                        CONDIVIDI PARTITA
+                    </button>
 
                     {user.id === match.creator_id && (
                         <>

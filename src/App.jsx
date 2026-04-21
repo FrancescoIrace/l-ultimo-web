@@ -12,6 +12,7 @@ import PublicProfile from './pages/PublicProfile';
 import AppSettings from './pages/AppSettings';
 import InstallGuide from './pages/InstallGuide';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import PublicMatchLanding from './pages/PublicMatchLanding';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
 import { AlertProvider } from './components/AlertComponent';
@@ -87,6 +88,7 @@ function App() {
         <Routes>
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/install-guide" element={<InstallGuide />} />
+          <Route path="/match/:id" element={<PublicMatchLanding />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/login" element={<Auth />} />
           <Route path="*" element={<Auth />} />

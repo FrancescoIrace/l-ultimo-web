@@ -1,52 +1,52 @@
 [
   {
     "date": "21 aprile 2026",
+    "title": "Add ricerca per titolo partita",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Fix skeleton su ricerca geolocalizzazione",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Change label",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Fix alert (non tutti)",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Add pagina tutorial installazione su Home",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Add lista recensioni su profilo",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Fix ricerca avanzata con campi simili",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Update Privacy Policy",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
     "title": "Fix - scroll impostazioni app",
     "description": "Modifica all'app"
   },
   {
     "date": "21 aprile 2026",
     "title": "Fix - scroll pagina impostazioni",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add - menù impostazioni App",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add - Sport preferito - Nuova selezione match - Pagina Privacy Policy",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add - gestione location da Nuovo utente e da Modifica profilo",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add pagina trova amici",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add - Filtro partite entro tot km",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Test",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix - codice più snello con la creazione di un componente home",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix vari",
     "description": "Modifica all'app"
   }
 ]

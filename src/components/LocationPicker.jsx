@@ -384,7 +384,7 @@ export default function LocationPicker({ value, onChange }) {
       {/* Avviso quando non selezionata */}
       {!selectedPos && (
         <p className="text-xs text-slate-500 italic">
-          Clicca sulla mappa o cerca un indirizzo (es: Via Roma 10, Milano) o una struttura sportiva (es: Centro sportivo Milano)
+          Clicca sulla mappa o cerca un indirizzo (es: Via Roma 10, Napoli) o una struttura sportiva (es: Centro sportivo Portici)
         </p>
       )}
     </div>

@@ -33,6 +33,7 @@ export default function Home({ session, isPWA }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [radiusKm, setRadiusKm] = useState(20);
   const [locationError, setLocationError] = useState('');
+  const [showPastMatches, setShowPastMatches] = useState(false);
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -213,13 +214,24 @@ export default function Home({ session, isPWA }) {
           distance: distances.find((item) => item?.id === match.id)?.distance,
         }));
 
-    if (!searchQuery.trim()) return baseList;
+    let filtered = baseList;
+
+    // Filtrare le partite passate se showPastMatches è false
+    if (!showPastMatches) {
+      const now = new Date();
+      filtered = baseList.filter((match) => {
+        const matchDateTime = new Date(match.datetime);
+        return matchDateTime >= now;
+      });
+    }
+
+    if (!searchQuery.trim()) return filtered;
 
     const normalizedSearch = normalizeSearch(searchQuery);
-    return baseList.filter((match) =>
+    return filtered.filter((match) =>
       normalizeSearch(match.title || '').includes(normalizedSearch)
     );
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showPastMatches]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -251,6 +263,17 @@ export default function Home({ session, isPWA }) {
             className={`rounded-2xl py-3 text-sm font-bold transition-all ${!showNearby ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
           >
             Tutte
+          </button>
+        </div>
+        <div className="mt-3 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
+          <span className="text-sm font-semibold text-slate-700">Partite passate</span>
+          <button
+            onClick={() => setShowPastMatches(!showPastMatches)}
+            className={`relative w-12 h-7 rounded-full transition-colors ${showPastMatches ? 'bg-blue-600' : 'bg-slate-300'}`}
+          >
+            <div
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showPastMatches ? 'translate-x-5' : 'translate-x-0'}`}
+            />
           </button>
         </div>
         {showNearby && (

@@ -5,6 +5,7 @@ import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import {AccordionItem, AccordionCreatedMatches} from '../components/MatchesAccordion';
 import { Loader } from 'lucide-react';
+import UserLocationInput from '../components/UserLocationInput';
 
 export default function Profile({ session }) {
     const navigate = useNavigate();
@@ -17,9 +18,13 @@ export default function Profile({ session }) {
     // Stato per il form di modifica
     const [editData, setEditData] = useState({
         username: '',
+        full_name: '',
         province: '',
         zip_code: '',
         gender: '',
+        location: '',
+        location_lat: null,
+        location_lng: null,
         updated_at: '',
         avatar_url: ''
     });
@@ -83,6 +88,9 @@ export default function Profile({ session }) {
                 province: editData.province,
                 zip_code: editData.zip_code,
                 gender: editData.gender,
+                location: editData.location,
+                location_lat: editData.location_lat,
+                location_lng: editData.location_lng,
                 updated_at: new Date(),
                 avatar_url: editData.avatar_url
             })
@@ -185,7 +193,10 @@ export default function Profile({ session }) {
                             )}
                         </div>
                         <h2 className="text-2xl font-black uppercase tracking-tight">{profile?.username}</h2>
-                        <p className="text-slate-400 text-sm font-bold"> 📍 {profile?.province} ({profile?.zip_code})</p>
+                        <p className="text-slate-400 text-sm font-bold">
+                          📍 {profile?.location || profile?.province}
+                          {profile?.location ? ` (${profile?.zip_code})` : '' }
+                        </p>
                         <button
                             onClick={() => setIsEditing(true)}
                             className="w-auto h-10 text-sm uppercase flex items-center justify-center p-2 mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
@@ -366,37 +377,17 @@ export default function Profile({ session }) {
                             />
                         </div>
 
-                        {/* Provincia e CAP */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Provincia</label>
-                                {/* <input
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                    value={editData.province ?? ''}
-                                    onChange={(e) => setEditData({ ...editData, province: e.target.value })}
-                                /> */}
-                                <select
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold uppercase tracking-wider cursor-pointer"
-                                    value={editData.province ?? ''}
-                                    onChange={(e) => setEditData({ ...editData, province: e.target.value })}
-                                >
-                                    <option value="NAPOLI">Napoli</option>
-                                    <option value="CASERTA">Caserta</option>
-                                    <option value="SALERNO">Salerno</option>
-                                    <option value="AVELLINO">Avellino</option>
-                                    <option value="BENEVENTO">Benevento</option>
-                                    <option value="ALTRO">Altro</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">CAP</label>
-                                <input
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                    value={editData.zip_code ?? ''}
-                                    maxLength={5}
-                                    onChange={(e) => setEditData({ ...editData, zip_code: e.target.value })}
-                                />
-                            </div>
+                        {/* Posizione di base */}
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                            <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
+                            <UserLocationInput
+                                value={{
+                                    location: editData.location ?? '',
+                                    province: editData.province,
+                                    zip_code: editData.zip_code,
+                                }}
+                                onChange={(value) => setEditData({ ...editData, ...value })}
+                            />
                         </div>
 
                         {/* Genere */}

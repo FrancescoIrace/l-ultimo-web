@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import UserLocationInput from '../components/UserLocationInput';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -9,32 +10,61 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [gender, setGender] = useState('');
-  const [province, setProvince] = useState('');
-  const [zipCode, setZipCode] = useState('');
   const [dataConsent, setDataConsent] = useState(false);
+  const [locationData, setLocationData] = useState({
+    location: '',
+    province: '',
+    zip_code: '',
+    location_lat: null,
+    location_lng: null,
+  });
   const navigate = useNavigate();
 
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = isSignUp
+    const authData = isSignUp
       ? await supabase.auth.signUp({
-        email, password, options: {
+        email,
+        password,
+        options: {
           data: {
-            username: username, // dallo stato del form
-            gender: gender,     // "M", "F", "Other"
-            province: province, // es. "Milano" o "MI"
-            zip_code: zipCode,
-            data_consent: dataConsent  // obbligatorio per procedere
+            username: username,
+            gender: gender,
+            province: locationData.province || null,
+            zip_code: locationData.zip_code || null,
+            location: locationData.location || null,
+            location_lat: locationData.location_lat || null,
+            location_lng: locationData.location_lng || null,
+            data_consent: dataConsent,
           }
         }
       })
       : await supabase.auth.signInWithPassword({ email, password });
 
+    const { error, data } = authData;
+
     if (error) alert(error.message);
     else {
       if (isSignUp) {
+        const userId = data?.user?.id;
+        if (userId) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              username: username,
+              gender: gender,
+              province: locationData.province || null,
+              zip_code: locationData.zip_code || null,
+              location: locationData.location || null,
+              location_lat: locationData.location_lat || null,
+              location_lng: locationData.location_lng || null,
+            }, { onConflict: 'id' });
+          if (profileError) console.warn('Errore salvataggio profilo:', profileError.message);
+        }
+
         // Salva un flag per mostrare l'alert di installazione app al primo accesso
         localStorage.setItem('newUserRegistered', 'true');
         alert('Controlla la mail per confermare!');
@@ -94,23 +124,10 @@ export default function Auth() {
                 <option value="F">Femmina</option>
                 <option value="Other">Altro</option>
               </select>
-              <input
-                type="text"
-                placeholder="Provincia"
-                className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="CAP"
-                maxLength={5}
-                className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none"
-                value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                required
-              />
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-sm font-bold text-slate-700 mb-2">Posizione di base (opzionale)</p>
+                <UserLocationInput value={locationData} onChange={setLocationData} />
+              </div>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -120,7 +137,6 @@ export default function Auth() {
                 />
                 Accetto il trattamento dei dati personali
               </label>
-
             </>
           )}
 

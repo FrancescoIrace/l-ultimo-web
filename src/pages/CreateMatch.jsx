@@ -69,8 +69,8 @@ export default function CreateMatch() {
 
         // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
         const localDate = new Date(formData.datetime);
-        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
-        const datetimeUTC = utcDate.toISOString();
+        // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
+        const datetimeUTC = localDate.toISOString();
         
         //Se il luogo non è stato selezionato, inseriamo la posizione salvata dall'utente (se presente)
         let locationData = {};
@@ -147,8 +147,8 @@ export default function CreateMatch() {
 
         // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
         const localDate = new Date(formData.datetime);
-        const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
-        const datetimeUTC = utcDate.toISOString();
+        // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
+        const datetimeUTC = localDate.toISOString();
 
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase

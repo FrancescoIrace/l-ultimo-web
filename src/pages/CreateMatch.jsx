@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
+import { Info } from 'lucide-react';
 
 
 
@@ -11,6 +12,9 @@ export default function CreateMatch() {
     const { id } = useParams(); // Se c'è un ID, siamo in modalità modifica
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [activeMatchCount, setActiveMatchCount] = useState(0);
+    const [userId, setUserId] = useState(null);
+    const [tooltipActive, setTooltipActive] = useState(false);
     const { success, error, alert } = useAlert();
     const [formData, setFormData] = useState({
         sport: 'Calcetto',
@@ -45,6 +49,30 @@ export default function CreateMatch() {
         });
     };
 
+    // Carica l'ID utente e conta le partite attive
+    useEffect(() => {
+        async function loadUserAndCountMatches() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUserId(user.id);
+                
+                // Conta le partite attive (datetime > now)
+                const now = new Date().toISOString();
+                const { data: activeMatches, error: countError } = await supabase
+                    .from('matches')
+                    .select('id', { count: 'exact' })
+                    .eq('creator_id', user.id)
+                    .gt('datetime', now);
+                
+                if (!countError && activeMatches) {
+                    setActiveMatchCount(activeMatches.length);
+                }
+            }
+        }
+        
+        loadUserAndCountMatches();
+    }, []);
+
     // 1. Se c'è un ID, carichiamo i dati attuali dal DB
     useEffect(() => {
         if (id) {
@@ -66,6 +94,13 @@ export default function CreateMatch() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        // Verifica il limite di partite attive
+        if (activeMatchCount >= 5) {
+            error(`Hai già ${activeMatchCount} partite attive. Non puoi crearne altre finché una non finisce.`);
+            setLoading(false);
+            return;
+        }
 
         // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
         const localDate = new Date(formData.datetime);
@@ -291,6 +326,32 @@ export default function CreateMatch() {
             <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase">Organizza Match</h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Info partite attive */}
+                <div className={`border rounded-xl p-3 text-xs font-semibold ${activeMatchCount >= 5 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                    <div className="flex items-center justify-between">
+                        <p>
+                            Partite attive: <span className="font-black">{activeMatchCount}</span>/5
+                        </p>
+                        <div className="relative cursor-help">
+                            <button
+                                type="button"
+                                onClick={() => setTooltipActive(!tooltipActive)}
+                                className="p-1 hover:opacity-70 transition-opacity"
+                            >
+                                <Info size={16} className="inline" />
+                            </button>
+                            {tooltipActive && (
+                                <div className="absolute bottom-full right-0 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 animate-fade-in">
+                                    Puoi avere max 5 partite attive contemporaneamente
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    {activeMatchCount >= 5 && (
+                        <p className="mt-1">❌ Hai raggiunto il limite. Aspetta che una partita finisca.</p>
+                    )}
+                </div>
+
                 {/* SPORT */}
                 <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Sport</label>
@@ -370,8 +431,8 @@ export default function CreateMatch() {
                 </div>
 
                 <button
-                    disabled={loading}
-                    className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                    disabled={loading || activeMatchCount >= 5}
+                    className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Creazione in corso...' : 'PUBBLICA PARTITA'}
                 </button>

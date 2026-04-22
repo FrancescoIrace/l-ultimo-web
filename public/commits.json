@@ -1,6 +1,11 @@
 [
   {
     "date": "22 aprile 2026",
+    "title": "Update mostra Dashboard anche per gli utenti da browser",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 aprile 2026",
     "title": "Fix link redirect reset password",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "21 aprile 2026",
     "title": "Add secondo banner esempio",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add mockup banner",
     "description": "Modifica all'app"
   }
 ]

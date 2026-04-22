@@ -266,7 +266,7 @@ export default function Profile({ session }) {
                                         <Info size={14} className="text-slate-400" />
                                     </button>
                                     {tooltipActive && (
-                                        <div className="absolute bottom-full left-0 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 animate-fade-in">
+                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 max-w-xs z-10 animate-fade-in whitespace-normal text-center">
                                             Puoi avere max 5 partite attive contemporaneamente
                                         </div>
                                     )}

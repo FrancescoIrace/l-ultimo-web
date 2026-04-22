@@ -64,7 +64,8 @@ export default function Profile({ session }) {
                  title,
                  sport,
                  datetime,
-                 location
+                 location,
+                 creator_id
                 )
               `)
             .eq('user_id', session.user.id);
@@ -278,7 +279,20 @@ export default function Profile({ session }) {
 
                     {/* Le Mie Partite */}
                     <div className="mb-8">
-                        <AccordionItem title={"Prossime Partite"} matches={myMatches.filter((item) => new Date(item.matches.datetime) > new Date())} isOpen={true} titleColor="text-blue-600" />
+                        <AccordionItem 
+                            title={"Prossime Partite"} 
+                            matches={myMatches
+                                .filter((item) => new Date(item.matches.datetime) > new Date())
+                                .sort((a, b) => new Date(a.matches.datetime) - new Date(b.matches.datetime))
+                                .map((item) => ({
+                                    ...item,
+                                    isCreator: item.matches.creator_id === session.user.id
+                                }))
+                            } 
+                            isOpen={true} 
+                            titleColor="text-blue-600" 
+                            userId={session.user.id}
+                        />
                     </div>
 
                     {/*Partite Create */}
@@ -288,7 +302,7 @@ export default function Profile({ session }) {
 
                     {/*Partite Passate */}
                     <div className="mb-8">
-                        <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" />
+                        <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" opacity="opacity-30" />
                     </div>
 
                     {/*Recensioni ricevute*/}

@@ -1,9 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function AccordionItem({ title, matches, isOpen, titleColor }) {
+function AccordionItem({ title, matches, isOpen, titleColor, opacity }) {
     const [open, setOpen] = useState(isOpen);
     const navigate = useNavigate();
+
+    // Calcola il tempo rimanente
+    const getTimeUntilMatch = (datetime) => {
+        const now = new Date();
+        const matchTime = new Date(datetime);
+        const diff = matchTime - now;
+        const hours = diff / (1000 * 60 * 60);
+        const days = Math.floor(hours / 24);
+
+        if (hours < 0) return null; // Non mostrare se la partita è passata
+
+        if (days >= 2) {
+            return { label: `Tra ${days} giorni`, urgent: false };
+        } else if (days === 1) {
+            return { label: 'Domani', urgent: false };
+        } else if (hours >= 12) {
+            return { label: `Oggi (${Math.floor(hours)}h)`, urgent: false };
+        } else if (hours > 0) {
+            return { label: `Tra ${Math.floor(hours)}h`, urgent: true };
+        }
+        return null;
+    };
 
     return (
         <div className="border-b border-slate-200">
@@ -18,25 +40,40 @@ function AccordionItem({ title, matches, isOpen, titleColor }) {
             {/* Grid trick: anima da grid-rows-[0fr] a grid-rows-[1fr] */}
             <div className={`grid transition-all duration-300 ease-in-out ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">
-                    <div className="pb-4 text-sm text-slate-500 space-y-3">
+                    <div className={`pb-4 text-sm text-slate-500 space-y-3`}>
                         {matches && matches.length > 0 ? (
-                            matches.map((item) => (
-                                <div
-                                    key={item.matches.id}
-                                    onClick={() => navigate(`/match/${item.matches.id}`)}
-                                    className="p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer"
-                                >
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
-                                            <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
+                            matches.map((item) => {
+                                const timeInfo = getTimeUntilMatch(item.matches.datetime);
+                                return (
+                                    <div
+                                        key={item.matches.id}
+                                        onClick={() => navigate(`/match/${item.matches.id}`)}
+                                        className={`p-4 border border-slate-100 rounded-2xl bg-white shadow-sm hover:border-blue-200 transition-all cursor-pointer ${opacity || ''}`}
+                                    >
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center gap-2 flex-1">
+                                                <p className="font-black uppercase text-sm">{item.matches.title || item.matches.sport}</p>
+                                                {item.isCreator && (
+                                                    <span className="text-[9px] bg-orange-600 text-white px-2 py-0.5 rounded font-bold uppercase">
+                                                        Creatore
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase ml-2 flex-shrink-0">
+                                                {item.matches.sport}
+                                            </span>
                                         </div>
-                                        <span className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold uppercase">
-                                            {item.matches.sport}
-                                        </span>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-xs text-slate-500">{new Date(item.matches.datetime).toLocaleDateString()}</p>
+                                            {timeInfo && (
+                                                <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${timeInfo?.urgent ? 'text-red-600 bg-red-50' : 'text-indigo-600 bg-indigo-50'}`}>
+                                                    {timeInfo?.label}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <p>Nessuna partita disponibile.</p>
                         )}

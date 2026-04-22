@@ -142,6 +142,16 @@ export default function Auth() {
             required
           />
 
+          {!isSignUp && (
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              className="text-sm text-blue-600 hover:underline font-semibold"
+            >
+              Password dimenticata?
+            </button>
+          )}
+
           {isSignUp && (
             <>
               <input

@@ -1,6 +1,11 @@
 [
   {
     "date": "22 aprile 2026",
+    "title": "Update matchCard per partita finita",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 aprile 2026",
     "title": "Fix matchCard",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "21 aprile 2026",
     "title": "Fix orario partita",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix icone landing",
     "description": "Modifica all'app"
   }
 ]

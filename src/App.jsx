@@ -15,6 +15,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import PublicMatchLanding from './pages/PublicMatchLanding';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
 
@@ -91,6 +93,8 @@ function App() {
           <Route path="/match/:id" element={<PublicMatchLanding />} />
           <Route path="/signup" element={<Auth />} />
           <Route path="/login" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<Auth />} />
         </Routes>
       </AlertProvider>

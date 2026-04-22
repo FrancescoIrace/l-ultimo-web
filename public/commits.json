@@ -1,6 +1,16 @@
 [
   {
     "date": "22 aprile 2026",
+    "title": "Fix link redirect reset password",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 aprile 2026",
+    "title": "Add Reset password",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 aprile 2026",
     "title": "Update matchCard per partita finita",
     "description": "Modifica all'app"
   },
@@ -37,16 +47,6 @@
   {
     "date": "21 aprile 2026",
     "title": "Add mockup banner",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix orario partita",
     "description": "Modifica all'app"
   }
 ]

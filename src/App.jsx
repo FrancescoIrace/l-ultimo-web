@@ -143,7 +143,7 @@ function App() {
         </header>
 
         <Routes>
-          <Route path="/" element={<Home session={session} isPWA={isPWA} />} />
+          <Route path="/" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
           <Route path="/partite" element={<Home session={session} isPWA={false} />} />
           <Route path="/organizza" element={<CreateMatch />} />
           <Route path="/reset-password" element={<ResetPassword />} />

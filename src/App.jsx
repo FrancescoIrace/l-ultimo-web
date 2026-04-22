@@ -17,6 +17,7 @@ import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ResetPasswordHandler from './pages/ResetPasswordHandler';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
 
@@ -145,7 +146,7 @@ function App() {
           <Route path="/" element={<Home session={session} isPWA={isPWA} />} />
           <Route path="/partite" element={<Home session={session} isPWA={false} />} />
           <Route path="/organizza" element={<CreateMatch />} />
-
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/modifica/:id" element={<CreateMatch />} />
 
           <Route path="/match/:id" element={<MatchDetail user={session.user} />} />

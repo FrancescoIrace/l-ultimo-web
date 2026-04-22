@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
@@ -11,24 +11,55 @@ export default function ResetPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [canReset, setCanReset] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { success, error } = useAlert();
+
+  // Converte hash in query string se necessario
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    
+    if (hash && !searchParams.get('access_token')) {
+      // Se c'è un hash ma non ci sono query params, converte l'hash
+      const params = new URLSearchParams(hash);
+      
+      // Usa la nuova URL con query string
+      const newUrl = `/reset-password?${params.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+      setSearchParams(params);
+    }
+  }, [searchParams, setSearchParams]);
 
   // Controlla se l'utente è arrivato dal link dell'email
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        error('Sessione non valida. Riprova dal link nell\'email.');
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
+      try {
+        // Supabase dovrebbe aver già autenticato l'utente dal link email
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          // Controlla se c'è un codice nell'URL
+          const code = searchParams.get('code');
+          if (!code) {
+            error('Sessione non valida. Riprova dal link nell\'email.');
+            setTimeout(() => navigate('/login'), 2000);
+            return;
+          }
+        }
+        
         setCanReset(true);
+      } catch (err) {
+        console.error('Errore validazione sessione:', err);
+        error('Errore durante la validazione');
+        setTimeout(() => navigate('/login'), 2000);
+      } finally {
+        setIsValidating(false);
       }
     };
     
     checkSession();
-  }, [navigate, error]);
+  }, [navigate, error, searchParams]);
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
@@ -68,10 +99,13 @@ export default function ResetPassword() {
     }
   };
 
-  if (!canReset) {
+  if (!canReset || isValidating) {
     return (
       <div className="max-w-md mx-auto p-6 bg-white min-h-screen flex flex-col items-center justify-center">
-        <p className="text-slate-500">Caricamento...</p>
+        <div className="text-center">
+          <p className="text-slate-500 mb-4">Validazione in corso...</p>
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+        </div>
       </div>
     );
   }

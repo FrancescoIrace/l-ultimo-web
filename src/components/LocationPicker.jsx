@@ -41,6 +41,7 @@ export default function LocationPicker({ value, onChange }) {
   const [mapCenter, setMapCenter] = useState([40.8199,  14.3413]); // Portici di default
   const [selectedPos, setSelectedPos] = useState(null);
   const [locationName, setLocationName] = useState(value?.location || '');
+  const [selectedSports, setSelectedSports] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -124,6 +125,7 @@ export default function LocationPicker({ value, onChange }) {
   const handleClear = () => {
     setSelectedPos(null);
     setLocationName('');
+    setSelectedSports([]);
     setSearchInput('');
     setSearchResults([]);
     onChange({
@@ -138,6 +140,7 @@ export default function LocationPicker({ value, onChange }) {
     setSelectedPos([center.lat, center.lng]);
     setMapCenter([center.lat, center.lng]);
     setLocationName(center.name);
+    setSelectedSports(center.sports || []);
     setSearchResults([]);
     setSearchInput('');
     
@@ -337,6 +340,18 @@ export default function LocationPicker({ value, onChange }) {
               >
                 <p className="font-bold text-slate-800">{center.name}</p>
                 <p className="text-xs text-slate-600">{center.address}</p>
+                {center.sports && center.sports.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {center.sports.map((sport, sIdx) => (
+                      <span
+                        key={sIdx}
+                        className="inline-block bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded text-xs font-semibold"
+                      >
+                        {sport}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -367,9 +382,21 @@ export default function LocationPicker({ value, onChange }) {
             <MapPin size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="font-bold text-slate-800">{locationName}</p>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 mb-2">
                 {selectedPos[0].toFixed(4)}°, {selectedPos[1].toFixed(4)}°
               </p>
+              {selectedSports.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {selectedSports.map((sport, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-semibold"
+                    >
+                      {sport}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <button
               onClick={handleClear}

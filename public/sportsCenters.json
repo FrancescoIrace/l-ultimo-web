@@ -5,182 +5,208 @@
       "address": "Via Federico Rossano 4, Portici",
       "lat": 40.8244,
       "lng": 14.3436,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["padel", "tennis"]
     },
     {
       "name": "Super Santos Village",
       "address": "Portici",
       "lat": 40.8247,
       "lng": 14.3439,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcio a 7", "calcetto"]
     },
     {
       "name": "Blu Padel & Tennis Club",
       "address": "Via Picenna 67, Portici",
       "lat": 40.8268,
       "lng": 14.3441,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["padel", "tennis"]
     },
     {
       "name": "Centro Sportivo Portici",
       "address": "Via De Curtis, Portici",
       "lat": 40.8244,
       "lng": 14.3326,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Campo Neapolis",
       "address": "Cupa Mare 27, San Giorgio a Cremano",
       "lat": 40.8386,
       "lng": 14.3360,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto", "calcio a 7"]
     },
     {
       "name": "Campo Moscato",
       "address": "Via Marittima 12, Ercolano NA",
       "lat": 40.8014,
       "lng": 14.3451,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto", "calcio a 7"]
     },
     {
       "name": "Calcetto Sirio 87",
       "address": "Via Vincenzo Mormone, San Giorgio a Cremano",
       "lat": 40.8423,
       "lng": 14.3436,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto"]
     },
     {
       "name": "Exclusive Padel San Giorgio",
       "address": "Via Gramsci 66, San Giorgio a Cremano",
       "lat": 40.8284,
       "lng": 14.3304,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["padel"]
     },
     {
       "name": "Centro Sportivo San Giorgio",
       "address": "Via Marconi 51, San Giorgio a Cremano",
       "lat": 40.8302,
       "lng": 14.3284,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Centro Sportivo Jepson",
       "address": "Via Cupa S. Marciano, Casoria NA",
       "lat": 40.8865,
       "lng": 14.3145,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto", "calcio a 7", "calcio a 11"]
     },
     {
       "name": "Stadio Raffaele Paudice",
       "address": "Via Sandriana 16, San Giorgio a Cremano",
       "lat": 40.8332,
       "lng": 14.3351,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Golden Padel Ercolano",
       "address": "Via Croce dei Monti 4, Ercolano",
       "lat": 40.8080,
       "lng": 14.3713,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["padel"]
     },
     {
       "name": "Sporting Padel Club Marianna",
       "address": "Via Fossogrande 29, Ercolano",
       "lat": 40.8294,
       "lng": 14.3661,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["padel", "calcetto"]
     },
     {
       "name": "La Siesta",
       "address": "Via Vesuvio 69, Ercolano",
       "lat": 40.8161,
       "lng": 14.3859,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto", "calcio a 7"]
     },
     {
       "name": "Poseidon Club",
       "address": "Via Benedetto Cozzolino 154, Ercolano",
       "lat": 40.7999,
       "lng": 14.3750,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "ASD San Sebastiano Calcio Mazzeo",
       "address": "Via Libertà 50, San Sebastiano al Vesuvio",
       "lat": 40.8463,
       "lng": 14.3632,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcio a 7", "calcio a 11"]
     },
     {
       "name": "Complesso Sportivo San Sebastiano",
       "address": "Via Panoramica Fellapane, San Sebastiano al Vesuvio",
       "lat": 40.8445,
       "lng": 14.3635,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Campetto Cupa Mare",
       "address": "Cupa Mare, San Giorgio a Cremano",
       "lat": 40.8375,
       "lng": 14.3355,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto"]
     },
     {
       "name": "Campetti Via Marconi",
       "address": "Via Marconi, San Giorgio a Cremano",
       "lat": 40.8310,
       "lng": 14.3290,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto"]
     },
     {
       "name": "Campi calcetto Portici centro",
       "address": "Portici centro",
       "lat": 40.8150,
       "lng": 14.3355,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto"]
     },
     {
       "name": "Campetti Via Libertà",
       "address": "San Sebastiano al Vesuvio",
       "lat": 40.8468,
       "lng": 14.3625,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto"]
     },
     {
       "name": "Campetti Via Vesuvio",
       "address": "Ercolano",
       "lat": 40.8140,
       "lng": 14.3700,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["calcetto"]
     },
     {
       "name": "Campi sportivi Fossogrande",
       "address": "Ercolano",
       "lat": 40.8285,
       "lng": 14.3655,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Campetto Via Diaz",
       "address": "Portici",
       "lat": 40.8170,
       "lng": 14.3380,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Campetto Via Gianturco locale",
       "address": "San Giorgio a Cremano",
       "lat": 40.8325,
       "lng": 14.3330,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": []
     },
     {
       "name": "Campetto Parco a Mare",
       "address": "Via Bagnara, Portici NA",
       "lat": 40.8127,
       "lng": 14.3335,
-      "type": "centro_sportivo"
+      "type": "centro_sportivo",
+      "sports": ["basket", "volley"]
     }
   ]
 

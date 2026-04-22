@@ -30,18 +30,19 @@ export default function MatchCard({ match, user }) {
     if (hours < 0) return null; // Non mostrare se la partita è passata
 
     if (days >= 2) {
-      return `Tra ${days} giorni`;
+      return { label: `Tra ${days} giorni`, urgent: false };
     } else if (days === 1) {
-      return 'Domani';
+      return { label: 'Domani', urgent: false };
     } else if (hours >= 12) {
-      return `Oggi (${Math.floor(hours)}h)`;
+      return { label: `Oggi (${Math.floor(hours)}h)`, urgent: false };
     } else if (hours > 0) {
-      return `Tra ${Math.floor(hours)}h`;
+      return { label: `Tra ${Math.floor(hours)}h`, urgent: true };
     }
     return null;
   };
 
-  const timeLabel = getTimeUntilMatch();
+  const timeInfo = getTimeUntilMatch();
+  const timeLabel = timeInfo?.label;
 
   // Controlliamo se l'utente è già tra i partecipanti al caricamento
   useEffect(() => {
@@ -103,8 +104,20 @@ export default function MatchCard({ match, user }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all" onClick={() => navigate(`/match/${match.id}`)}>
-      {/* Badge Organizzatore */}
+    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all ${isPast ? 'opacity-60' : ''}`} onClick={() => navigate(`/match/${match.id}`)}>
+      {/* Indicatore partita passata */}
+      {isPast && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-300 to-slate-200 rounded-t-xl"></div>
+      )}
+      
+      {/* Overlay obliquo "Partita Finita" */}
+      {isPast && (
+        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-31 w-80 bg-red-400 rounded-xl text-white font-bold text-center py-2 opacity-60 shadow-xl">
+            Partita Finita
+          </div>
+        </div>
+      )}
       {isCreator && (
         <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
           TUO MATCH
@@ -116,7 +129,7 @@ export default function MatchCard({ match, user }) {
         </div>
         <div className="flex flex-col items-end gap-1">
           {timeLabel && (
-            <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${timeInfo?.urgent ? 'text-red-600 bg-red-50' : 'text-indigo-600 bg-indigo-50'}`}>
               {timeLabel}
             </span>
           )}

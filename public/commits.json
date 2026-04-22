@@ -1,5 +1,25 @@
 [
   {
+    "date": "22 aprile 2026",
+    "title": "Fix matchCard",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Add bottone per mostrare anche le partite passate",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Add Badge in overlay",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "21 aprile 2026",
+    "title": "Add tasti squadra e tornei",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "21 aprile 2026",
     "title": "Test click",
     "description": "Modifica all'app"
@@ -27,26 +47,6 @@
   {
     "date": "21 aprile 2026",
     "title": "Fix icone landing",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix duplicazione link",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "fix",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix url doppio + aggiunta icone",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Fix Policy per condivisione match",
     "description": "Modifica all'app"
   }
 ]

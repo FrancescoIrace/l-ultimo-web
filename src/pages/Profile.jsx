@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
-import { Loader } from 'lucide-react';
+import { Loader, Info } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
 
 export default function Profile({ session }) {
@@ -15,6 +15,8 @@ export default function Profile({ session }) {
     const [myCreatedMatches, setMyCreatedMatches] = useState([]);
     const [myReviews, setMyReviews] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
+    const [activeMatchCount, setActiveMatchCount] = useState(0);
+    const [tooltipActive, setTooltipActive] = useState(false);
 
     // Stato per il form di modifica
     const [editData, setEditData] = useState({
@@ -76,6 +78,11 @@ export default function Profile({ session }) {
             .eq('creator_id', session.user.id);
 
         setMyCreatedMatches(createdMatchesData || []);
+
+        // 3.5 Conta le partite attive (datetime > now)
+        const now = new Date().toISOString();
+        const activeMatches = (createdMatchesData || []).filter(match => match.datetime > now);
+        setActiveMatchCount(activeMatches.length);
 
         // 4. Recupera le recensioni ricevute
         const { data: reviewsData, error: reviewsError } = await supabase
@@ -246,6 +253,26 @@ export default function Profile({ session }) {
                         <div className="flex justify-between">
                             <span className="text-slate-400 font-bold uppercase text-[10px]">Sport Preferito</span>
                             <span className="font-bold">{profile?.favorite_sport}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-200 pt-2 mt-2 items-center">
+                            <div className="flex items-center gap-1">
+                                <span className="text-slate-400 font-bold uppercase text-[10px]">Partite Attive</span>
+                                <div className="relative cursor-help">
+                                    <button
+                                        type="button"
+                                        onClick={() => setTooltipActive(!tooltipActive)}
+                                        className="p-1 hover:opacity-70 transition-opacity"
+                                    >
+                                        <Info size={14} className="text-slate-400" />
+                                    </button>
+                                    {tooltipActive && (
+                                        <div className="absolute bottom-full left-0 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 animate-fade-in">
+                                            Puoi avere max 5 partite attive contemporaneamente
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <span className={`font-black text-sm ${activeMatchCount >= 5 ? 'text-red-600' : 'text-blue-600'}`}>{activeMatchCount}/5</span>
                         </div>
                     </div>
 

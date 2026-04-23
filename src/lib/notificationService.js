@@ -20,6 +20,7 @@ export async function createNotification({
   metadata = {},
 }) {
   try {
+    
     const { data, error } = await supabase
       .from('notifications')
       .insert([
@@ -32,8 +33,8 @@ export async function createNotification({
           link,
           metadata,
         },
-      ])
-      .select();
+      ]);
+
 
     if (error) throw error;
     return { success: true, data };

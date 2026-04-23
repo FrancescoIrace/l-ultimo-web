@@ -1,6 +1,16 @@
 [
   {
     "date": "22 aprile 2026",
+    "title": "Fix allineamento tag card profilo",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "22 aprile 2026",
+    "title": "Fix larghezza tooltip",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "22 aprile 2026",
     "title": "Merge pull request #1 from FrancescoIrace/logica-giocatori-partita",
     "description": "Add funzione MAX 5 partite attive"
   },
@@ -37,16 +47,6 @@
   {
     "date": "21 aprile 2026",
     "title": "Add bottone per mostrare anche le partite passate",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add Badge in overlay",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add tasti squadra e tornei",
     "description": "Modifica all'app"
   }
 ]

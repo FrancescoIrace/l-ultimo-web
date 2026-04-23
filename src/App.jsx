@@ -18,6 +18,7 @@ import PWADashboard from './pages/PWADashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ResetPasswordHandler from './pages/ResetPasswordHandler';
+import { NotificationBell } from './components/NotificationBell';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
 
@@ -118,21 +119,25 @@ function App() {
             {/* <h1 className="text-2xl font-black text-green-600 tracking-tighter">InCampo</h1> */}
           </button>
 
-          <button
-            onClick={() => navigate('/profile')}
-            className="mr-3 text-blue-500 font-bold border border-blue-600 border-2 rounded-full hover:bg-blue-50 active:scale-95 transition-all ease-in-out"
-          >
-            {/* <CircleUser size={76} strokeWidth={1.75} /> */}
-            <div className="">
-              {session.avatar_url ? (
-                <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-semibold text-slate-600">
-                  {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            {session?.user?.id && <NotificationBell userId={session.user.id} />}
+            
+            <button
+              onClick={() => navigate('/profile')}
+              className="mr-3 text-blue-500 font-bold border border-blue-600 border-2 rounded-full hover:bg-blue-50 active:scale-95 transition-all ease-in-out"
+            >
+              {/* <CircleUser size={76} strokeWidth={1.75} /> */}
+              <div className="">
+                {session.avatar_url ? (
+                  <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-semibold text-slate-600">
+                    {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </button>
+          </div>
 
           {/* <button
           onClick={() => supabase.auth.signOut()}

@@ -91,7 +91,66 @@ export default function MatchDetail({ user }) {
             setLoading(false);
         }
         getDetails();
-    }, [id]);
+
+        // Real-time subscription ai cambiamenti dei partecipanti
+        const channel = supabase
+            .channel(`public:participants:match_id=eq.${id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'participants',
+                    filter: `match_id=eq.${id}`,
+                },
+                async (payload) => {
+                    const { data: updatedParticipants } = await supabase
+                        .from('participants')
+                        .select(`id, user_id, profiles (username, avatar_url, gender)`)
+                        .eq('match_id', id);
+
+                    if (updatedParticipants) {
+                        setParticipants(updatedParticipants);
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'participants',
+                },
+                async (payload) => {
+                    // Ricarica i partecipanti quando c'è un DELETE
+                    const { data: updatedParticipants } = await supabase
+                        .from('participants')
+                        .select(`id, user_id, profiles (username, avatar_url, gender)`)
+                        .eq('match_id', id);
+
+                    if (updatedParticipants) {
+                        setParticipants(updatedParticipants);
+                    }
+
+                    // Aggiorna isJoined
+                    if (user.id) {
+                        const { data: currentUserParticipant } = await supabase
+                            .from('participants')
+                            .select('*')
+                            .eq('match_id', id)
+                            .eq('user_id', user.id)
+                            .maybeSingle();
+                        
+                        setIsJoined(!!currentUserParticipant);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            channel.unsubscribe();
+        };
+    }, [id, user.id]);
 
     const handleLeave = async () => {
         if (match.creator_id === user.id) {
@@ -131,7 +190,7 @@ export default function MatchDetail({ user }) {
                     .eq('id', id);
 
                 success('Hai abbandonato la partita!');
-                setTimeout(() => window.location.reload(), 1000);
+                // La real-time subscription aggiornerà automaticamente i dati
             }
         });
     };
@@ -222,7 +281,7 @@ Scopri di più qui: ${window.location.href}`;
                 .eq('id', match.id);
 
             success("Iscritto con successo!");
-            setTimeout(() => window.location.reload(), 1000);
+            // La real-time subscription aggiornerà automaticamente i dati
         } else {
             error("Errore durante l'iscrizione: " + partError.message);
         }

@@ -414,7 +414,7 @@ Scopri di più qui: ${window.location.href}`;
                             </div>
                         )}
                     </div>
-                    <p className="text-slate-600 mb-3">📝 {match.description}</p>
+                    <p className={`text-slate-600 mb-3 ${!match.description ? 'opacity-50' : ''}`}>📝 {match.description || 'Nessuna descrizione disponibile'}</p>
                 </div>
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({participants.length}/{match.max_players})</h3>

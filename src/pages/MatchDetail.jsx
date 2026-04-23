@@ -183,11 +183,8 @@ export default function MatchDetail({ user }) {
                 .eq('user_id', user.id);
 
             if (!partError) {
-                // 2. Decrementa il contatore in matches
-                await supabase
-                    .from('matches')
-                    .update({ current_players: match.current_players - 1 })
-                    .eq('id', id);
+                // 2. Decrementa il contatore in matches (usando SQL, non il valore locale)
+                await supabase.rpc('decrement_match_players', { match_id: id });
 
                 success('Hai abbandonato la partita!');
                 // La real-time subscription aggiornerà automaticamente i dati
@@ -275,10 +272,8 @@ Scopri di più qui: ${window.location.href}`;
             .insert([{ match_id: match.id, user_id: user.id }]);
 
         if (!partError) {
-            await supabase
-                .from('matches')
-                .update({ current_players: match.current_players + 1 })
-                .eq('id', match.id);
+            // Incrementa il contatore in matches (usando SQL, non il valore locale)
+            await supabase.rpc('increment_match_players', { match_id: match.id });
 
             success("Iscritto con successo!");
             // La real-time subscription aggiornerà automaticamente i dati

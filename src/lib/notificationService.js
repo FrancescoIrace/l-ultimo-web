@@ -114,7 +114,7 @@ export async function notifyMatchCancelled(matchId, matchTitle, participantIds) 
  */
 export async function notifyMatchReminder(matchId, matchTitle, hoursLeft, participantIds) {
   const time = hoursLeft > 1 ? `tra ${hoursLeft} ore` : 'tra meno di un\'ora';
-  
+
   const notifications = participantIds.map(userId =>
     createNotification({
       userId,
@@ -141,6 +141,25 @@ export async function notifyTeamInvite(invitedUserId, inviterName, teamName, inv
     content: `${inviterName} ti ha invitato a unirti a "${teamName}"`,
     link: `/find-friends`, // O il link che preferisci
     metadata: { teamName, inviterName },
+  });
+}
+
+/**
+ * Notifica quando un giocatore abbandona un match
+ */
+export async function notifyMatchLeave(matchId, matchTitle, playerName, organizerId, leftUserId) {
+  return createNotification({
+    userId: organizerId,
+    senderId: leftUserId,
+    type: 'match_leave',
+    title: '👋 Giocatore in Partenza',
+    content: `${playerName} ha abbandonato "${matchTitle}"`,
+    link: `/match/${matchId}`,
+    metadata: {
+      matchId,
+      playerId: leftUserId,
+      playerName,
+    },
   });
 }
 

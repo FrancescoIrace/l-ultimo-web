@@ -3,6 +3,42 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, X, Trash2 } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 
+function getNotificationStyles(type) {
+  const styles = {
+    match_join: {
+      bg: 'bg-green-50',
+      dot: 'bg-green-500',
+      hover: 'hover:bg-green-100',
+    },
+    match_leave: {
+      bg: 'bg-red-50',
+      dot: 'bg-red-500',
+      hover: 'hover:bg-red-100',
+    },
+    match_update: {
+      bg: 'bg-blue-50',
+      dot: 'bg-blue-500',
+      hover: 'hover:bg-blue-100',
+    },
+    match_cancelled: {
+      bg: 'bg-slate-100',
+      dot: 'bg-slate-600',
+      hover: 'hover:bg-slate-200',
+    },
+    match_reminder: {
+      bg: 'bg-yellow-50',
+      dot: 'bg-yellow-500',
+      hover: 'hover:bg-yellow-100',
+    },
+    team_invite: {
+      bg: 'bg-purple-50',
+      dot: 'bg-purple-500',
+      hover: 'hover:bg-purple-100',
+    },
+  };
+  return styles[type] || styles.match_update;
+}
+
 export function NotificationBell({ userId }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -82,20 +118,22 @@ export function NotificationBell({ userId }) {
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">
-                {notifications.map((notification) => (
+                {notifications.map((notification) => {
+                  const styles = getNotificationStyles(notification.type);
+                  return (
                   <li
                     key={notification.id}
-                    className={`p-3 cursor-pointer hover:bg-slate-50 transition-colors ${
-                      !notification.is_read ? 'bg-blue-50' : ''
-                    }`}
+                    className={`p-3 cursor-pointer transition-colors ${
+                      !notification.is_read ? styles.bg : ''
+                    } ${styles.hover}`}
                   >
                     <div
                       onClick={() => handleNotificationClick(notification)}
                       className="flex gap-3 mb-2"
                     >
-                      {/* Pallino non letto */}
+                      {/* Pallino colorato non letto */}
                       {!notification.is_read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                        <div className={`w-2 h-2 ${styles.dot} rounded-full mt-1.5 flex-shrink-0`}></div>
                       )}
                       
                       {/* Contenuto */}
@@ -126,7 +164,8 @@ export function NotificationBell({ userId }) {
                       </button>
                     </div>
                   </li>
-                ))}
+                );
+                })}
               </ul>
             )}
           </div>

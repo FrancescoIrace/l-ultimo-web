@@ -187,6 +187,7 @@ export default function MatchDetail({ user }) {
                 await supabase.rpc('decrement_match_players', { match_id: id });
 
                 success('Hai abbandonato la partita!');
+                // Il trigger PostgreSQL inserirà automaticamente la notifica di abbandono
                 // La real-time subscription aggiornerà automaticamente i dati
             }
         });

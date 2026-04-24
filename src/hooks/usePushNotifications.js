@@ -2,145 +2,82 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { getFCMToken } from '../lib/firebase';
 
-/**
- * Hook per gestire le push notifications con Firebase Cloud Messaging
- * 
- * FUNZIONAMENTO:
- * ===============
- * 1. Registra Firebase Cloud Messaging
- * 2. Richiede permesso all'utente
- * 3. Genera token FCM e lo salva in DB
- * 4. Permette invio push native Android + Web
- * 
- * VANTAGGI:
- * - Notifiche native Android (belle, bold, anche app chiusa)
- * - Firebase gestisce il delivery
- * - Realtime + push = copertura totale
- */
 export function usePushNotifications(userId) {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Controlla se il browser supporta le push
   useEffect(() => {
-    const supported =
-      'serviceWorker' in navigator &&
-      'Notification' in window;
-
-    console.log('🔔 usePushNotifications (Firebase): isSupported =', supported);
+    const supported = 'serviceWorker' in navigator && 'Notification' in window;
     setIsSupported(supported);
     setIsLoading(false);
 
-    if (!supported) {
-      console.log('Push notifications non supportate su questo browser');
-      return;
+    if (supported) {
+      registerServiceWorkers();
     }
-
-    // Registra i Service Worker
-    registerServiceWorkers();
   }, []);
 
-  // Quando userId è disponibile, controlla la subscription
   useEffect(() => {
     if (userId) {
-      console.log('🔄 userId disponibile, controllando subscription...');
       checkSubscription();
     }
   }, [userId]);
 
   const registerServiceWorkers = async () => {
     try {
-      if (!('serviceWorker' in navigator)) return;
-
-      // 1. Registra il SW standard per Real-time
-      const registration1 = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/',
-      });
-      console.log('✅ Service Worker (Real-time) registrato:', registration1);
-
-      // Controlla lo stato di subscription
+      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
       checkSubscription();
     } catch (err) {
-      console.error('❌ Errore registrazione Service Worker:', err);
-      setError('Errore nella registrazione del servizio');
+      console.error('❌ Errore SW:', err);
     }
   };
 
   const checkSubscription = async () => {
+    if (!userId) return;
     try {
-      // Se userId non è disponibile, salta il check
-      if (!userId) {
-        console.log('⏳ userId non ancora disponibile, skipping subscription check');
-        return;
-      }
-
-      console.log('🔍 Controllando subscription per userId:', userId.substring(0, 8) + '...');
-
-      // Controlla se l'utente ha già un token salvato nel DB
       const { data, error: dbError } = await supabase
         .from('push_subscriptions')
-        .select('*')
+        .select('id')
         .eq('user_id', userId)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .limit(1);
 
       if (dbError) throw dbError;
-
-      if (data && data.length > 0) {
-        console.log('✅ Token FCM attivo trovato nel DB:', data.length);
-        setIsSubscribed(true);
-      } else {
-        console.log('❌ Nessun token FCM attivo nel DB');
-        setIsSubscribed(false);
-      }
+      setIsSubscribed(data && data.length > 0);
     } catch (err) {
-      console.error('Errore nel controllo della subscription:', err);
+      console.error('Errore check subscription:', err);
     }
   };
 
-  /**
-   * Richiedi permesso e sottoscrivi alle push Firebase
-   */
   const subscribeToPushNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('🔔 Inizio subscription Firebase...');
-
-      // 1. Richiedi permesso notifiche
       if (Notification.permission === 'denied') {
-        throw new Error('Permessi negati. Abilita le notifiche dalle impostazioni del browser');
+        throw new Error('Permessi negati. Abilita le notifiche nelle impostazioni.');
       }
 
-      if (Notification.permission !== 'granted') {
-        console.log('📢 Richiedendo permessi...');
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          throw new Error('Permessi negati dall\'utente');
-        }
-      }
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') throw new Error('Permessi negati');
 
-      console.log('✅ Permessi notifiche concessi');
+      // 1. Otteniamo la subscription standard del browser (per p256dh e auth)
+      const registration = await navigator.serviceWorker.ready;
+      const browserSub = await registration.pushManager.getSubscription() 
+                         || await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: 'IL_TUO_VAPID_PUBLIC_KEY' // Opzionale se usi solo Firebase
+                         });
 
-      // 2. Ottieni il token FCM
-      console.log('🔐 Generando token FCM...');
+      // 2. Otteniamo il token FCM
       const fcmToken = await getFCMToken();
+      if (!fcmToken) throw new Error('Impossibile generare token FCM');
 
-      if (!fcmToken) {
-        throw new Error('Impossibile generare token FCM. Riprova.');
-      }
-
-      console.log('✅ Token FCM generato:', fcmToken.substring(0, 30) + '...');
-
-      // 3. Salva nel database
-      await saveTokenToDB(fcmToken);
-      console.log('✅ Token salvato nel DB');
+      // 3. Salvataggio unico
+      await saveTokenToDB(browserSub, fcmToken);
 
       setIsSubscribed(true);
-      console.log('✅ isSubscribed settato a TRUE');
-
       return { success: true, token: fcmToken };
     } catch (err) {
       console.error('❌ Errore subscription:', err);
@@ -151,125 +88,63 @@ export function usePushNotifications(userId) {
     }
   }, [userId]);
 
-  /**
-   * Salva il token FCM nel database come "endpoint"
-   */
-  const saveTokenToDB = async (subscription, fcmToken = null) => {
-  try {
-    let endpoint = null;
-    let p256dh = 'fcm-token';
-    let auth = 'fcm-token';
+  const saveTokenToDB = async (browserSub, fcmToken) => {
+    try {
+      if (!userId) return;
 
-    // CASO 1: Abbiamo una sottoscrizione Web standard (quella che serve per iPhone)
-    if (subscription && subscription.endpoint) {
-      endpoint = subscription.endpoint;
+      // Costruiamo l'endpoint FCM
+      const endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
       
-      // Estraiamo le chiavi reali per la crittografia (fondamentale per iOS)
-      try {
-        const rawP256dh = subscription.getKey('p256dh');
-        const rawAuth = subscription.getKey('auth');
-        
-        if (rawP256dh && rawAuth) {
-          p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(rawP256dh)));
+      let p256dh = 'fcm-token';
+      let auth = 'fcm-token';
+
+      // Se abbiamo la sottoscrizione del browser, estraiamo le chiavi reali (PER IPHONE)
+      if (browserSub && browserSub.getKey) {
+        const rawP256 = browserSub.getKey('p256dh');
+        const rawAuth = browserSub.getKey('auth');
+        if (rawP256 && rawAuth) {
+          p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(rawP256)));
           auth = btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth)));
         }
-      } catch (e) {
-        console.warn("⚠️ Impossibile estrarre chiavi crittografiche, uso fallback");
       }
-    } 
-    // CASO 2: Abbiamo solo il token FCM diretto (fallback Android)
-    else if (fcmToken) {
-      endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
-    }
 
-    // CONTROLLO CRITICO: Se l'endpoint è ancora null, blocchiamo l'esecuzione
-    if (!endpoint) {
-      console.error("❌ Errore: Nessun endpoint o token trovato. Sottoscrizione annullata.");
-      return; 
-    }
+      console.log("📡 Salvataggio su DB per device:", detectDevice());
 
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .upsert(
-        {
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .upsert({
           user_id: userId,
-          endpoint: endpoint, // Ora siamo sicuri che non sia null
+          endpoint: endpoint,
           p256dh: p256dh,
           auth: auth,
           browser_name: detectBrowser(),
           device_name: detectDevice(),
           is_active: true,
           last_used_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'user_id,endpoint',
-        }
-      );
-
-    if (error) throw error;
-    console.log('✅ Sottoscrizione salvata correttamente');
-
-  } catch (err) {
-    console.error('❌ Errore durante il salvataggio su Supabase:', err.message);
-  }
-};
-
-  /**
-   * Annulla la subscription alle push Firebase
-   */
-  const unsubscribeFromPushNotifications = useCallback(async () => {
-    try {
-      setIsLoading(true);
-
-      // 1. Rimuovi tutti i token per questo utente
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .update({ is_active: false })
-        .eq('user_id', userId);
+        , { onConflict: 'user_id,endpoint' });
 
       if (error) throw error;
-
-      setIsSubscribed(false);
-      console.log('✅ Unsubscribed dalle push Firebase');
+      console.log('✅ DATABASE AGGIORNATO');
     } catch (err) {
-      console.error('❌ Errore unsubscribe:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+      console.error('❌ ERRORE UPSERT:', err.message);
     }
-  }, [userId]);
-
-  return {
-    isSupported,
-    isSubscribed,
-    isLoading,
-    error,
-    subscribeToPushNotifications,
-    unsubscribeFromPushNotifications,
   };
-}
 
-/**
- * Rileva il browser
- */
-function detectBrowser() {
-  const ua = navigator.userAgent;
-  if (ua.indexOf('Firefox') > -1) return 'Firefox';
-  if (ua.indexOf('Chrome') > -1) return 'Chrome';
-  if (ua.indexOf('Safari') > -1) return 'Safari';
-  if (ua.indexOf('Edge') > -1) return 'Edge';
-  return 'Unknown';
-}
+  function detectBrowser() {
+    const ua = navigator.userAgent;
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Edg')) return 'Edge';
+    if (ua.includes('Chrome')) return 'Chrome';
+    if (ua.includes('Safari')) return 'Safari';
+    return 'Unknown';
+  }
 
-/**
- * Rileva il device
- */
-function detectDevice() {
-  const ua = navigator.userAgent;
-  if (/Android/i.test(ua)) return 'Android';
-  if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
-  if (/Windows/i.test(ua)) return 'Windows';
-  if (/Mac/i.test(ua)) return 'MacOS';
-  if (/Linux/i.test(ua)) return 'Linux';
-  return 'Unknown';
+  function detectDevice() {
+    const ua = navigator.userAgent;
+    if (/Android/i.test(ua)) return 'Android';
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'iOS';
+    return 'Desktop';
+  }
+
+  return { isSupported, isSubscribed, isLoading, error, subscribeToPushNotifications };
 }

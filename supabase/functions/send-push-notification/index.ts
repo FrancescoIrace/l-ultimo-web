@@ -287,7 +287,18 @@ async function sendToFCM(endpoint: string, message: PushMessage) {
  */
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
-    const privateKey = JSON.parse(privateKeyJson);
+    // Pulisci la stringa - potrebbe avere escape characters
+    let cleanJson = privateKeyJson.trim();
+    
+    // Se è una stringa JSON con doppi escape, puliscila
+    if (cleanJson.startsWith('"') && cleanJson.endsWith('"')) {
+      cleanJson = JSON.parse(cleanJson);
+    }
+    
+    // Prova a parserizare
+    const privateKey = typeof cleanJson === 'string' ? JSON.parse(cleanJson) : cleanJson;
+    
+    console.log(`   🔑 Private key client email: ${privateKey.client_email}`);
     
     // JWT header
     const header = {
@@ -305,7 +316,7 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       iat: now,
     };
 
-    // Crea il JWT (semplificato - in produzione useresti una libreria)
+    // Crea il JWT
     const headerB64 = base64url(JSON.stringify(header));
     const payloadB64 = base64url(JSON.stringify(payload));
     const signatureInput = `${headerB64}.${payloadB64}`;
@@ -314,8 +325,15 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(signatureInput);
 
-    // Importa la private key
-    const keyData = privateKey.private_key
+    // Estrai la private key (potrebbe avere \n escape o newline reali)
+    let keyPem = privateKey.private_key;
+    
+    // Se è un string con \n literal, convertilo a newline reali
+    if (typeof keyPem === 'string') {
+      keyPem = keyPem.replace(/\\n/g, '\n');
+    }
+
+    const keyData = keyPem
       .replace(/-----BEGIN PRIVATE KEY-----/g, '')
       .replace(/-----END PRIVATE KEY-----/g, '')
       .replace(/\n/g, '');
@@ -342,6 +360,8 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
 
     const jwt = `${signatureInput}.${signatureB64}`;
 
+    console.log(`   📜 JWT generato, scambio con Google...`);
+
     // Scambia il JWT per un access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -356,14 +376,15 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
 
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text();
-      console.error('OAuth2 error:', error);
+      console.error('   ❌ OAuth2 error:', error);
       throw new Error(`Failed to get FCM token: ${error}`);
     }
 
     const tokenData = await tokenResponse.json() as any;
+    console.log(`   🔓 Access token ottenuto!`);
     return tokenData.access_token;
   } catch (error: any) {
-    console.error('FCM token generation failed:', error.message);
+    console.error('❌ FCM token generation failed:', error.message);
     throw error;
   }
 }

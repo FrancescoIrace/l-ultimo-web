@@ -186,15 +186,16 @@ serve(async (req) => {
  * Costruisce il messaggio push dalla notifica
  */
 function buildPushMessage(notification: any): PushMessage {
+  console.log(`DEBUG DB: Title="${notification.title}", Content="${notification.content}"`);
   return {
-    title: notification.title,
-    body: notification.content,
+    title: notification.title || "Nuovo aggiornamento",
+    body: notification.content || notification.message || "Tocca per vedere i dettagli", // Prova anche .message
     icon: '/icon-192x192.png',
     badge: '/badge-72x72.png',
     data: {
       notificationId: notification.id,
-      link: notification.link,
-      type: notification.type,
+      link: notification.link || '/',
+      type: notification.type || 'general',
       ...notification.metadata,
     },
   };
@@ -218,7 +219,7 @@ async function sendPushToDevice(sub: any, pushMessage: any, notificationId: stri
 
     // Chiama la funzione di invio che abbiamo sistemato nei messaggi precedenti
     return await sendToFCM(token, pushMessage);
-    
+
   } catch (error) {
     console.error(`❌ Fallimento invio al device ${sub.id}:`, error.message);
     throw error;
@@ -267,39 +268,33 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
 
     // 3. COSTRUZIONE BODY "A PROVA DI BOMBA"
     // Usiamo String() per evitare l'errore "No number after minus sign"
-   const payload = {
+    const payload = {
   message: {
     token: deviceToken,
-    // Notifica generica (usata da molti sistemi)
+    // Usiamo 'notification' per Android e come fallback universale
     notification: {
-      title: String(message.title || "Titolo mancante"),
-      body: String(message.body || "Contenuto non disponibile"),
+      title: String(message.title).trim(),
+      body: String(message.body).trim(),
     },
-    // Configurazione specifica Android
-    android: {
-      priority: "high",
-      notification: {
-        title: String(message.title || "Titolo Android"),
-        body: String(message.body || "Corpo Android"),
-        sound: "default",
-        click_action: "FLUTTER_NOTIFICATION_CLICK", // Utile se usi Flutter, altrimenti ignoralo
-      },
-    },
-    // Configurazione specifica Apple (APNS) - CRUCIALE PER IPHONE
+    // Configurazione specifica per iOS
     apns: {
       payload: {
         aps: {
           alert: {
-            title: String(message.title || "Titolo iPhone"),
-            body: String(message.body || "Corpo iPhone"),
+            title: String(message.title).trim(),
+            body: String(message.body).trim(),
           },
           sound: "default",
           badge: 1,
           "mutable-content": 1,
         },
       },
+      headers: {
+        "apns-priority": "10",
+        "apns-push-type": "alert",
+      },
     },
-    // Dati personalizzati (passati silenziosamente all'app)
+    // Dati per il Service Worker (utili per il click sulla notifica)
     data: Object.fromEntries(
       Object.entries(message.data || {}).map(([k, v]) => [k, String(v)])
     ),

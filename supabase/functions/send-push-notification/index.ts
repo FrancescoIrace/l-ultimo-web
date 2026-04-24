@@ -6,7 +6,9 @@
 
 import { serve } from 'https://deno.land/std@0.132.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.0';
-import { SignJWT } from 'https://esm.sh/jose@5.4.1';
+import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
+// Se preferisci usare i singoli componenti come SignJWT:
+const { SignJWT, importPKCS8 } = jose;
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -320,35 +322,30 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
     const serviceAccount = JSON.parse(privateKeyJson);
-
-    if (!serviceAccount.private_key || !serviceAccount.client_email) {
-      throw new Error('FCM_PRIVATE_KEY incompleto (mancano campi chiave)');
-    }
-
-    // 1. Normalizzazione della Private Key (Risolve il problema della firma)
-    // 1. Normalizzazione RIGOROSA della Private Key
+    
+    // 1. ESTRAZIONE E PULIZIA RADICALE
     let pKey = serviceAccount.private_key;
 
-    // Se la chiave è nel formato JSON di Firebase, i \n sono scritti come stringa "\\n"
-    if (pKey.includes('\\n')) {
-      pKey = pKey.replace(/\\n/g, '\n');
+    // Rimuove letteralmente tutto ciò che non è Base64 o le etichette BEGIN/END
+    // Questo elimina spazi, tabulazioni e newline sporchi
+    if (pKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      const header = '-----BEGIN PRIVATE KEY-----';
+      const footer = '-----END PRIVATE KEY-----';
+      
+      // Estraiamo solo la parte centrale (il Base64)
+      let base64Part = pKey
+        .replace(header, '')
+        .replace(footer, '')
+        .replace(/\s+/g, ''); // Rimuove TUTTI i tipi di spazi/a capo
+      
+      // Ricostruiamo il PEM con i newline corretti ogni 64 caratteri (standard RSA)
+      const chunks = base64Part.match(/.{1,64}/g) || [];
+      pKey = `${header}\n${chunks.join('\n')}\n${footer}`;
     }
 
-    // Rimuove eventuali virgolette doppie che a volte Supabase aggiunge ai segreti
-    pKey = pKey.replace(/"/g, '').trim();
-
-    // Forza il formato PEM corretto se mancano gli a capo dopo BEGIN e prima di END
-    if (!pKey.includes('\n')) {
-       // Se è tutto su una riga, Google la rifiuterà sempre. 
-       // Proviamo a ripristinare i newline solo nei punti critici.
-       pKey = pKey
-         .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
-         .replace('-----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----');
-    }
-
-    // 2. Creazione del JWT
+    // 2. CREAZIONE JWT
     const now = Math.floor(Date.now() / 1000);
-    const jwt = await new SignJWT({
+    const jwt = await new jose.SignJWT({
       iss: serviceAccount.client_email,
       scope: 'https://www.googleapis.com/auth/firebase.messaging',
       aud: 'https://oauth2.googleapis.com/token',
@@ -356,9 +353,9 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       exp: now + 3600,
     })
       .setProtectedHeader({ alg: 'RS256' })
-      .sign(await importPrivateKey(pKey));
+      .sign(await jose.importPKCS8(pKey, 'RS256'));
 
-    // 3. Scambio JWT con Access Token
+    // 3. SCAMBIO TOKEN
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -368,15 +365,10 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       }),
     });
 
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      throw new Error(`OAuth failed: ${errorText}`);
-    }
-
     const tokenData = await tokenResponse.json();
-    console.log('🔓 Access token FCM ottenuto con successo');
+    if (tokenData.error) throw new Error(`OAuth Error: ${tokenData.error_description}`);
+    
     return tokenData.access_token;
-
   } catch (error: any) {
     console.error('❌ Errore generazione token FCM:', error.message);
     throw error;

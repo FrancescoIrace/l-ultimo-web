@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Calendar, Bell } from 'lucide-react';
 import { useAlert } from '../components/AlertComponent';
-import { notifyMatchReminder } from '../lib/notificationService';
+import { notifyMatchReminder, notifyMatchJoin } from '../lib/notificationService';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
 
 export default function MatchDetail({ user }) {
@@ -177,7 +177,8 @@ export default function MatchDetail({ user }) {
             warningMessage = "⚠️ Mancano meno di 8 ore alla partita! Sei sicuro di voler abbandonare?";
         }
 
-        confirmDangerous(warningMessage, async () => {
+    confirmDangerous(warningMessage, async () => {
+        try {
             // 1. Rimuovi dai partecipanti
             const { error: partError } = await supabase
                 .from('participants')
@@ -185,15 +186,30 @@ export default function MatchDetail({ user }) {
                 .eq('match_id', id)
                 .eq('user_id', user.id);
 
-            if (!partError) {
-                // 2. Decrementa il contatore in matches (usando SQL, non il valore locale)
-                await supabase.rpc('decrement_match_players', { match_id: id });
-
-                success('Hai abbandonato la partita!');
-                // Il trigger PostgreSQL inserirà automaticamente la notifica di abbandono
-                // La real-time subscription aggiornerà automaticamente i dati
+            if (partError) {
+                console.error('❌ Errore delete partecipante:', partError);
+                error('Errore durante l\'abbandono: ' + partError.message);
+                return;
             }
-        });
+
+            console.log('✅ Partecipante rimosso');
+
+            // 2. Decrementa il contatore in matches
+            const { error: rpcError } = await supabase.rpc('decrement_match_players', { match_id: id });
+            
+            if (rpcError) {
+                console.error('❌ Errore RPC decrement:', rpcError);
+                error('Errore durante l\'aggiornamento: ' + rpcError.message);
+                return;
+            }
+
+            console.log('✅ Contatore decrementato');
+            success('Hai abbandonato la partita!');
+        } catch (err) {
+            console.error('❌ Errore generale:', err);
+            error('Errore: ' + err.message);
+        }
+    });
     };
 
     const handleDeleteMatch = async () => {
@@ -273,13 +289,13 @@ Scopri di più qui: ${window.location.href}`;
     const handleSendReminders = async () => {
         const { canSend, nextResetIn } = canSendReminder();
 
-        if (!canSend) {
-            const minutes = Math.floor(nextResetIn / 60);
-            const seconds = nextResetIn % 60;
-            const timeFormatted = `${minutes} minuti e ${seconds.toString().padStart(2, '0')} secondi`;
-            error(`Puoi inviare un reminder ogni 30 minuti. Riprova tra ${timeFormatted}`);
-            return;
-        }
+        // if (!canSend) {
+        //     const minutes = Math.floor(nextResetIn / 60);
+        //     const seconds = nextResetIn % 60;
+        //     const timeFormatted = `${minutes} minuti e ${seconds.toString().padStart(2, '0')} secondi`;
+        //     error(`Puoi inviare un reminder ogni 30 minuti. Riprova tra ${timeFormatted}`);
+        //     return;
+        // }
 
         confirm('Inviare il reminder a tutti i partecipanti?', async () => {
             try {
@@ -315,6 +331,15 @@ Scopri di più qui: ${window.location.href}`;
         if (!partError) {
             // Incrementa il contatore in matches (usando SQL, non il valore locale)
             await supabase.rpc('increment_match_players', { match_id: match.id });
+
+            // Crea la notifica per l'organizzatore
+            await notifyMatchJoin(
+                match.id,
+                match.title,
+                user.user_metadata?.username || 'Un giocatore',
+                match.creator_id,
+                user.id
+            );
 
             success("Iscritto con successo!");
             // La real-time subscription aggiornerà automaticamente i dati

@@ -1,5 +1,25 @@
 [
   {
+    "date": "24 aprile 2026",
+    "title": "Add Bottone notifica per inviare un reminder ai partecipanti",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "Add notifica al creatore quando player abbandona partita",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "Fix gestione counter player",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "Add notifica al creatore quando un giocatore si unisce alla partita + Fix realtime crud",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
     "date": "22 aprile 2026",
     "title": "Fix allineamento tag card profilo",
     "description": "Co-authored-by: Copilot <copilot@github.com>"
@@ -27,26 +47,6 @@
   {
     "date": "22 aprile 2026",
     "title": "Fix link redirect reset password",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Add Reset password",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Update matchCard per partita finita",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Fix matchCard",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "21 aprile 2026",
-    "title": "Add bottone per mostrare anche le partite passate",
     "description": "Modifica all'app"
   }
 ]

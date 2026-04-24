@@ -1,6 +1,26 @@
 import { supabase } from '../lib/supabase';
 
 /**
+ * Chiama l'Edge Function per inviare le push notifications
+ * @param {string} notificationId - ID della notifica
+ */
+async function triggerPushNotification(notificationId) {
+  try {
+    console.log('📤 Chiamando Edge Function per push:', notificationId);
+    
+    const response = await supabase.functions.invoke('send-push-notification', {
+      body: { notificationId },
+    });
+
+    console.log('✅ Edge Function risposta:', response);
+    return response;
+  } catch (err) {
+    console.error('❌ Errore nell\'invio della push via Edge Function:', err);
+    // Non lancia errore, così la notifica in-app funziona comunque
+  }
+}
+
+/**
  * Crea una notifica per un utente
  * @param {string} userId - ID dell'utente destinatario
  * @param {string} senderId - ID dell'utente che ha generato l'azione (opzionale)
@@ -9,6 +29,7 @@ import { supabase } from '../lib/supabase';
  * @param {string} content - Contenuto/messaggio della notifica
  * @param {string} link - Link per reindirizzare (es: /match/123)
  * @param {object} metadata - Dati extra opzionali
+ * @param {boolean} sendPush - Se true, invia anche via push notification
  */
 export async function createNotification({
   userId,
@@ -18,28 +39,37 @@ export async function createNotification({
   content,
   link = null,
   metadata = {},
+  sendPush = true,
 }) {
   try {
+    console.log('📝 Creando notifica:', { type, title, userId });
     
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert([
-        {
-          user_id: userId,
-          sender_id: senderId,
-          type,
-          title,
-          content,
-          link,
-          metadata,
-        },
-      ]);
-
+    // Usa la RPC function che bypassa RLS
+    const { data, error } = await supabase.rpc('create_notification_with_push', {
+      p_user_id: userId,
+      p_sender_id: senderId,
+      p_type: type,
+      p_title: title,
+      p_content: content,
+      p_link: link,
+      p_metadata: metadata,
+      p_send_push: sendPush,
+    });
 
     if (error) throw error;
-    return { success: true, data };
+
+    const notificationId = data;
+    console.log('✅ Notifica creata:', notificationId);
+
+    // Se sendPush è true, chiama l'Edge Function
+    if (sendPush && notificationId) {
+      // Esegui in background, non bloccare
+      triggerPushNotification(notificationId);
+    }
+
+    return { success: true, data: { id: notificationId } };
   } catch (err) {
-    console.error('Errore nella creazione della notifica:', err);
+    console.error('❌ Errore nella creazione della notifica:', err);
     return { success: false, error: err.message };
   }
 }

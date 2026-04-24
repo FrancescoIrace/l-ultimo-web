@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate,Link } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import Auth from './pages/Auth';
 import CreateMatch from './pages/CreateMatch';
 import FindFriends from './pages/FindFriends';
@@ -27,6 +28,7 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
   const isPWA = usePWAMode();
+  const { isSupported, isSubscribed, subscribeToPushNotifications } = usePushNotifications(session?.user?.id);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -121,6 +123,16 @@ function App() {
 
           <div className="flex items-center gap-2">
             {session?.user?.id && <NotificationBell userId={session.user.id} />}
+            
+            {isSupported && !isSubscribed && (
+              <button
+                onClick={subscribeToPushNotifications}
+                className="text-2xl hover:scale-110 transition-transform active:scale-95"
+                title="Attiva notifiche push"
+              >
+                🔔
+              </button>
+            )}
             
             <button
               onClick={() => navigate('/profile')}

@@ -372,14 +372,22 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     // Estrai e processa la private key
     let keyPem = privateKey.private_key;
     if (typeof keyPem === 'string') {
+      // Sostituisci \\n letterali con newline reali (se necessario)
       keyPem = keyPem.replace(/\\n/g, '\n');
     }
+
+    console.log(`   🔍 Private key prima di elaborazione (primi 100 char): ${keyPem.substring(0, 100)}`);
+    console.log(`   🔍 Private key contiene '-----BEGIN': ${keyPem.includes('-----BEGIN PRIVATE KEY-----')}`);
+    console.log(`   🔍 Private key lunghezza: ${keyPem.length}`);
 
     const keyData = keyPem
       .replace(/-----BEGIN PRIVATE KEY-----/g, '')
       .replace(/-----END PRIVATE KEY-----/g, '')
       .replace(/\n/g, '')
       .replace(/\s/g, '');
+
+    console.log(`   🔍 Key data dopo elaborazione (lunghezza): ${keyData.length}`);
+    console.log(`   🔍 Key data (primi 50 char): ${keyData.substring(0, 50)}`);
 
     if (!keyData || keyData.length < 100) {
       throw new Error(`Private key data too short: ${keyData.length}`);
@@ -390,6 +398,9 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
+
+    console.log(`   🔍 Binary string length: ${binaryString.length}`);
+    console.log(`   🔍 Bytes buffer length: ${bytes.length}`);
 
     const cryptoKey = await crypto.subtle.importKey(
       'pkcs8',
@@ -402,11 +413,16 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       ['sign']
     );
 
+    console.log(`   ✅ Crypto key imported successfully`);
+
     const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, data);
     const signatureB64 = base64url(String.fromCharCode(...new Uint8Array(signature)));
     const jwt = `${signatureInput}.${signatureB64}`;
 
-    console.log(`   📜 JWT generato`);
+    console.log(`   📜 JWT generato (lunghezza: ${jwt.length})`);
+    console.log(`   🔍 Header JWT: ${headerB64}`);
+    console.log(`   🔍 Payload JWT: ${payloadB64}`);
+    console.log(`   🔍 Signature (primi 50 char): ${signatureB64.substring(0, 50)}`);
 
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',

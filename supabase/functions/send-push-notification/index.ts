@@ -229,23 +229,40 @@ async function sendPushToDevice(
 async function getFCMPrivateKey(): Promise<string> {
   try {
     // Prova prima dal database - dovrebbe essere il JSON completo
+    console.log('   🔍 Cercando FCM_PRIVATE_KEY in app_secrets...');
     const { data, error } = await supabase
       .from('app_secrets')
       .select('value')
       .eq('key', 'FCM_PRIVATE_KEY')
       .single();
 
-    if (data && data.value && data.value.length > 100) {
-      console.log('   ✅ FCM_PRIVATE_KEY caricato dal database app_secrets');
-      // Ritorna direttamente il JSON completo
-      return data.value;
+    console.log(`   🔍 Query result - error: ${error ? error.message : 'none'}, data: ${data ? 'found' : 'null'}`);
+    
+    if (error) {
+      console.log(`   ⚠️  Query error: ${error.message}`);
+    }
+
+    if (data) {
+      console.log(`   🔍 Data trovato! Lunghezza value: ${data.value ? data.value.length : 'null'}`);
+      console.log(`   🔍 Value first 50 chars: ${data.value ? data.value.substring(0, 50) : 'null'}`);
+      
+      if (data.value && data.value.length > 100) {
+        console.log('   ✅ FCM_PRIVATE_KEY caricato dal database app_secrets (lunghezza OK)');
+        // Ritorna direttamente il JSON completo
+        return data.value;
+      } else {
+        console.log(`   ❌ Value troppo corto: ${data.value ? data.value.length : 0} caratteri`);
+      }
     }
   } catch (dbError) {
-    console.log('   ℹ️  app_secrets non trovata o FCM_PRIVATE_KEY non trovata');
+    console.log(`   ❌ Exception: ${(dbError as any).message}`);
   }
 
   // Fallback: usa il secret ambientale
+  console.log('   🔍 Fallback: cercando in Deno.env...');
   const envKey = Deno.env.get('FCM_PRIVATE_KEY');
+  console.log(`   🔍 Deno.env.get('FCM_PRIVATE_KEY') lunghezza: ${envKey ? envKey.length : 'null'}`);
+  
   if (envKey && envKey.length > 100) {
     console.log('   ✅ FCM_PRIVATE_KEY caricato da ambiente');
     return envKey;

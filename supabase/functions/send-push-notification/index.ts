@@ -454,7 +454,11 @@ function reformatPEMKey(keyStr: string): string {
 
     console.log(`   ✅ Crypto key imported successfully`);
 
-    const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, data);
+    const signature = await crypto.subtle.sign(
+      { name: 'RSASSA-PKCS1-v1_5' },
+      cryptoKey,
+      data
+    );
     const signatureB64 = base64url(String.fromCharCode(...new Uint8Array(signature)));
     const jwt = `${signatureInput}.${signatureB64}`;
 

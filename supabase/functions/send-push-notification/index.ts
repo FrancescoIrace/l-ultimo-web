@@ -376,28 +376,45 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       console.log(`   🔧 Dopo normalizzazione (primi 100 chars): ${privateKeyPEM.substring(0, 100)}`);
       console.log(`   🔧 Dopo normalizzazione (ultimi 50 chars): ${privateKeyPEM.substring(privateKeyPEM.length - 50)}`);
       
-      // Se la chiave ha spazi al posto di newline (problema del database SQL), riforma
-      const hasSpacesBetweenLines = privateKeyPEM.includes('-----BEGIN') && 
-                                     privateKeyPEM.includes('-----END') &&
-                                     !privateKeyPEM.includes('\n');
-      
-      const hasMultipleSpaces = privateKeyPEM.includes('  ') || 
-                                (privateKeyPEM.match(/ [A-Za-z0-9+/]/g) || []).length > 5;
-      
-      if (hasSpacesBetweenLines || hasMultipleSpaces) {
-        console.log(`   🔧 Rilevato problema con spazi al posto di newline - riformattando...`);
-        console.log(`   🔧 hasSpacesBetweenLines: ${hasSpacesBetweenLines}, hasMultipleSpaces: ${hasMultipleSpaces}`);
-        privateKeyPEM = reformatPEMKey(privateKeyPEM);
+      // SEMPRE riformatta se contiene BEGIN/END (il database potrebbe aver corrotto i newline)
+      if (privateKeyPEM.includes('-----BEGIN') && privateKeyPEM.includes('-----END')) {
+        // Verifica se ha troppi spazi nelle linee base64 (indizio di corruzione)
+        const lines = privateKeyPEM.split('\n');
+        const hasSpacesInBase64 = lines.some((line, idx) => {
+          // Scarta header/footer
+          if (idx === 0 || idx === lines.length - 1) return false;
+          // Guarda se ci sono spazi in mezzo al base64
+          return /\s+[A-Za-z0-9+/]/.test(line);
+        });
+        
+        if (hasSpacesInBase64) {
+          console.log(`   🔧 Rilevati spazi nella base64 - riformattando...`);
+          privateKeyPEM = reformatPEMKey(privateKeyPEM);
+        } else {
+          console.log(`   ✅ PEM sembra OK`);
+        }
       }
     }
 
     console.log(`   🔍 Final private key lunghezza: ${privateKeyPEM.length}`);
-    console.log(`   🔍 Final private key contains BEGIN: ${privateKeyPEM.includes('-----BEGIN PRIVATE KEY-----')}`);
-    console.log(`   🔍 Final private key contains END: ${privateKeyPEM.includes('-----END PRIVATE KEY-----')}`);
-    console.log(`   🔍 Final private key newline count: ${(privateKeyPEM.match(/\n/g) || []).length}`);
+    console.log(`   ✅ Final private key lunghezza: ${privateKeyPEM.length}`);
+    console.log(`   ✅ Final private key contains BEGIN: ${privateKeyPEM.includes('-----BEGIN PRIVATE KEY-----')}`);
+    console.log(`   ✅ Final private key newline count: ${(privateKeyPEM.match(/\n/g) || []).length}`);
 
-    // Crea JWT usando jose
+    // Crea JWT usando jose con importPKCS8
     const now = Math.floor(Date.now() / 1000);
+    const algorithm = 'RS256';
+    
+    // Importa la chiave in formato PKCS8 (che è quello che Firebase usa)
+    console.log(`   🔐 Importando chiave PKCS8...`);
+    const privateKeyObj = await crypto.subtle.importKey(
+      'pkcs8',
+      pemToDER(privateKeyPEM),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
     const jwt = await new SignJWT({
       iss: serviceAccount.client_email,
       scope: 'https://www.googleapis.com/auth/firebase.messaging',
@@ -405,11 +422,11 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       iat: now,
       exp: now + 3600,
     })
-      .setProtectedHeader({ alg: 'RS256' })
-      .sign(await importPrivateKey(privateKeyPEM));
+      .setProtectedHeader({ alg: algorithm })
+      .sign(privateKeyObj);
 
-    console.log(`   📜 JWT generato con jose (lunghezza: ${jwt.length})`);
-    console.log(`   📜 JWT (primi 100 chars): ${jwt.substring(0, 100)}`);
+    console.log(`   📜 JWT generato con firma corretta (lunghezza: ${jwt.length})`);
+    console.log(`   📜 JWT payload check: ${jwt.split('.')[1] ? 'presente ✅' : 'MANCANTE ❌'}`);
 
     // Scambia JWT con access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -430,26 +447,12 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     }
 
     const tokenData = await tokenResponse.json() as any;
-    console.log(`   🔓 Access token ottenuto!`);
+    console.log(`   🔓 Access token ottenuto! Tipo: ${tokenData.token_type}, scadenza: ${tokenData.expires_in}s`);
     return tokenData.access_token;
   } catch (error: any) {
     console.error('❌ FCM token generation failed:', error.message);
     throw error;
   }
-}
-
-/**
- * Importa una private key PEM e ritorna una CryptoKey per jose
- */
-async function importPrivateKey(pem: string) {
-  // jose si aspetta una stringa PEM direttamente
-  return await crypto.subtle.importKey(
-    'pkcs8',
-    pemToDER(pem),
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
 }
 
 /**

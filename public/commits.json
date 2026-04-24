@@ -1,52 +1,52 @@
 [
   {
     "date": "24 aprile 2026",
-    "title": "fix ?",
+    "title": "debug",
     "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",
-    "title": "Spostamento pk su db",
+    "title": "Ultimo Fix notifiche?",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "fix: sistema gitignore e dipendenze",
     "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",
-    "title": ".",
+    "title": "fix d",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "add formattazione",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "debug",
     "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",
-    "title": "test debug",
+    "title": "fix sendPushtodevice",
     "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",
-    "title": ".",
+    "title": "debug",
     "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",
-    "title": "chore: Add fcm-key.json to gitignore",
+    "title": "debug",
     "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",
-    "title": "add apici json",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "test.",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": ".",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "testing 2",
+    "title": "Debug",
     "description": "Modifica all'app"
   }
 ]

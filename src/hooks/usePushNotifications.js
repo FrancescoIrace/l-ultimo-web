@@ -1,19 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { getFCMToken } from '../lib/firebase';
 
 /**
- * Hook per gestire le push notifications
+ * Hook per gestire le push notifications con Firebase Cloud Messaging
  * 
  * FUNZIONAMENTO:
  * ===============
- * 1. Registra il Service Worker
+ * 1. Registra Firebase Cloud Messaging
  * 2. Richiede permesso all'utente
- * 3. Genera e salva la subscription del device in DB
- * 4. Permette di inviare push dal server
+ * 3. Genera token FCM e lo salva in DB
+ * 4. Permette invio push native Android + Web
  * 
  * VANTAGGI:
- * - Funziona anche con app chiusa
- * - Browser nativo, nessuna app store richiesta
+ * - Notifiche native Android (belle, bold, anche app chiusa)
+ * - Firebase gestisce il delivery
  * - Realtime + push = copertura totale
  */
 export function usePushNotifications(userId) {
@@ -26,10 +27,9 @@ export function usePushNotifications(userId) {
   useEffect(() => {
     const supported =
       'serviceWorker' in navigator &&
-      'PushManager' in window &&
       'Notification' in window;
 
-    console.log('🔔 usePushNotifications: isSupported =', supported);
+    console.log('🔔 usePushNotifications (Firebase): isSupported =', supported);
     setIsSupported(supported);
     setIsLoading(false);
 
@@ -38,40 +38,51 @@ export function usePushNotifications(userId) {
       return;
     }
 
-    // Registra il Service Worker
-    registerServiceWorker();
+    // Registra i Service Worker
+    registerServiceWorkers();
   }, []);
 
-  const registerServiceWorker = async () => {
+  const registerServiceWorkers = async () => {
     try {
       if (!('serviceWorker' in navigator)) return;
 
-      const registration = await navigator.serviceWorker.register('/sw.js', {
+      // 1. Registra il SW standard per Real-time
+      const registration1 = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',
       });
+      console.log('✅ Service Worker (Real-time) registrato:', registration1);
 
-      console.log('Service Worker registrato:', registration);
+      // 2. Registra il Firebase Messaging SW per notifiche in background
+      const registration2 = await navigator.serviceWorker.register(
+        '/firebase-messaging-sw.js',
+        { scope: '/' }
+      );
+      console.log('✅ Firebase Messaging SW registrato:', registration2);
 
       // Controlla lo stato di subscription
-      checkSubscription(registration);
+      checkSubscription();
     } catch (err) {
-      console.error('Errore registrazione Service Worker:', err);
+      console.error('❌ Errore registrazione Service Worker:', err);
       setError('Errore nella registrazione del servizio');
     }
   };
 
-  const checkSubscription = async (registration) => {
+  const checkSubscription = async () => {
     try {
-      const subscription = await registration.pushManager.getSubscription();
-      
-      if (subscription) {
-        console.log('✅ Subscription trovata nel browser:', subscription.endpoint);
+      // Controlla se l'utente ha già un token salvato nel DB
+      const { data, error: dbError } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (dbError) throw dbError;
+
+      if (data && data.length > 0) {
+        console.log('✅ Token FCM attivo trovato nel DB');
         setIsSubscribed(true);
-        
-        // Auto-salva nel DB se non presente
-        await saveSubscriptionToDB(subscription);
       } else {
-        console.log('❌ Nessuna subscription nel browser');
+        console.log('❌ Nessun token FCM attivo nel DB');
         setIsSubscribed(false);
       }
     } catch (err) {
@@ -80,16 +91,16 @@ export function usePushNotifications(userId) {
   };
 
   /**
-   * Richiedi permesso e sottoscrivi alle push
+   * Richiedi permesso e sottoscrivi alle push Firebase
    */
   const subscribeToPushNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('🔔 Inizio subscription...');
+      console.log('🔔 Inizio subscription Firebase...');
 
-      // 1. Richiedi permesso
+      // 1. Richiedi permesso notifiche
       if (Notification.permission === 'denied') {
         throw new Error('Permessi negati. Abilita le notifiche dalle impostazioni del browser');
       }
@@ -102,33 +113,26 @@ export function usePushNotifications(userId) {
         }
       }
 
-      console.log('✅ Permessi concessi');
+      console.log('✅ Permessi notifiche concessi');
 
-      // 2. Ottieni la registrazione del Service Worker
-      const registration = await navigator.serviceWorker.ready;
-      console.log('✅ Service Worker pronto');
+      // 2. Ottieni il token FCM
+      console.log('🔐 Generando token FCM...');
+      const fcmToken = await getFCMToken();
 
-      // 3. Crea la subscription push
-      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      if (!vapidKey) {
-        throw new Error('VITE_VAPID_PUBLIC_KEY non configurato nel .env.local');
+      if (!fcmToken) {
+        throw new Error('Impossibile generare token FCM. Riprova.');
       }
-      
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
 
-      console.log('✅ Subscription creata:', subscription.endpoint);
+      console.log('✅ Token FCM generato:', fcmToken.substring(0, 30) + '...');
 
-      // 4. Salva nel database
-      await saveSubscriptionToDB(subscription);
-      console.log('✅ Subscription salvata nel DB');
+      // 3. Salva nel database
+      await saveTokenToDB(fcmToken);
+      console.log('✅ Token salvato nel DB');
 
       setIsSubscribed(true);
       console.log('✅ isSubscribed settato a TRUE');
-      
-      return { success: true, subscription };
+
+      return { success: true, token: fcmToken };
     } catch (err) {
       console.error('❌ Errore subscription:', err);
       setError(err.message);
@@ -139,20 +143,20 @@ export function usePushNotifications(userId) {
   }, [userId]);
 
   /**
-   * Salva la subscription nel database
+   * Salva il token FCM nel database come "endpoint"
    */
-  const saveSubscriptionToDB = async (subscription) => {
+  const saveTokenToDB = async (fcmToken) => {
     try {
-      const subData = subscription.toJSON();
+      const endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
 
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert(
           {
             user_id: userId,
-            endpoint: subData.endpoint,
-            p256dh: subData.keys.p256dh,
-            auth: subData.keys.auth,
+            endpoint, // Formato FCM
+            p256dh: 'fcm-token', // Placeholder per FCM
+            auth: 'fcm-token', // Placeholder per FCM
             browser_name: detectBrowser(),
             device_name: detectDevice(),
             is_active: true,
@@ -164,39 +168,32 @@ export function usePushNotifications(userId) {
         );
 
       if (error) throw error;
-      console.log('Subscription salvata nel database');
+      console.log('✅ Token FCM salvato nel database');
     } catch (err) {
-      console.error('Errore salvataggio subscription:', err);
+      console.error('❌ Errore salvataggio token:', err);
       throw err;
     }
   };
 
   /**
-   * Annulla la subscription alle push
+   * Annulla la subscription alle push Firebase
    */
   const unsubscribeFromPushNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
+      // 1. Rimuovi tutti i token per questo utente
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .update({ is_active: false })
+        .eq('user_id', userId);
 
-      if (subscription) {
-        // 1. Unsubscribe dal push manager
-        await subscription.unsubscribe();
+      if (error) throw error;
 
-        // 2. Rimuovi dal database
-        await supabase
-          .from('push_subscriptions')
-          .update({ is_active: false })
-          .eq('user_id', userId)
-          .eq('endpoint', subscription.endpoint);
-
-        setIsSubscribed(false);
-        console.log('Unsubscribed dalle push');
-      }
+      setIsSubscribed(false);
+      console.log('✅ Unsubscribed dalle push Firebase');
     } catch (err) {
-      console.error('Errore unsubscribe:', err);
+      console.error('❌ Errore unsubscribe:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -211,25 +208,6 @@ export function usePushNotifications(userId) {
     subscribeToPushNotifications,
     unsubscribeFromPushNotifications,
   };
-}
-
-/**
- * Converte la VAPID key da base64 a Uint8Array
- */
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-
-  return outputArray;
 }
 
 /**

@@ -154,18 +154,37 @@ export function usePushNotifications(userId) {
   /**
    * Salva il token FCM nel database come "endpoint"
    */
-  const saveTokenToDB = async (fcmToken) => {
+  const saveTokenToDB = async (subscription, fcmToken = null) => {
     try {
-      const endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
+      let endpoint, p256dh, auth;
+
+      // Se abbiamo la subscription standard del browser (necessaria per iOS/Safari)
+      if (subscription && subscription.getKey) {
+        endpoint = subscription.endpoint;
+
+        // Estraiamo le chiavi crittografiche reali
+        const rawP256dh = subscription.getKey('p256dh');
+        const rawAuth = subscription.getKey('auth');
+
+        // Convertiamo in stringa Base64
+        p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(rawP256dh)));
+        auth = btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth)));
+      }
+      // Fallback per sistemi che passano solo il token FCM (vecchio stile Android)
+      else if (fcmToken) {
+        endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
+        p256dh = 'fcm-token';
+        auth = 'fcm-token';
+      }
 
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert(
           {
             user_id: userId,
-            endpoint, // Formato FCM
-            p256dh: 'fcm-token', // Placeholder per FCM
-            auth: 'fcm-token', // Placeholder per FCM
+            endpoint,
+            p256dh,
+            auth,
             browser_name: detectBrowser(),
             device_name: detectDevice(),
             is_active: true,
@@ -177,7 +196,7 @@ export function usePushNotifications(userId) {
         );
 
       if (error) throw error;
-      console.log('✅ Token FCM salvato nel database');
+      console.log('✅ Sottoscrizione salvata correttamente con chiavi reali');
     } catch (err) {
       console.error('❌ Errore salvataggio token:', err);
       throw err;

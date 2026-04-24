@@ -269,35 +269,46 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
     // 3. COSTRUZIONE BODY "A PROVA DI BOMBA"
     // Usiamo String() per evitare l'errore "No number after minus sign"
     // Assicurati che 'message' sia l'oggetto restituito da buildPushMessage
+    // Assicurati che 'message' sia quello che arriva da buildPushMessage
     const payload = {
       message: {
         token: deviceToken,
+        // 1. Notifica standard (Android la legge qui)
         notification: {
-          title: message.title || "Titolo non pervenuto",
-          body: message.body || "Contenuto non pervenuto",
+          title: String(message.title).trim(),
+          body: String(message.body).trim(),
         },
+        // 2. Dati (Il Service Worker la legge qui)
+        // Importante: forziamo title e body anche qui dentro
         data: {
-          // FCM V1 vuole solo stringhe in 'data'
+          title: String(message.title).trim(),
+          body: String(message.body).trim(),
           notificationId: String(message.data?.notificationId || ""),
           link: String(message.data?.link || "/"),
-          // Forziamo titolo e corpo anche qui per il Service Worker
-          title: String(message.title || ""),
-          body: String(message.body || ""),
         },
+        // 3. Configurazione Apple (iOS la legge qui)
         apns: {
           payload: {
             aps: {
               alert: {
-                title: message.title,
-                body: message.body,
+                title: String(message.title).trim(),
+                body: String(message.body).trim(),
               },
               sound: "default",
               badge: 1,
+              "mutable-content": 1,
             },
           },
-        },
-      },
+          headers: {
+            "apns-priority": "10",
+            "apns-push-type": "alert",
+          }
+        }
+      }
     };
+
+    // Log di controllo prima dell'invio (Cruciale per vedere se il JSON è rotto)
+    console.log("🚀 Payload finale inviato a Google:", JSON.stringify(payload));
 
     console.log(`📡 Invio a Google V1...`);
 

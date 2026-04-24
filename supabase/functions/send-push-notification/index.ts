@@ -267,18 +267,44 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
 
     // 3. COSTRUZIONE BODY "A PROVA DI BOMBA"
     // Usiamo String() per evitare l'errore "No number after minus sign"
-    const payload = {
-      message: {
-        token: deviceToken,
-        notification: {
-          title: String(message.title || "Nuova notifica"),
-          body: String(message.body || ""),
-        },
-        data: Object.fromEntries(
-          Object.entries(message.data || {}).map(([k, v]) => [k, String(v)])
-        ),
+   const payload = {
+  message: {
+    token: deviceToken,
+    // Notifica generica (usata da molti sistemi)
+    notification: {
+      title: String(message.title || "Titolo mancante"),
+      body: String(message.body || "Contenuto non disponibile"),
+    },
+    // Configurazione specifica Android
+    android: {
+      priority: "high",
+      notification: {
+        title: String(message.title || "Titolo Android"),
+        body: String(message.body || "Corpo Android"),
+        sound: "default",
+        click_action: "FLUTTER_NOTIFICATION_CLICK", // Utile se usi Flutter, altrimenti ignoralo
       },
-    };
+    },
+    // Configurazione specifica Apple (APNS) - CRUCIALE PER IPHONE
+    apns: {
+      payload: {
+        aps: {
+          alert: {
+            title: String(message.title || "Titolo iPhone"),
+            body: String(message.body || "Corpo iPhone"),
+          },
+          sound: "default",
+          badge: 1,
+          "mutable-content": 1,
+        },
+      },
+    },
+    // Dati personalizzati (passati silenziosamente all'app)
+    data: Object.fromEntries(
+      Object.entries(message.data || {}).map(([k, v]) => [k, String(v)])
+    ),
+  },
+};
 
     console.log(`📡 Invio a Google V1...`);
 

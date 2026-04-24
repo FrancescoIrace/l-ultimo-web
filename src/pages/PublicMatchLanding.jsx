@@ -17,11 +17,13 @@ export default function PublicMatchLanding() {
         .select('id, title, sport, datetime, location, description, max_players, current_players')
         .eq('id', id)
         .eq('is_public', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Errore caricamento partita pubblica:', error);
         setError('Partita non trovata.');
+      } else if (!data) {
+        setError('Partita non trovata o non pubblica.');
       } else {
         setMatch(data);
       }

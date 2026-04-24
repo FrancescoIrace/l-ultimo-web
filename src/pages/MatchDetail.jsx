@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Calendar } from 'lucide-react';
+import { Loader, Calendar, Bell } from 'lucide-react';
 import { useAlert } from '../components/AlertComponent';
+import { notifyMatchReminder, notifyMatchJoin } from '../lib/notificationService';
+import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -13,6 +15,7 @@ export default function MatchDetail({ user }) {
     const [isJoined, setIsJoined] = useState(false);
     const navigate = useNavigate();
     const { alert, success, error, confirm, confirmDangerous } = useAlert();
+    const { canSendReminder, recordReminder, isLoading: isRemindersLoading, setError: setReminderError } = useReminderRateLimit(id);
     const isMatchFinished = match ? new Date(match.datetime) < new Date() : false;
     const [selectedPlayer, setSelectedPlayer] = useState(null); // Memorizza il profilo da votare
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -91,7 +94,66 @@ export default function MatchDetail({ user }) {
             setLoading(false);
         }
         getDetails();
-    }, [id]);
+
+        // Real-time subscription ai cambiamenti dei partecipanti
+        const channel = supabase
+            .channel(`public:participants:match_id=eq.${id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'participants',
+                    filter: `match_id=eq.${id}`,
+                },
+                async (payload) => {
+                    const { data: updatedParticipants } = await supabase
+                        .from('participants')
+                        .select(`id, user_id, profiles (username, avatar_url, gender)`)
+                        .eq('match_id', id);
+
+                    if (updatedParticipants) {
+                        setParticipants(updatedParticipants);
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'participants',
+                },
+                async (payload) => {
+                    // Ricarica i partecipanti quando c'è un DELETE
+                    const { data: updatedParticipants } = await supabase
+                        .from('participants')
+                        .select(`id, user_id, profiles (username, avatar_url, gender)`)
+                        .eq('match_id', id);
+
+                    if (updatedParticipants) {
+                        setParticipants(updatedParticipants);
+                    }
+
+                    // Aggiorna isJoined
+                    if (user.id) {
+                        const { data: currentUserParticipant } = await supabase
+                            .from('participants')
+                            .select('*')
+                            .eq('match_id', id)
+                            .eq('user_id', user.id)
+                            .maybeSingle();
+                        
+                        setIsJoined(!!currentUserParticipant);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            channel.unsubscribe();
+        };
+    }, [id, user.id]);
 
     const handleLeave = async () => {
         if (match.creator_id === user.id) {
@@ -115,7 +177,8 @@ export default function MatchDetail({ user }) {
             warningMessage = "⚠️ Mancano meno di 8 ore alla partita! Sei sicuro di voler abbandonare?";
         }
 
-        confirmDangerous(warningMessage, async () => {
+    confirmDangerous(warningMessage, async () => {
+        try {
             // 1. Rimuovi dai partecipanti
             const { error: partError } = await supabase
                 .from('participants')
@@ -123,17 +186,30 @@ export default function MatchDetail({ user }) {
                 .eq('match_id', id)
                 .eq('user_id', user.id);
 
-            if (!partError) {
-                // 2. Decrementa il contatore in matches
-                await supabase
-                    .from('matches')
-                    .update({ current_players: match.current_players - 1 })
-                    .eq('id', id);
-
-                success('Hai abbandonato la partita!');
-                setTimeout(() => window.location.reload(), 1000);
+            if (partError) {
+                console.error('❌ Errore delete partecipante:', partError);
+                error('Errore durante l\'abbandono: ' + partError.message);
+                return;
             }
-        });
+
+            console.log('✅ Partecipante rimosso');
+
+            // 2. Decrementa il contatore in matches
+            const { error: rpcError } = await supabase.rpc('decrement_match_players', { match_id: id });
+            
+            if (rpcError) {
+                console.error('❌ Errore RPC decrement:', rpcError);
+                error('Errore durante l\'aggiornamento: ' + rpcError.message);
+                return;
+            }
+
+            console.log('✅ Contatore decrementato');
+            success('Hai abbandonato la partita!');
+        } catch (err) {
+            console.error('❌ Errore generale:', err);
+            error('Errore: ' + err.message);
+        }
+    });
     };
 
     const handleDeleteMatch = async () => {
@@ -210,19 +286,63 @@ Scopri di più qui: ${window.location.href}`;
         await shareFallback();
     };
 
+    const handleSendReminders = async () => {
+        const { canSend, nextResetIn } = canSendReminder();
+
+        // if (!canSend) {
+        //     const minutes = Math.floor(nextResetIn / 60);
+        //     const seconds = nextResetIn % 60;
+        //     const timeFormatted = `${minutes} minuti e ${seconds.toString().padStart(2, '0')} secondi`;
+        //     error(`Puoi inviare un reminder ogni 30 minuti. Riprova tra ${timeFormatted}`);
+        //     return;
+        // }
+
+        confirm('Inviare il reminder a tutti i partecipanti?', async () => {
+            try {
+                // Estrai gli ID dei partecipanti ESCLUSO il creatore
+                let participantIds = participants
+                    .map(p => p.user_id)
+                    .filter(id => id !== match.creator_id);
+
+                // Calcola le ore rimanenti
+                const now = new Date();
+                const matchTime = new Date(match.datetime);
+                const hoursLeft = Math.ceil((matchTime - now) / (1000 * 60 * 60));
+
+                // Invia i reminder
+                const result = await notifyMatchReminder(id, match.title, hoursLeft, participantIds);
+
+                // Registra nel rate limit
+                recordReminder();
+
+                success(`Reminder inviato a ${participantIds.length} partecipanti!`);
+            } catch (err) {
+                console.error('Errore nell\'invio del reminder:', err);
+                error('Errore nell\'invio del reminder: ' + err.message);
+            }
+        });
+    };
+
     const handleJoin = async () => {
         const { error: partError } = await supabase
             .from('participants')
             .insert([{ match_id: match.id, user_id: user.id }]);
 
         if (!partError) {
-            await supabase
-                .from('matches')
-                .update({ current_players: match.current_players + 1 })
-                .eq('id', match.id);
+            // Incrementa il contatore in matches (usando SQL, non il valore locale)
+            await supabase.rpc('increment_match_players', { match_id: match.id });
+
+            // Crea la notifica per l'organizzatore
+            await notifyMatchJoin(
+                match.id,
+                match.title,
+                user.user_metadata?.username || 'Un giocatore',
+                match.creator_id,
+                user.id
+            );
 
             success("Iscritto con successo!");
-            setTimeout(() => window.location.reload(), 1000);
+            // La real-time subscription aggiornerà automaticamente i dati
         } else {
             error("Errore durante l'iscrizione: " + partError.message);
         }
@@ -509,6 +629,14 @@ Scopri di più qui: ${window.location.href}`;
 
                     {user.id === match.creator_id && (
                         <>
+                            <button
+                                onClick={handleSendReminders}
+                                disabled={isRemindersLoading}
+                                className="w-full mt-4 cursor-pointer bg-blue-50 text-blue-600 border border-blue-600 py-4 rounded-2xl font-bold shadow-sm hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                <Bell size={20} />
+                                Invia Reminder
+                            </button>
                             <button
                                 onClick={() => { navigate(`/modifica/${match.id}`) }}
                                 className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"

@@ -365,8 +365,16 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
 
     // Normalizza la private key (gestisci \n letterali e spazi)
     let privateKeyPEM = serviceAccount.private_key;
+    console.log(`   🔍 Raw private_key da JSON (primi 100 chars): ${privateKeyPEM.substring(0, 100)}`);
+    console.log(`   🔍 Raw private_key da JSON (ultimi 50 chars): ${privateKeyPEM.substring(privateKeyPEM.length - 50)}`);
+    console.log(`   🔍 Contains literal \\n: ${privateKeyPEM.includes('\\n')}`);
+    console.log(`   🔍 Contains actual newline: ${privateKeyPEM.includes('\n')}`);
+    
     if (typeof privateKeyPEM === 'string') {
+      // Sostituisci SOLO i \n letterali, non quelli reali
       privateKeyPEM = privateKeyPEM.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+      console.log(`   🔧 Dopo normalizzazione (primi 100 chars): ${privateKeyPEM.substring(0, 100)}`);
+      console.log(`   🔧 Dopo normalizzazione (ultimi 50 chars): ${privateKeyPEM.substring(privateKeyPEM.length - 50)}`);
       
       // Se la chiave ha spazi al posto di newline, riforma
       if (privateKeyPEM.includes('-----BEGIN') && !privateKeyPEM.includes('\n')) {
@@ -375,8 +383,10 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       }
     }
 
-    console.log(`   🔍 Private key lunghezza: ${privateKeyPEM.length}`);
-    console.log(`   🔍 Private key contains BEGIN: ${privateKeyPEM.includes('-----BEGIN PRIVATE KEY-----')}`);
+    console.log(`   🔍 Final private key lunghezza: ${privateKeyPEM.length}`);
+    console.log(`   🔍 Final private key contains BEGIN: ${privateKeyPEM.includes('-----BEGIN PRIVATE KEY-----')}`);
+    console.log(`   🔍 Final private key contains END: ${privateKeyPEM.includes('-----END PRIVATE KEY-----')}`);
+    console.log(`   🔍 Final private key newline count: ${(privateKeyPEM.match(/\n/g) || []).length}`);
 
     // Crea JWT usando jose
     const now = Math.floor(Date.now() / 1000);
@@ -391,6 +401,7 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       .sign(await importPrivateKey(privateKeyPEM));
 
     console.log(`   📜 JWT generato con jose (lunghezza: ${jwt.length})`);
+    console.log(`   📜 JWT (primi 100 chars): ${jwt.substring(0, 100)}`);
 
     // Scambia JWT con access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {

@@ -234,14 +234,50 @@ async function sendPushToDevice(
 }
 
 /**
+ * Legge FCM_PRIVATE_KEY dal database (app_secrets) con fallback al secret ambientale
+ */
+async function getFCMPrivateKey(): Promise<string> {
+  try {
+    // Prova prima dal database
+    const { data, error } = await supabase
+      .from('app_secrets')
+      .select('value')
+      .eq('key', 'FCM_PRIVATE_KEY')
+      .single();
+
+    if (data && data.value && data.value.length > 100) {
+      console.log('   ✅ FCM_PRIVATE_KEY caricato dal database');
+      return data.value;
+    }
+  } catch (dbError) {
+    console.log('   ℹ️  Tabella app_secrets non ancora creata o secret non trovato, provo secret ambientale');
+  }
+
+  // Fallback: usa il secret ambientale
+  const envKey = Deno.env.get('FCM_PRIVATE_KEY');
+  if (envKey && envKey.length > 100) {
+    console.log('   ✅ FCM_PRIVATE_KEY caricato da ambiente');
+    return envKey;
+  }
+
+  throw new Error('FCM_PRIVATE_KEY non trovato in database o ambiente');
+}
+
+/**
  * Invia a FCM - con autenticazione OAuth2
  */
 async function sendToFCM(endpoint: string, message: PushMessage) {
-  const fcmPrivateKey = Deno.env.get('FCM_PRIVATE_KEY');
+  let fcmPrivateKey: string;
   
-  console.log(`   🔍 FCM_PRIVATE_KEY length: ${fcmPrivateKey?.length || 0}`);
-  console.log(`   🔍 FCM_PRIVATE_KEY first 100 chars: ${fcmPrivateKey?.substring(0, 100)}`);
-  console.log(`   🔍 FCM_PRIVATE_KEY type: ${typeof fcmPrivateKey}`);
+  try {
+    fcmPrivateKey = await getFCMPrivateKey();
+  } catch (error) {
+    console.warn('   ⚠️  FCM_PRIVATE_KEY non disponibile:', (error as any).message);
+    throw error;
+  }
+  
+  console.log(`   🔍 FCM_PRIVATE_KEY length: ${fcmPrivateKey.length}`);
+  console.log(`   🔍 FCM_PRIVATE_KEY first 100 chars: ${fcmPrivateKey.substring(0, 100)}`);
   
   if (!fcmPrivateKey || fcmPrivateKey.length < 100) {
     console.warn('   ⚠️  FCM_PRIVATE_KEY incompleto o non configurato');

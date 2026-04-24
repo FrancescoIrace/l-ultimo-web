@@ -6,6 +6,7 @@
 
 import { serve } from 'https://deno.land/std@0.132.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.47.0';
+import { SignJWT } from 'https://esm.sh/jose@5.4.1';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -324,149 +325,56 @@ async function sendToFCM(endpoint: string, message: PushMessage) {
 }
 
 /**
- * Genera un access token OAuth2 per FCM
- * Usa solo le credenziali minime necessarie
+ * Genera un access token OAuth2 per FCM usando jose
  */
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
     // Prova a parsare come JSON completo
-    let privateKey;
+    let serviceAccount;
     try {
-      privateKey = JSON.parse(privateKeyJson);
+      serviceAccount = JSON.parse(privateKeyJson);
     } catch (e) {
-      // Se fallisce, assume che sia una stringa incompleta e skip FCM
       console.warn('   ⚠️  FCM_PRIVATE_KEY non è un JSON valido, skip FCM');
       throw new Error('FCM_PRIVATE_KEY non è JSON valido');
     }
 
-    if (!privateKey.private_key || !privateKey.client_email) {
+    if (!serviceAccount.private_key || !serviceAccount.client_email) {
       console.warn('   ⚠️  FCM_PRIVATE_KEY non contiene i campi obbligatori');
       throw new Error('FCM_PRIVATE_KEY incompleto');
     }
     
-    console.log(`   🔑 Client email: ${privateKey.client_email}`);
-    
-    // JWT header
-    const header = {
-      alg: 'RS256',
-      typ: 'JWT',
-    };
+    console.log(`   🔑 Client email: ${serviceAccount.client_email}`);
 
-    // JWT payload
-    const now = Math.floor(Date.now() / 1000);
-    const payload = {
-      iss: privateKey.client_email,
-      scope: 'https://www.googleapis.com/auth/firebase.messaging',
-      aud: 'https://oauth2.googleapis.com/token',
-      exp: now + 3000,
-      iat: now,
-    };
-
-    const headerB64 = base64url(JSON.stringify(header));
-    const payloadB64 = base64url(JSON.stringify(payload));
-    const signatureInput = `${headerB64}.${payloadB64}`;
-
-    const encoder = new TextEncoder();
-    const data = encoder.encode(signatureInput);
-
-/**
- * Riforma una chiave PEM che ha spazi al posto di newline
- */
-function reformatPEMKey(keyStr: string): string {
-  // Estrai il contenuto tra BEGIN e END
-  const match = keyStr.match(/-----BEGIN[^-]*-----\s*([\s\S]*?)\s*-----END[^-]*-----/);
-  if (!match || !match[1]) {
-    return keyStr; // Se non è in formato PEM, torna come è
-  }
-
-  const base64Content = match[1].replace(/\s/g, ''); // Rimuovi TUTTI gli spazi/newline
-  const keyType = keyStr.includes('PRIVATE KEY') ? 'PRIVATE KEY' : 'PUBLIC KEY';
-
-  // Riforma la chiave con righe di 64 caratteri
-  let formattedKey = `-----BEGIN ${keyType}-----\n`;
-  for (let i = 0; i < base64Content.length; i += 64) {
-    formattedKey += base64Content.substring(i, i + 64) + '\n';
-  }
-  formattedKey += `-----END ${keyType}-----`;
-
-  return formattedKey;
-}
-
-    // Estrai e processa la private key
-    let keyPem = privateKey.private_key;
-    if (typeof keyPem === 'string') {
-      // Gestisci sia \\n che \n e spazi
-      keyPem = keyPem.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+    // Normalizza la private key (gestisci \n letterali e spazi)
+    let privateKeyPEM = serviceAccount.private_key;
+    if (typeof privateKeyPEM === 'string') {
+      privateKeyPEM = privateKeyPEM.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
       
       // Se la chiave ha spazi al posto di newline, riforma
-      if (keyPem.includes('-----BEGIN') && !keyPem.includes('\n')) {
+      if (privateKeyPEM.includes('-----BEGIN') && !privateKeyPEM.includes('\n')) {
         console.log(`   🔧 Riformattando PEM con spazi...`);
-        keyPem = reformatPEMKey(keyPem);
+        privateKeyPEM = reformatPEMKey(privateKeyPEM);
       }
     }
 
-    console.log(`   🔍 Private key dopo riformattazione (primi 100 char): ${keyPem.substring(0, 100)}`);
-    console.log(`   🔍 Private key contiene '-----BEGIN': ${keyPem.includes('-----BEGIN PRIVATE KEY-----')}`);
-    console.log(`   🔍 Private key lunghezza: ${keyPem.length}`);
-    console.log(`   🔍 Newline count in key: ${(keyPem.match(/\n/g) || []).length}`);
+    console.log(`   🔍 Private key lunghezza: ${privateKeyPEM.length}`);
+    console.log(`   🔍 Private key contains BEGIN: ${privateKeyPEM.includes('-----BEGIN PRIVATE KEY-----')}`);
 
-    // Verifica che la chiave inizi e finisca correttamente
-    if (!keyPem.includes('-----BEGIN PRIVATE KEY-----') || !keyPem.includes('-----END PRIVATE KEY-----')) {
-      console.error(`   ❌ Private key format error: doesn't contain BEGIN/END markers`);
-      console.error(`   First 200 chars: ${keyPem.substring(0, 200)}`);
-      throw new Error('Invalid private key format');
-    }
+    // Crea JWT usando jose
+    const now = Math.floor(Date.now() / 1000);
+    const jwt = await new SignJWT({
+      iss: serviceAccount.client_email,
+      scope: 'https://www.googleapis.com/auth/firebase.messaging',
+      aud: 'https://oauth2.googleapis.com/token',
+      iat: now,
+      exp: now + 3600,
+    })
+      .setProtectedHeader({ alg: 'RS256' })
+      .sign(await importPrivateKey(privateKeyPEM));
 
-    const keyData = keyPem
-      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-      .replace(/-----END PRIVATE KEY-----/g, '')
-      .replace(/\n/g, '')
-      .replace(/\r/g, '')
-      .replace(/\s/g, '');
+    console.log(`   📜 JWT generato con jose (lunghezza: ${jwt.length})`);
 
-    console.log(`   🔍 Key data dopo elaborazione (lunghezza): ${keyData.length}`);
-    console.log(`   🔍 Key data (primi 50 char): ${keyData.substring(0, 50)}`);
-    console.log(`   🔍 Key data (ultimi 50 char): ${keyData.substring(keyData.length - 50)}`);
-
-    if (!keyData || keyData.length < 100) {
-      throw new Error(`Private key data too short: ${keyData.length}`);
-    }
-
-    const binaryString = atob(keyData);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    console.log(`   🔍 Binary string length: ${binaryString.length}`);
-    console.log(`   🔍 Bytes buffer length: ${bytes.length}`);
-
-    const cryptoKey = await crypto.subtle.importKey(
-      'pkcs8',
-      bytes.buffer,
-      {
-        name: 'RSASSA-PKCS1-v1_5',
-        hash: 'SHA-256',
-      },
-      false,
-      ['sign']
-    );
-
-    console.log(`   ✅ Crypto key imported successfully`);
-
-    const signature = await crypto.subtle.sign(
-      { name: 'RSASSA-PKCS1-v1_5' },
-      cryptoKey,
-      data
-    );
-    const signatureB64 = base64url(String.fromCharCode(...new Uint8Array(signature)));
-    const jwt = `${signatureInput}.${signatureB64}`;
-
-    console.log(`   📜 JWT generato (lunghezza: ${jwt.length})`);
-    console.log(`   🔍 Header JWT: ${headerB64}`);
-    console.log(`   🔍 Payload JWT: ${payloadB64}`);
-    console.log(`   🔍 Signature (primi 50 char): ${signatureB64.substring(0, 50)}`);
-
+    // Scambia JWT con access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -491,6 +399,60 @@ function reformatPEMKey(keyStr: string): string {
     console.error('❌ FCM token generation failed:', error.message);
     throw error;
   }
+}
+
+/**
+ * Importa una private key PEM e ritorna una CryptoKey per jose
+ */
+async function importPrivateKey(pem: string) {
+  // jose si aspetta una stringa PEM direttamente
+  return await crypto.subtle.importKey(
+    'pkcs8',
+    pemToDER(pem),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+}
+
+/**
+ * Converte PEM a DER (formato binario)
+ */
+function pemToDER(pem: string): ArrayBuffer {
+  // Rimuovi header/footer e newline
+  const base64 = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+    .replace(/-----END PRIVATE KEY-----/g, '')
+    .replace(/\s/g, '');
+  
+  // Converti base64 a bytes
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+/**
+ * Riforma una chiave PEM che ha spazi al posto di newline
+ */
+function reformatPEMKey(keyStr: string): string {
+  const match = keyStr.match(/-----BEGIN[^-]*-----\s*([\s\S]*?)\s*-----END[^-]*-----/);
+  if (!match || !match[1]) {
+    return keyStr;
+  }
+
+  const base64Content = match[1].replace(/\s/g, '');
+  const keyType = keyStr.includes('PRIVATE KEY') ? 'PRIVATE KEY' : 'PUBLIC KEY';
+
+  let formattedKey = `-----BEGIN ${keyType}-----\n`;
+  for (let i = 0; i < base64Content.length; i += 64) {
+    formattedKey += base64Content.substring(i, i + 64) + '\n';
+  }
+  formattedKey += `-----END ${keyType}-----`;
+
+  return formattedKey;
 }
 
 /**

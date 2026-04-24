@@ -244,6 +244,9 @@ async function sendToFCM(endpoint: string, message: PushMessage) {
   }
 
   try {
+    console.log(`   🔍 FCM_PRIVATE_KEY length: ${fcmPrivateKey.length}`);
+    console.log(`   🔍 FCM_PRIVATE_KEY first chars: ${fcmPrivateKey.substring(0, 50)}`);
+
     // Estrai il token FCM dall'endpoint
     const token = endpoint.split('/fcm/send/')[1];
     if (!token) throw new Error('Token FCM non trovato');

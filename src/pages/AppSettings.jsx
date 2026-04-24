@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import UserLocationInput from '../components/UserLocationInput';
 
 export default function AppSettings({ session }) {
@@ -9,6 +10,7 @@ export default function AppSettings({ session }) {
   const [searchRadius, setSearchRadius] = useState(10);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [useGeolocation, setUseGeolocation] = useState(true);
+  const [pushLoading, setPushLoading] = useState(false);
   const [manualLocation, setManualLocation] = useState({
     location: '',
     province: '',
@@ -16,6 +18,14 @@ export default function AppSettings({ session }) {
     location_lat: null,
     location_lng: null,
   });
+
+  // Hook per gestire push notifications
+  const {
+    isSupported: isPushSupported,
+    isSubscribed: isPushSubscribed,
+    subscribeToPushNotifications,
+    unsubscribeFromPushNotifications,
+  } = usePushNotifications(session?.user?.id);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -84,6 +94,40 @@ export default function AppSettings({ session }) {
     );
   };
 
+  /**
+   * Attiva le notifiche push
+   */
+  const handleEnablePushNotifications = async () => {
+    setPushLoading(true);
+    try {
+      const result = await subscribeToPushNotifications();
+      if (result.success) {
+        alert('✅ Notifiche push attivate!');
+      } else {
+        alert('❌ Errore: ' + result.error);
+      }
+    } catch (error) {
+      alert('❌ Errore: ' + error.message);
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  /**
+   * Disattiva le notifiche push
+   */
+  const handleDisablePushNotifications = async () => {
+    setPushLoading(true);
+    try {
+      await unsubscribeFromPushNotifications();
+      alert('✅ Notifiche push disattivate');
+    } catch (error) {
+      alert('❌ Errore: ' + error.message);
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
       <button
@@ -147,16 +191,63 @@ export default function AppSettings({ session }) {
 
       <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <h2 className="text-xl font-bold mb-3">Notifiche</h2>
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={notificationsEnabled}
-            onChange={(e) => setNotificationsEnabled(e.target.checked)}
-            className="h-4 w-4"
-          />
-          <span className="text-slate-700">Abilita notifiche per le partite vicine</span>
-        </label>
-        <p className="text-sm text-slate-500 mt-2">Le notifiche sono gestite dal browser / dispositivo.</p>
+        
+        {/* Notifiche generiche */}
+        <div className="mb-4">
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={notificationsEnabled}
+              onChange={(e) => setNotificationsEnabled(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <span className="text-slate-700">Notifiche partite vicine</span>
+          </label>
+          <p className="text-sm text-slate-500 mt-1">Gestite dal database in real-time</p>
+        </div>
+
+        {/* Notifiche Push */}
+        {isPushSupported ? (
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold text-slate-700 mb-3">Notifiche push (anche app chiusa)</h3>
+            <div className="flex flex-col gap-2">
+              {isPushSubscribed ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                    <span className="text-sm text-slate-600">✅ Attive su questo dispositivo</span>
+                  </div>
+                  <button
+                    disabled={pushLoading}
+                    onClick={handleDisablePushNotifications}
+                    className="w-full rounded-2xl bg-red-600 text-white py-2 text-sm font-bold hover:bg-red-700 transition-all disabled:opacity-50"
+                  >
+                    {pushLoading ? '⏳ Elaborazione...' : '❌ Disattiva'}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="h-2 w-2 rounded-full bg-gray-400"></span>
+                    <span className="text-sm text-slate-600">⭕ Non attive</span>
+                  </div>
+                  <button
+                    disabled={pushLoading}
+                    onClick={handleEnablePushNotifications}
+                    className="w-full rounded-2xl bg-green-600 text-white py-2 text-sm font-bold hover:bg-green-700 transition-all disabled:opacity-50"
+                  >
+                    {pushLoading ? '⏳ Elaborazione...' : '✅ Attiva'}
+                  </button>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Riceverai notifiche anche quando l'app è chiusa</p>
+          </div>
+        ) : (
+          <div className="border-t pt-4 mt-4 text-sm text-slate-600">
+            <span className="text-yellow-700">⚠️</span> Notifiche push non supportate su questo browser
+          </div>
+        )}
       </section>
 
           <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">

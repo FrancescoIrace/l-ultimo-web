@@ -29,6 +29,7 @@ export function usePushNotifications(userId) {
       'PushManager' in window &&
       'Notification' in window;
 
+    console.log('🔔 usePushNotifications: isSupported =', supported);
     setIsSupported(supported);
     setIsLoading(false);
 
@@ -62,10 +63,16 @@ export function usePushNotifications(userId) {
   const checkSubscription = async (registration) => {
     try {
       const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-
+      
       if (subscription) {
-        console.log('Già sottoscritto:', subscription.endpoint);
+        console.log('✅ Subscription trovata nel browser:', subscription.endpoint);
+        setIsSubscribed(true);
+        
+        // Auto-salva nel DB se non presente
+        await saveSubscriptionToDB(subscription);
+      } else {
+        console.log('❌ Nessuna subscription nel browser');
+        setIsSubscribed(false);
       }
     } catch (err) {
       console.error('Errore nel controllo della subscription:', err);

@@ -289,40 +289,26 @@ async function sendToFCM(endpoint: string, message: PushMessage) {
 
 /**
  * Genera un access token OAuth2 per FCM
+ * Usa solo le credenziali minime necessarie
  */
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
-    // Fix: la chiave potrebbe non avere newline corretti
-    // Formato atteso: -----BEGIN PRIVATE KEY-----\n{base64}\n-----END PRIVATE KEY-----
-    let fixedKey = privateKeyJson
-      .replace(/-----BEGIN PRIVATE KEY-----\s+/g, '-----BEGIN PRIVATE KEY-----\n')
-      .replace(/\s+-----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----');
-
-    console.log(`   🔧 Key fixed, length: ${fixedKey.length}`);
-    console.log(`   🔧 First chars: ${fixedKey.substring(0, 60)}`);
-
-    // Pulisci la stringa - potrebbe avere escape characters
-    let cleanJson = fixedKey.trim();
-    
-    // Se è una stringa JSON con doppi escape, puliscila
-    if (cleanJson.startsWith('"') && cleanJson.endsWith('"')) {
-      cleanJson = JSON.parse(cleanJson);
-    }
-    
-    // Prova a parserizare - se è già JSON, parsalo
+    // Prova a parsare come JSON completo
     let privateKey;
     try {
-      privateKey = typeof cleanJson === 'string' ? JSON.parse(cleanJson) : cleanJson;
+      privateKey = JSON.parse(privateKeyJson);
     } catch (e) {
-      // Se non è JSON, assume che sia la PEM key raw
-      console.log('   ℹ️  Non è JSON, assume PEM key raw');
-      privateKey = {
-        private_key: fixedKey,
-        client_email: 'firebase-adminsdk@example.com'
-      };
+      // Se fallisce, assume che sia una stringa incompleta e skip FCM
+      console.warn('   ⚠️  FCM_PRIVATE_KEY non è un JSON valido, skip FCM');
+      throw new Error('FCM_PRIVATE_KEY non è JSON valido');
+    }
+
+    if (!privateKey.private_key || !privateKey.client_email) {
+      console.warn('   ⚠️  FCM_PRIVATE_KEY non contiene i campi obbligatori');
+      throw new Error('FCM_PRIVATE_KEY incompleto');
     }
     
-    console.log(`   🔑 Private key client email: ${privateKey.client_email}`);
+    console.log(`   🔑 Client email: ${privateKey.client_email}`);
     
     // JWT header
     const header = {
@@ -330,34 +316,28 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       typ: 'JWT',
     };
 
-    // JWT payload (50 minuti di validità)
+    // JWT payload
     const now = Math.floor(Date.now() / 1000);
     const payload = {
       iss: privateKey.client_email,
       scope: 'https://www.googleapis.com/auth/firebase.messaging',
       aud: 'https://oauth2.googleapis.com/token',
-      exp: now + 3000, // 50 minuti
+      exp: now + 3000,
       iat: now,
     };
 
-    // Crea il JWT
     const headerB64 = base64url(JSON.stringify(header));
     const payloadB64 = base64url(JSON.stringify(payload));
     const signatureInput = `${headerB64}.${payloadB64}`;
 
-    // Firma con RSA (Deno crypto)
     const encoder = new TextEncoder();
     const data = encoder.encode(signatureInput);
 
-    // Estrai la private key (potrebbe avere \n escape o newline reali)
+    // Estrai e processa la private key
     let keyPem = privateKey.private_key;
-    
-    // Se è un string con \n literal, convertilo a newline reali
     if (typeof keyPem === 'string') {
       keyPem = keyPem.replace(/\\n/g, '\n');
     }
-
-    console.log(`   📄 Key PEM length: ${keyPem.length}`);
 
     const keyData = keyPem
       .replace(/-----BEGIN PRIVATE KEY-----/g, '')
@@ -365,7 +345,9 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       .replace(/\n/g, '')
       .replace(/\s/g, '');
 
-    console.log(`   🔐 Key data (base64) length: ${keyData.length}`);
+    if (!keyData || keyData.length < 100) {
+      throw new Error(`Private key data too short: ${keyData.length}`);
+    }
 
     const binaryString = atob(keyData);
     const bytes = new Uint8Array(binaryString.length);
@@ -386,12 +368,10 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
 
     const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, data);
     const signatureB64 = base64url(String.fromCharCode(...new Uint8Array(signature)));
-
     const jwt = `${signatureInput}.${signatureB64}`;
 
-    console.log(`   📜 JWT generato, scambio con Google...`);
+    console.log(`   📜 JWT generato`);
 
-    // Scambia il JWT per un access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -406,7 +386,7 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text();
       console.error('   ❌ OAuth2 error:', error);
-      throw new Error(`Failed to get FCM token: ${error}`);
+      throw new Error(`OAuth failed: ${error}`);
     }
 
     const tokenData = await tokenResponse.json() as any;

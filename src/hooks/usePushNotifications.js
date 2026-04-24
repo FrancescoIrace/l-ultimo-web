@@ -155,53 +155,64 @@ export function usePushNotifications(userId) {
    * Salva il token FCM nel database come "endpoint"
    */
   const saveTokenToDB = async (subscription, fcmToken = null) => {
-    try {
-      let endpoint, p256dh, auth;
+  try {
+    let endpoint = null;
+    let p256dh = 'fcm-token';
+    let auth = 'fcm-token';
 
-      // Se abbiamo la subscription standard del browser (necessaria per iOS/Safari)
-      if (subscription && subscription.getKey) {
-        endpoint = subscription.endpoint;
-
-        // Estraiamo le chiavi crittografiche reali
+    // CASO 1: Abbiamo una sottoscrizione Web standard (quella che serve per iPhone)
+    if (subscription && subscription.endpoint) {
+      endpoint = subscription.endpoint;
+      
+      // Estraiamo le chiavi reali per la crittografia (fondamentale per iOS)
+      try {
         const rawP256dh = subscription.getKey('p256dh');
         const rawAuth = subscription.getKey('auth');
-
-        // Convertiamo in stringa Base64
-        p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(rawP256dh)));
-        auth = btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth)));
+        
+        if (rawP256dh && rawAuth) {
+          p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(rawP256dh)));
+          auth = btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth)));
+        }
+      } catch (e) {
+        console.warn("⚠️ Impossibile estrarre chiavi crittografiche, uso fallback");
       }
-      // Fallback per sistemi che passano solo il token FCM (vecchio stile Android)
-      else if (fcmToken) {
-        endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
-        p256dh = 'fcm-token';
-        auth = 'fcm-token';
-      }
-
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .upsert(
-          {
-            user_id: userId,
-            endpoint,
-            p256dh,
-            auth,
-            browser_name: detectBrowser(),
-            device_name: detectDevice(),
-            is_active: true,
-            last_used_at: new Date().toISOString(),
-          },
-          {
-            onConflict: 'user_id,endpoint',
-          }
-        );
-
-      if (error) throw error;
-      console.log('✅ Sottoscrizione salvata correttamente con chiavi reali');
-    } catch (err) {
-      console.error('❌ Errore salvataggio token:', err);
-      throw err;
+    } 
+    // CASO 2: Abbiamo solo il token FCM diretto (fallback Android)
+    else if (fcmToken) {
+      endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
     }
-  };
+
+    // CONTROLLO CRITICO: Se l'endpoint è ancora null, blocchiamo l'esecuzione
+    if (!endpoint) {
+      console.error("❌ Errore: Nessun endpoint o token trovato. Sottoscrizione annullata.");
+      return; 
+    }
+
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .upsert(
+        {
+          user_id: userId,
+          endpoint: endpoint, // Ora siamo sicuri che non sia null
+          p256dh: p256dh,
+          auth: auth,
+          browser_name: detectBrowser(),
+          device_name: detectDevice(),
+          is_active: true,
+          last_used_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'user_id,endpoint',
+        }
+      );
+
+    if (error) throw error;
+    console.log('✅ Sottoscrizione salvata correttamente');
+
+  } catch (err) {
+    console.error('❌ Errore durante il salvataggio su Supabase:', err.message);
+  }
+};
 
   /**
    * Annulla la subscription alle push Firebase

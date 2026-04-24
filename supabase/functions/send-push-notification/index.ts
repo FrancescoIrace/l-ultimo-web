@@ -195,18 +195,29 @@ async function sendPushToDevice(
     const isFCM = endpoint.includes('fcm.googleapis.com');
     const isWNS = endpoint.includes('notify.windows.com');
 
-    if (isFCM || isWNS) {
-      // FCM e WNS sono complessi perché richiedono credenziali proprietarie.
-      // L'utente riceverà la notifica via Real-time (online) o via Service Worker (offline).
-      // Questo è il percorso preferito per la maggior parte dei casi d'uso!
-      console.log(`   ℹ️  ${isFCM ? 'FCM' : 'WNS'} endpoint rilevato - notifica inoltrata via Real-time + Service Worker`);
+    if (isFCM) {
+      console.log(`   🔥 FCM endpoint rilevato - tentando invio...`);
+      try {
+        await sendToFCM(endpoint, message);
+        console.log(`   ✅ FCM OK`);
+      } catch (fcmError) {
+        console.warn(`   ⚠️  FCM fallito (notifica via Real-time):`, (fcmError as any).message);
+      }
+    } else if (isWNS) {
+      console.log(`   🪟 WNS endpoint rilevato - tentando invio...`);
+      try {
+        await sendToWNS(endpoint, message);
+        console.log(`   ✅ WNS OK`);
+      } catch (wnsError) {
+        console.warn(`   ⚠️  WNS fallito (notifica via Real-time):`, (wnsError as any).message);
+      }
     } else {
       console.log(`   🔔 Web Push standard`);
       try {
         await sendToWebPush(subscription, message);
-        console.log(`   ✅ Inviato via Web Push`);
+        console.log(`   ✅ Web Push OK`);
       } catch (pushError) {
-        console.warn(`   ⚠️  Web Push non riuscito (notifica arriverà via real-time):`, (pushError as any).message);
+        console.warn(`   ⚠️  Web Push non riuscito (notifica via real-time):`, (pushError as any).message);
       }
     }
 

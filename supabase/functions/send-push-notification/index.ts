@@ -322,28 +322,18 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
     const serviceAccount = JSON.parse(privateKeyJson);
-    
-    // 1. ESTRAZIONE E PULIZIA RADICALE
     let pKey = serviceAccount.private_key;
 
-    // Rimuove letteralmente tutto ciò che non è Base64 o le etichette BEGIN/END
-    // Questo elimina spazi, tabulazioni e newline sporchi
-    if (pKey.includes('-----BEGIN PRIVATE KEY-----')) {
-      const header = '-----BEGIN PRIVATE KEY-----';
-      const footer = '-----END PRIVATE KEY-----';
-      
-      // Estraiamo solo la parte centrale (il Base64)
-      let base64Part = pKey
-        .replace(header, '')
-        .replace(footer, '')
-        .replace(/\s+/g, ''); // Rimuove TUTTI i tipi di spazi/a capo
-      
-      // Ricostruiamo il PEM con i newline corretti ogni 64 caratteri (standard RSA)
-      const chunks = base64Part.match(/.{1,64}/g) || [];
-      pKey = `${header}\n${chunks.join('\n')}\n${footer}`;
-    }
+    // PULIZIA RADICALE: Estraiamo solo il contenuto tra i trattini
+    const match = pKey.match(/-----BEGIN PRIVATE KEY-----([\s\S]*)-----END PRIVATE KEY-----/);
+    if (!match) throw new Error("Formato chiave privata non valido (mancano i tag BEGIN/END)");
 
-    // 2. CREAZIONE JWT
+    // Rimuoviamo TUTTO (spazi, \n, \\n, virgolette) lasciando solo il Base64 puro
+    const base64Content = match[1].replace(/\\n/g, '').replace(/\s+/g, '').trim();
+    
+    // Ricostruiamo la chiave PEM standard
+    const formattedKey = `-----BEGIN PRIVATE KEY-----\n${base64Content}\n-----END PRIVATE KEY-----`;
+
     const now = Math.floor(Date.now() / 1000);
     const jwt = await new jose.SignJWT({
       iss: serviceAccount.client_email,
@@ -353,9 +343,8 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       exp: now + 3600,
     })
       .setProtectedHeader({ alg: 'RS256' })
-      .sign(await jose.importPKCS8(pKey, 'RS256'));
+      .sign(await jose.importPKCS8(formattedKey, 'RS256'));
 
-    // 3. SCAMBIO TOKEN
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

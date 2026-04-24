@@ -38,7 +38,7 @@ serve(async (req) => {
   try {
     // Richieste non POST non sono supportate
     if (req.method !== 'POST') {
-      return new Response('Method not allowed', { 
+      return new Response('Method not allowed', {
         status: 405,
         headers: corsHeaders,
       });
@@ -47,7 +47,7 @@ serve(async (req) => {
     const { notificationId } = await req.json();
 
     if (!notificationId) {
-      return new Response(JSON.stringify({ error: 'Missing notificationId' }), { 
+      return new Response(JSON.stringify({ error: 'Missing notificationId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -126,9 +126,27 @@ serve(async (req) => {
 
     // 5. Invia a tutti i device (Nota: questo è un best-effort, gli errori vengono ignorati)
     const results = await Promise.allSettled(
-      subscriptions.map((sub) => sendPushToDevice(sub, pushMessage, notificationId))
-    );
+      subscriptions.map((sub) => {
+        // --- LOGICA DI PULIZIA TOKEN ---
+        let deviceToken = sub.endpoint;
 
+        // Se l'endpoint contiene l'URL completo di Google, estraiamo solo il token finale
+        // Esempio: da "https://fcm.googleapis.com/fcm/send/DEVICE_TOKEN" a "DEVICE_TOKEN"
+        if (deviceToken.includes('/fcm/send/')) {
+          const parts = deviceToken.split('/fcm/send/');
+          deviceToken = parts[parts.length - 1];
+        }
+
+        // Rimuoviamo eventuali spazi bianchi o caratteri spuri
+        deviceToken = deviceToken.trim();
+        // -------------------------------
+
+        // Ora chiamiamo la funzione di invio passando il token pulito
+        // NOTA: Se la tua funzione 'sendPushToDevice' accetta l'intero oggetto 'sub', 
+        // potresti dover modificare anche quella funzione per usare 'deviceToken' invece di 'sub.endpoint'
+        return sendToFCM(deviceToken, pushMessage);
+      })
+    );
     // Log results
     const succeeded = results.filter((r) => r.status === 'fulfilled').length;
     const failed = results.filter((r) => r.status === 'rejected').length;
@@ -185,53 +203,24 @@ function buildPushMessage(notification: any): PushMessage {
 /**
  * Invia il push a un singolo device - best-effort per endpoint proprietari
  */
-async function sendPushToDevice(
-  subscription: any,
-  message: PushMessage,
-  notificationId: string
-) {
+async function sendPushToDevice(sub: any, pushMessage: any, notificationId: string) {
   try {
-    console.log(`📤 Tentativo di invio a ${subscription.device_name}...`);
+    let token = sub.endpoint;
 
-    const endpoint = subscription.endpoint;
-    const isFCM = endpoint.includes('fcm.googleapis.com');
-    const isWNS = endpoint.includes('notify.windows.com');
-
-    if (isFCM) {
-      console.log(`   🔥 FCM endpoint rilevato - tentando invio...`);
-      try {
-        await sendToFCM(endpoint, message);
-        console.log(`   ✅ FCM OK`);
-      } catch (fcmError) {
-        console.warn(`   ⚠️  FCM fallito (notifica via Real-time):`, (fcmError as any).message);
-      }
-    } else if (isWNS) {
-      console.log(`   🪟 WNS endpoint rilevato - tentando invio...`);
-      try {
-        await sendToWNS(endpoint, message);
-        console.log(`   ✅ WNS OK`);
-      } catch (wnsError) {
-        console.warn(`   ⚠️  WNS fallito (notifica via Real-time):`, (wnsError as any).message);
-      }
-    } else {
-      console.log(`   🔔 Web Push standard`);
-      try {
-        await sendToWebPush(subscription, message);
-        console.log(`   ✅ Web Push OK`);
-      } catch (pushError) {
-        console.warn(`   ⚠️  Web Push non riuscito (notifica via real-time):`, (pushError as any).message);
-      }
+    // Pulizia del token (Cruciale per FCM V1)
+    if (token.includes('/fcm/send/')) {
+      token = token.split('/fcm/send/').pop();
     }
+    token = token.trim();
 
-    // Aggiorna last_used_at (anche se il push device non è riuscito)
-    await supabase
-      .from('push_subscriptions')
-      .update({ last_used_at: new Date().toISOString() })
-      .eq('id', subscription.id);
+    // Log per debug (controlla che non sia un URL!)
+    console.log(`📤 Tentativo di invio a Android. Token: ${token.substring(0, 15)}...`);
 
-    return { success: true };
-  } catch (error: any) {
-    console.error(`❌ Errore elaborazione subscription:`, error.message);
+    // Chiama la funzione di invio che abbiamo sistemato nei messaggi precedenti
+    return await sendToFCM(token, pushMessage);
+    
+  } catch (error) {
+    console.error(`❌ Fallimento invio al device ${sub.id}:`, error.message);
     throw error;
   }
 }
@@ -242,7 +231,7 @@ async function sendPushToDevice(
 async function getFCMPrivateKey(): Promise<string> {
   // Ignoriamo il database, andiamo dritti al cuore del sistema
   const secretKey = Deno.env.get('FCM_PRIVATE_KEY');
-  
+
   if (secretKey && secretKey.length > 500) {
     console.log(`✅ Chiave caricata correttamente (Lunghezza: ${secretKey.length})`);
     return secretKey;
@@ -251,7 +240,7 @@ async function getFCMPrivateKey(): Promise<string> {
   // Se arriviamo qui, logghiamo COSA c'è dentro per capire l'errore
   console.error(`❌ Errore critico: Chiave assente o troppo corta (${secretKey?.length || 0} caratteri).`);
   console.error(`🔍 Valore attuale: "${secretKey}"`); // Questo ti farà vedere cosa sono quei 27 caratteri
-  
+
   throw new Error('FCM_PRIVATE_KEY non valida nei Secrets di Supabase');
 }
 
@@ -260,7 +249,7 @@ async function getFCMPrivateKey(): Promise<string> {
  */
 async function sendToFCM(deviceToken: string, message: PushMessage) {
   let fcmPrivateKeyJson: string;
-  
+
   try {
     fcmPrivateKeyJson = await getFCMPrivateKey();
   } catch (error) {
@@ -332,14 +321,14 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     // Se la chiave è finita su una riga sola o ha spazi strani, la riformattiamo
     const header = "-----BEGIN PRIVATE KEY-----";
     const footer = "-----END PRIVATE KEY-----";
-    
+
     if (pKey.includes(header) && pKey.includes(footer)) {
       // Estraiamo solo la parte Base64 tra header e footer
       const base64Part = pKey
         .replace(header, "")
         .replace(footer, "")
         .replace(/\s/g, ""); // Rimuove TUTTI gli spazi e gli a capo esistenti
-      
+
       // Ricostruiamo la chiave con un a capo ogni 64 caratteri (formato standard)
       const matches = base64Part.match(/.{1,64}/g);
       pKey = `${header}\n${matches?.join("\n")}\n${footer}`;
@@ -369,7 +358,7 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
 
     const data = await response.json();
     if (data.error) throw new Error(`OAuth Error: ${data.error_description}`);
-    
+
     return data.access_token;
   } catch (error: any) {
     console.error('❌ Errore critico generazione token:', error.message);
@@ -400,7 +389,7 @@ function pemToDER(pem: string): ArrayBuffer {
     .replace(/-----BEGIN PRIVATE KEY-----/g, '')
     .replace(/-----END PRIVATE KEY-----/g, '')
     .replace(/\s/g, '');
-  
+
   // Converti base64 a bytes
   const binaryString = atob(base64);
   const bytes = new Uint8Array(binaryString.length);

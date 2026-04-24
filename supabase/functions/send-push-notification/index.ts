@@ -372,22 +372,32 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     // Estrai e processa la private key
     let keyPem = privateKey.private_key;
     if (typeof keyPem === 'string') {
-      // Sostituisci \\n letterali con newline reali (se necessario)
-      keyPem = keyPem.replace(/\\n/g, '\n');
+      // Gestisci sia \\n che \n
+      keyPem = keyPem.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
     }
 
     console.log(`   🔍 Private key prima di elaborazione (primi 100 char): ${keyPem.substring(0, 100)}`);
     console.log(`   🔍 Private key contiene '-----BEGIN': ${keyPem.includes('-----BEGIN PRIVATE KEY-----')}`);
     console.log(`   🔍 Private key lunghezza: ${keyPem.length}`);
+    console.log(`   🔍 Newline count in key: ${(keyPem.match(/\n/g) || []).length}`);
+
+    // Verifica che la chiave inizi e finisca correttamente
+    if (!keyPem.includes('-----BEGIN PRIVATE KEY-----') || !keyPem.includes('-----END PRIVATE KEY-----')) {
+      console.error(`   ❌ Private key format error: doesn't contain BEGIN/END markers`);
+      console.error(`   First 200 chars: ${keyPem.substring(0, 200)}`);
+      throw new Error('Invalid private key format');
+    }
 
     const keyData = keyPem
       .replace(/-----BEGIN PRIVATE KEY-----/g, '')
       .replace(/-----END PRIVATE KEY-----/g, '')
       .replace(/\n/g, '')
+      .replace(/\r/g, '')
       .replace(/\s/g, '');
 
     console.log(`   🔍 Key data dopo elaborazione (lunghezza): ${keyData.length}`);
     console.log(`   🔍 Key data (primi 50 char): ${keyData.substring(0, 50)}`);
+    console.log(`   🔍 Key data (ultimi 50 char): ${keyData.substring(keyData.length - 50)}`);
 
     if (!keyData || keyData.length < 100) {
       throw new Error(`Private key data too short: ${keyData.length}`);

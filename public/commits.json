@@ -1,52 +1,52 @@
 [
   {
     "date": "24 aprile 2026",
-    "title": "Add Bottone notifica per inviare un reminder ai partecipanti",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "Add notifica al creatore quando player abbandona partita",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "Fix gestione counter player",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "Add notifica al creatore quando un giocatore si unisce alla partita + Fix realtime crud",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Fix allineamento tag card profilo",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Fix larghezza tooltip",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Merge pull request #1 from FrancescoIrace/logica-giocatori-partita",
-    "description": "Add funzione MAX 5 partite attive"
-  },
-  {
-    "date": "22 aprile 2026",
-    "title": "Add funzione MAX 5 partite attive",
+    "title": "fix ?",
     "description": "Modifica all'app"
   },
   {
-    "date": "22 aprile 2026",
-    "title": "Update mostra Dashboard anche per gli utenti da browser",
+    "date": "24 aprile 2026",
+    "title": "Spostamento pk su db",
     "description": "Modifica all'app"
   },
   {
-    "date": "22 aprile 2026",
-    "title": "Fix link redirect reset password",
+    "date": "24 aprile 2026",
+    "title": ".",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "test debug",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": ".",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "chore: Add fcm-key.json to gitignore",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "add apici json",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "test.",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": ".",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "testing 2",
     "description": "Modifica all'app"
   }
 ]

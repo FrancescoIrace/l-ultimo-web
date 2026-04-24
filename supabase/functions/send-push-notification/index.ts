@@ -324,18 +324,30 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     const serviceAccount = JSON.parse(privateKeyJson);
     let pKey = serviceAccount.private_key;
 
-    // PULIZIA RADICALE: Estraiamo solo il contenuto tra i trattini
-    const match = pKey.match(/-----BEGIN PRIVATE KEY-----([\s\S]*)-----END PRIVATE KEY-----/);
-    if (!match) throw new Error("Formato chiave privata non valido (mancano i tag BEGIN/END)");
+    // 1. PULIZIA TOTALE
+    // Trasformiamo i \n testuali in veri a capo e rimuoviamo spazi/virgolette extra
+    pKey = pKey.replace(/\\n/g, '\n').replace(/"/g, '').trim();
 
-    // Rimuoviamo TUTTO (spazi, \n, \\n, virgolette) lasciando solo il Base64 puro
-    const base64Content = match[1].replace(/\\n/g, '').replace(/\s+/g, '').trim();
+    // 2. RICOSTRUZIONE PEM (Il "Tocco Magico")
+    // Se la chiave è finita su una riga sola o ha spazi strani, la riformattiamo
+    const header = "-----BEGIN PRIVATE KEY-----";
+    const footer = "-----END PRIVATE KEY-----";
     
-    // Ricostruiamo la chiave PEM standard
-    const formattedKey = `-----BEGIN PRIVATE KEY-----\n${base64Content}\n-----END PRIVATE KEY-----`;
+    if (pKey.includes(header) && pKey.includes(footer)) {
+      // Estraiamo solo la parte Base64 tra header e footer
+      const base64Part = pKey
+        .replace(header, "")
+        .replace(footer, "")
+        .replace(/\s/g, ""); // Rimuove TUTTI gli spazi e gli a capo esistenti
+      
+      // Ricostruiamo la chiave con un a capo ogni 64 caratteri (formato standard)
+      const matches = base64Part.match(/.{1,64}/g);
+      pKey = `${header}\n${matches?.join("\n")}\n${footer}`;
+    }
 
+    // 3. GENERAZIONE JWT
     const now = Math.floor(Date.now() / 1000);
-    const jwt = await new jose.SignJWT({
+    const jwt = await new SignJWT({
       iss: serviceAccount.client_email,
       scope: 'https://www.googleapis.com/auth/firebase.messaging',
       aud: 'https://oauth2.googleapis.com/token',
@@ -343,9 +355,10 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       exp: now + 3600,
     })
       .setProtectedHeader({ alg: 'RS256' })
-      .sign(await jose.importPKCS8(formattedKey, 'RS256'));
+      .sign(await importPKCS8(pKey, 'RS256'));
 
-    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    // 4. SCAMBIO TOKEN
+    const response = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -354,12 +367,12 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       }),
     });
 
-    const tokenData = await tokenResponse.json();
-    if (tokenData.error) throw new Error(`OAuth Error: ${tokenData.error_description}`);
+    const data = await response.json();
+    if (data.error) throw new Error(`OAuth Error: ${data.error_description}`);
     
-    return tokenData.access_token;
+    return data.access_token;
   } catch (error: any) {
-    console.error('❌ Errore generazione token FCM:', error.message);
+    console.error('❌ Errore critico generazione token:', error.message);
     throw error;
   }
 }

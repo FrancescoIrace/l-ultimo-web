@@ -239,19 +239,32 @@ async function sendPushToDevice(
  */
 async function getFCMPrivateKey(): Promise<string> {
   try {
-    // Prova prima dal database
+    // Prova prima dal database - potrebbe essere salvata come JSON o come base64
     const { data, error } = await supabase
       .from('app_secrets')
       .select('value')
-      .eq('key', 'FCM_PRIVATE_KEY')
+      .eq('key', 'FCM_PRIVATE_KEY_B64')
       .single();
 
     if (data && data.value && data.value.length > 100) {
-      console.log('   ✅ FCM_PRIVATE_KEY caricato dal database');
-      return data.value;
+      // Se è base64, decodifica
+      console.log('   ✅ FCM_PRIVATE_KEY_B64 caricato dal database');
+      const decodedKey = new TextDecoder().decode(
+        Uint8Array.from(atob(data.value), c => c.charCodeAt(0))
+      );
+      // Ricostruisci il JSON completo
+      const fullJson = JSON.stringify({
+        type: 'service_account',
+        project_id: 'ultimo-web',
+        private_key_id: 'f10246150f7fc0c1c6813c0af203a6b50133b2de',
+        private_key: decodedKey,
+        client_email: 'firebase-adminsdk-fbsvc@ultimo-web.iam.gserviceaccount.com',
+        client_id: '114302719770690184033',
+      });
+      return fullJson;
     }
   } catch (dbError) {
-    console.log('   ℹ️  Tabella app_secrets non ancora creata o secret non trovato, provo secret ambientale');
+    console.log('   ℹ️  Tabella app_secrets non trovata o key FCM_PRIVATE_KEY_B64 non trovata');
   }
 
   // Fallback: usa il secret ambientale

@@ -238,15 +238,17 @@ async function sendPushToDevice(
  */
 async function sendToFCM(endpoint: string, message: PushMessage) {
   const fcmPrivateKey = Deno.env.get('FCM_PRIVATE_KEY');
-  if (!fcmPrivateKey) {
-    console.warn('   ⚠️  FCM_PRIVATE_KEY non configurato');
-    throw new Error('FCM_PRIVATE_KEY mancante');
+  
+  console.log(`   🔍 FCM_PRIVATE_KEY length: ${fcmPrivateKey?.length || 0}`);
+  console.log(`   🔍 FCM_PRIVATE_KEY first 100 chars: ${fcmPrivateKey?.substring(0, 100)}`);
+  console.log(`   🔍 FCM_PRIVATE_KEY type: ${typeof fcmPrivateKey}`);
+  
+  if (!fcmPrivateKey || fcmPrivateKey.length < 100) {
+    console.warn('   ⚠️  FCM_PRIVATE_KEY incompleto o non configurato');
+    throw new Error('FCM_PRIVATE_KEY mancante o incompleto');
   }
 
   try {
-    console.log(`   🔍 FCM_PRIVATE_KEY length: ${fcmPrivateKey.length}`);
-    console.log(`   🔍 FCM_PRIVATE_KEY first chars: ${fcmPrivateKey.substring(0, 50)}`);
-
     // Estrai il token FCM dall'endpoint
     const token = endpoint.split('/fcm/send/')[1];
     if (!token) throw new Error('Token FCM non trovato');

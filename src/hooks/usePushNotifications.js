@@ -42,6 +42,14 @@ export function usePushNotifications(userId) {
     registerServiceWorkers();
   }, []);
 
+  // Quando userId è disponibile, controlla la subscription
+  useEffect(() => {
+    if (userId) {
+      console.log('🔄 userId disponibile, controllando subscription...');
+      checkSubscription();
+    }
+  }, [userId]);
+
   const registerServiceWorkers = async () => {
     try {
       if (!('serviceWorker' in navigator)) return;
@@ -51,13 +59,6 @@ export function usePushNotifications(userId) {
         scope: '/',
       });
       console.log('✅ Service Worker (Real-time) registrato:', registration1);
-
-      // 2. Registra il Firebase Messaging SW per notifiche in background
-      const registration2 = await navigator.serviceWorker.register(
-        '/firebase-messaging-sw.js',
-        { scope: '/' }
-      );
-      console.log('✅ Firebase Messaging SW registrato:', registration2);
 
       // Controlla lo stato di subscription
       checkSubscription();
@@ -69,6 +70,14 @@ export function usePushNotifications(userId) {
 
   const checkSubscription = async () => {
     try {
+      // Se userId non è disponibile, salta il check
+      if (!userId) {
+        console.log('⏳ userId non ancora disponibile, skipping subscription check');
+        return;
+      }
+
+      console.log('🔍 Controllando subscription per userId:', userId.substring(0, 8) + '...');
+
       // Controlla se l'utente ha già un token salvato nel DB
       const { data, error: dbError } = await supabase
         .from('push_subscriptions')
@@ -79,7 +88,7 @@ export function usePushNotifications(userId) {
       if (dbError) throw dbError;
 
       if (data && data.length > 0) {
-        console.log('✅ Token FCM attivo trovato nel DB');
+        console.log('✅ Token FCM attivo trovato nel DB:', data.length);
         setIsSubscribed(true);
       } else {
         console.log('❌ Nessun token FCM attivo nel DB');

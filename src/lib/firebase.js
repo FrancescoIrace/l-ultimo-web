@@ -5,33 +5,59 @@ import { getMessaging, getToken } from 'firebase/messaging';
  * Configurazione Firebase per ultimo-web
  * Credenziali pubbliche (safe da esporre nel frontend)
  */
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: 'ultimo-web',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: '987337082220', // 🔑 Chiave essenziale per FCM
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+let app = null;
+let messaging = null;
 
-/**
- * Inizializza Firebase
- */
-const app = initializeApp(firebaseConfig);
+function initializeFirebase() {
+  if (app) return app; // Già inizializzato
 
-/**
- * Inizializza Cloud Messaging
- */
-export const messaging = getMessaging(app);
+  const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: 'ultimo-web',
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: '987337082220', // 🔑 Chiave essenziale per FCM
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  };
+
+  console.log('🔧 Inizializzo Firebase con config:', {
+    ...firebaseConfig,
+    apiKey: firebaseConfig.apiKey ? '✅' : '❌',
+  });
+
+  if (!firebaseConfig.apiKey) {
+    throw new Error('❌ VITE_FIREBASE_API_KEY non trovato. Controlla .env.local');
+  }
+
+  app = initializeApp(firebaseConfig);
+  messaging = getMessaging(app);
+
+  return app;
+}
+
+export function getMessagingInstance() {
+  if (!messaging) {
+    initializeFirebase();
+  }
+  return messaging;
+}
 
 /**
  * Ottiene il token FCM per questo device
- * Salva nel database push_subscriptions con endpoint FCM
+ * Usa il Service Worker già registrato
  */
 export async function getFCMToken() {
   try {
-    const token = await getToken(messaging, {
+    const msg = getMessagingInstance();
+
+    // Ottieni la registrazione del SW standard che è già registrato
+    const registration = await navigator.serviceWorker.ready;
+    
+    console.log('📱 Ottenendo token FCM con SW:', registration.scope);
+
+    const token = await getToken(msg, {
       vapidPublicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
+      serviceWorkerRegistration: registration, // Usa il SW già registrato
     });
 
     if (token) {
@@ -43,7 +69,7 @@ export async function getFCMToken() {
     }
   } catch (error) {
     console.error('❌ Errore generazione FCM token:', error);
-    return null;
+    throw error;
   }
 }
 

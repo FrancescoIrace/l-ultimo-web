@@ -326,20 +326,25 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     }
 
     // 1. Normalizzazione della Private Key (Risolve il problema della firma)
+    // 1. Normalizzazione RIGOROSA della Private Key
     let pKey = serviceAccount.private_key;
-    
-    // Sostituisce i \n letterali con veri a capo
-    pKey = pKey.replace(/\\n/g, '\n');
 
-    // Se la chiave è arrivata come una riga singola con spazi (errore comune di copia-incolla)
-    if (pKey.includes('-----BEGIN PRIVATE KEY-----') && !pKey.includes('\n')) {
-      pKey = pKey
-        .replace('-----BEGIN PRIVATE KEY----- ', '-----BEGIN PRIVATE KEY-----\n')
-        .replace(' -----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----')
-        // Sostituisce gli spazi interni con newline, ma solo nella parte codificata
-        .split(' ').join('\n');
+    // Se la chiave è nel formato JSON di Firebase, i \n sono scritti come stringa "\\n"
+    if (pKey.includes('\\n')) {
+      pKey = pKey.replace(/\\n/g, '\n');
     }
-    pKey = pKey.trim();
+
+    // Rimuove eventuali virgolette doppie che a volte Supabase aggiunge ai segreti
+    pKey = pKey.replace(/"/g, '').trim();
+
+    // Forza il formato PEM corretto se mancano gli a capo dopo BEGIN e prima di END
+    if (!pKey.includes('\n')) {
+       // Se è tutto su una riga, Google la rifiuterà sempre. 
+       // Proviamo a ripristinare i newline solo nei punti critici.
+       pKey = pKey
+         .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
+         .replace('-----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----');
+    }
 
     // 2. Creazione del JWT
     const now = Math.floor(Date.now() / 1000);

@@ -9,12 +9,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.13.0/firebase-messaging.js'
 
 // Configurazione Firebase IDENTICA al frontend
 firebase.initializeApp({
-  apiKey: "AIzaSyB2rqlQmlHjOJJkN9e7AyZWrHFCLk7z5zU",
+  apiKey: "AIzaSyASqa6u9FB-nHZFPOrmDb_Odu_QVHmLftM",
   authDomain: "ultimo-web.firebaseapp.com",
   projectId: "ultimo-web",
-  storageBucket: "ultimo-web.appspot.com",
+  storageBucket: "ultimo-web.firebasestorage.app",
   messagingSenderId: "987337082220", // 🔑 CRITICO: deve matchare il token generato
-  appId: "1:987337082220:web:c1b4e8a0f4d3a1b2c3d4"
+  appId: "1:987337082220:web:c79252b7a433f149e41f49"
 });
 
 // Ottieni l'istanza di messaging

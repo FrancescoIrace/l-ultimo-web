@@ -1,6 +1,16 @@
 [
   {
     "date": "24 aprile 2026",
+    "title": "Fix",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "24 aprile 2026",
+    "title": "Fix firebase",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "24 aprile 2026",
     "title": "comm",
     "description": "Modifica all'app"
   },
@@ -33,16 +43,6 @@
     "date": "24 aprile 2026",
     "title": "add formattazione",
     "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "debug",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "fix sendPushtodevice",
-    "description": "Modifica all'app"
   },
   {
     "date": "24 aprile 2026",

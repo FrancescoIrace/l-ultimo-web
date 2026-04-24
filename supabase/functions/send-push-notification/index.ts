@@ -319,56 +319,29 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
  */
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
-    // Prova a parsare come JSON completo
-    let serviceAccount;
-    try {
-      serviceAccount = JSON.parse(privateKeyJson);
-    } catch (e) {
-      console.warn('   ⚠️  FCM_PRIVATE_KEY non è un JSON valido, skip FCM');
-      throw new Error('FCM_PRIVATE_KEY non è JSON valido');
-    }
+    const serviceAccount = JSON.parse(privateKeyJson);
 
     if (!serviceAccount.private_key || !serviceAccount.client_email) {
-      console.warn('   ⚠️  FCM_PRIVATE_KEY non contiene i campi obbligatori');
-      throw new Error('FCM_PRIVATE_KEY incompleto');
-    }
-    
-    console.log(`   🔑 Client email: ${serviceAccount.client_email}`);
-
-    // Normalizza la private key (gestisci \n letterali e spazi)
-    let privateKeyPEM = serviceAccount.private_key;
-    console.log(`   🔍 Raw private_key da JSON (primi 100 chars): ${privateKeyPEM.substring(0, 100)}`);
-    console.log(`   🔍 Raw private_key da JSON (ultimi 50 chars): ${privateKeyPEM.substring(privateKeyPEM.length - 50)}`);
-    console.log(`   🔍 Contains literal \\n: ${privateKeyPEM.includes('\\n')}`);
-    console.log(`   🔍 Contains actual newline: ${privateKeyPEM.includes('\n')}`);
-    
-    if (typeof privateKeyPEM === 'string') {
-      // Sostituisci SOLO i \n letterali, non quelli reali
-      privateKeyPEM = privateKeyPEM.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
-      console.log(`   🔧 Dopo normalizzazione (primi 100 chars): ${privateKeyPEM.substring(0, 100)}`);
-      console.log(`   🔧 Dopo normalizzazione (ultimi 50 chars): ${privateKeyPEM.substring(privateKeyPEM.length - 50)}`);
-      
-      // Se la chiave ha spazi al posto di newline (problema del database SQL), riforma
-      const hasSpacesBetweenLines = privateKeyPEM.includes('-----BEGIN') && 
-                                     privateKeyPEM.includes('-----END') &&
-                                     !privateKeyPEM.includes('\n');
-      
-      const hasMultipleSpaces = privateKeyPEM.includes('  ') || 
-                                (privateKeyPEM.match(/ [A-Za-z0-9+/]/g) || []).length > 5;
-      
-      if (hasSpacesBetweenLines || hasMultipleSpaces) {
-        console.log(`   🔧 Rilevato problema con spazi al posto di newline - riformattando...`);
-        console.log(`   🔧 hasSpacesBetweenLines: ${hasSpacesBetweenLines}, hasMultipleSpaces: ${hasMultipleSpaces}`);
-        privateKeyPEM = reformatPEMKey(privateKeyPEM);
-      }
+      throw new Error('FCM_PRIVATE_KEY incompleto (mancano campi chiave)');
     }
 
-    console.log(`   🔍 Final private key lunghezza: ${privateKeyPEM.length}`);
-    console.log(`   🔍 Final private key contains BEGIN: ${privateKeyPEM.includes('-----BEGIN PRIVATE KEY-----')}`);
-    console.log(`   🔍 Final private key contains END: ${privateKeyPEM.includes('-----END PRIVATE KEY-----')}`);
-    console.log(`   🔍 Final private key newline count: ${(privateKeyPEM.match(/\n/g) || []).length}`);
+    // 1. Normalizzazione della Private Key (Risolve il problema della firma)
+    let pKey = serviceAccount.private_key;
+    
+    // Sostituisce i \n letterali con veri a capo
+    pKey = pKey.replace(/\\n/g, '\n');
 
-    // Crea JWT usando jose
+    // Se la chiave è arrivata come una riga singola con spazi (errore comune di copia-incolla)
+    if (pKey.includes('-----BEGIN PRIVATE KEY-----') && !pKey.includes('\n')) {
+      pKey = pKey
+        .replace('-----BEGIN PRIVATE KEY----- ', '-----BEGIN PRIVATE KEY-----\n')
+        .replace(' -----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----')
+        // Sostituisce gli spazi interni con newline, ma solo nella parte codificata
+        .split(' ').join('\n');
+    }
+    pKey = pKey.trim();
+
+    // 2. Creazione del JWT
     const now = Math.floor(Date.now() / 1000);
     const jwt = await new SignJWT({
       iss: serviceAccount.client_email,
@@ -378,34 +351,29 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       exp: now + 3600,
     })
       .setProtectedHeader({ alg: 'RS256' })
-      .sign(await importPrivateKey(privateKeyPEM));
+      .sign(await importPrivateKey(pKey));
 
-    console.log(`   📜 JWT generato con jose (lunghezza: ${jwt.length})`);
-    console.log(`   📜 JWT (primi 100 chars): ${jwt.substring(0, 100)}`);
-
-    // Scambia JWT con access token
+    // 3. Scambio JWT con Access Token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
         assertion: jwt,
-      }).toString(),
+      }),
     });
 
     if (!tokenResponse.ok) {
-      const error = await tokenResponse.text();
-      console.error('   ❌ OAuth2 error:', error);
-      throw new Error(`OAuth failed: ${error}`);
+      const errorText = await tokenResponse.text();
+      throw new Error(`OAuth failed: ${errorText}`);
     }
 
-    const tokenData = await tokenResponse.json() as any;
-    console.log(`   🔓 Access token ottenuto!`);
+    const tokenData = await tokenResponse.json();
+    console.log('🔓 Access token FCM ottenuto con successo');
     return tokenData.access_token;
+
   } catch (error: any) {
-    console.error('❌ FCM token generation failed:', error.message);
+    console.error('❌ Errore generazione token FCM:', error.message);
     throw error;
   }
 }

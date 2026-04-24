@@ -64,11 +64,11 @@ export function usePushNotifications(userId) {
 
       // 1. Otteniamo la subscription standard del browser (per p256dh e auth)
       const registration = await navigator.serviceWorker.ready;
-      const browserSub = await registration.pushManager.getSubscription() 
-                         || await registration.pushManager.subscribe({
-                            userVisibleOnly: true,
-                            applicationServerKey: 'IL_TUO_VAPID_PUBLIC_KEY' // Opzionale se usi solo Firebase
-                         });
+      const browserSub = await registration.pushManager.getSubscription()
+        || await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: 'IL_TUO_VAPID_PUBLIC_KEY' // Opzionale se usi solo Firebase
+        });
 
       // 2. Otteniamo il token FCM
       const fcmToken = await getFCMToken();
@@ -94,7 +94,7 @@ export function usePushNotifications(userId) {
 
       // Costruiamo l'endpoint FCM
       const endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
-      
+
       let p256dh = 'fcm-token';
       let auth = 'fcm-token';
 
@@ -121,7 +121,7 @@ export function usePushNotifications(userId) {
           device_name: detectDevice(),
           is_active: true,
           last_used_at: new Date().toISOString(),
-        , { onConflict: 'user_id,endpoint' });
+        }, { onConflict: 'user_id,endpoint' });
 
       if (error) throw error;
       console.log('✅ DATABASE AGGIORNATO');

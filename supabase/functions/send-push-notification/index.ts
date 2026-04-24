@@ -376,9 +376,17 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       console.log(`   🔧 Dopo normalizzazione (primi 100 chars): ${privateKeyPEM.substring(0, 100)}`);
       console.log(`   🔧 Dopo normalizzazione (ultimi 50 chars): ${privateKeyPEM.substring(privateKeyPEM.length - 50)}`);
       
-      // Se la chiave ha spazi al posto di newline, riforma
-      if (privateKeyPEM.includes('-----BEGIN') && !privateKeyPEM.includes('\n')) {
-        console.log(`   🔧 Riformattando PEM con spazi...`);
+      // Se la chiave ha spazi al posto di newline (problema del database SQL), riforma
+      const hasSpacesBetweenLines = privateKeyPEM.includes('-----BEGIN') && 
+                                     privateKeyPEM.includes('-----END') &&
+                                     !privateKeyPEM.includes('\n');
+      
+      const hasMultipleSpaces = privateKeyPEM.includes('  ') || 
+                                (privateKeyPEM.match(/ [A-Za-z0-9+/]/g) || []).length > 5;
+      
+      if (hasSpacesBetweenLines || hasMultipleSpaces) {
+        console.log(`   🔧 Rilevato problema con spazi al posto di newline - riformattando...`);
+        console.log(`   🔧 hasSpacesBetweenLines: ${hasSpacesBetweenLines}, hasMultipleSpaces: ${hasMultipleSpaces}`);
         privateKeyPEM = reformatPEMKey(privateKeyPEM);
       }
     }
@@ -467,12 +475,23 @@ function pemToDER(pem: string): ArrayBuffer {
  * Riforma una chiave PEM che ha spazi al posto di newline
  */
 function reformatPEMKey(keyStr: string): string {
+  console.log(`   🔧 reformatPEMKey input length: ${keyStr.length}`);
+  
+  // Estrai il contenuto base64 rimuovendo header/footer
   const match = keyStr.match(/-----BEGIN[^-]*-----\s*([\s\S]*?)\s*-----END[^-]*-----/);
   if (!match || !match[1]) {
+    console.log(`   ❌ reformatPEMKey: match non trovato`);
     return keyStr;
   }
 
+  console.log(`   🔧 Match trovato, lunghezza content: ${match[1].length}`);
+  
+  // Rimuovi TUTTI gli spazi dal base64
   const base64Content = match[1].replace(/\s/g, '');
+  console.log(`   🔧 Base64 dopo pulizia: ${base64Content.length} caratteri`);
+  console.log(`   🔧 Base64 primi 50: ${base64Content.substring(0, 50)}`);
+  console.log(`   🔧 Base64 ultimi 50: ${base64Content.substring(base64Content.length - 50)}`);
+  
   const keyType = keyStr.includes('PRIVATE KEY') ? 'PRIVATE KEY' : 'PUBLIC KEY';
 
   let formattedKey = `-----BEGIN ${keyType}-----\n`;
@@ -480,6 +499,10 @@ function reformatPEMKey(keyStr: string): string {
     formattedKey += base64Content.substring(i, i + 64) + '\n';
   }
   formattedKey += `-----END ${keyType}-----`;
+
+  console.log(`   🔧 reformatPEMKey output lunghezza: ${formattedKey.length}`);
+  console.log(`   🔧 reformatPEMKey output primi 100: ${formattedKey.substring(0, 100)}`);
+  console.log(`   🔧 reformatPEMKey output newline count: ${(formattedKey.match(/\n/g) || []).length}`);
 
   return formattedKey;
 }

@@ -195,22 +195,11 @@ async function sendPushToDevice(
     const isFCM = endpoint.includes('fcm.googleapis.com');
     const isWNS = endpoint.includes('notify.windows.com');
 
-    if (isFCM) {
-      console.log(`   📱 FCM Endpoint rilevato`);
-      try {
-        await sendToFCM(endpoint, message);
-        console.log(`   ✅ Inviato a FCM`);
-      } catch (fcmError) {
-        console.warn(`   ⚠️  FCM non riuscito (notifica arriverà via real-time):`, (fcmError as any).message);
-      }
-    } else if (isWNS) {
-      console.log(`   🪟 WNS Endpoint rilevato`);
-      try {
-        await sendToWNS(endpoint, message);
-        console.log(`   ✅ Inviato a WNS`);
-      } catch (wnsError) {
-        console.warn(`   ⚠️  WNS non riuscito (notifica arriverà via real-time):`, (wnsError as any).message);
-      }
+    if (isFCM || isWNS) {
+      // FCM e WNS sono complessi perché richiedono credenziali proprietarie.
+      // L'utente riceverà la notifica via Real-time (online) o via Service Worker (offline).
+      // Questo è il percorso preferito per la maggior parte dei casi d'uso!
+      console.log(`   ℹ️  ${isFCM ? 'FCM' : 'WNS'} endpoint rilevato - notifica inoltrata via Real-time + Service Worker`);
     } else {
       console.log(`   🔔 Web Push standard`);
       try {
@@ -239,32 +228,20 @@ async function sendPushToDevice(
  */
 async function getFCMPrivateKey(): Promise<string> {
   try {
-    // Prova prima dal database - potrebbe essere salvata come JSON o come base64
+    // Prova prima dal database - dovrebbe essere il JSON completo
     const { data, error } = await supabase
       .from('app_secrets')
       .select('value')
-      .eq('key', 'FCM_PRIVATE_KEY_B64')
+      .eq('key', 'FCM_PRIVATE_KEY')
       .single();
 
     if (data && data.value && data.value.length > 100) {
-      // Se è base64, decodifica
-      console.log('   ✅ FCM_PRIVATE_KEY_B64 caricato dal database');
-      const decodedKey = new TextDecoder().decode(
-        Uint8Array.from(atob(data.value), c => c.charCodeAt(0))
-      );
-      // Ricostruisci il JSON completo
-      const fullJson = JSON.stringify({
-        type: 'service_account',
-        project_id: 'ultimo-web',
-        private_key_id: 'f10246150f7fc0c1c6813c0af203a6b50133b2de',
-        private_key: decodedKey,
-        client_email: 'firebase-adminsdk-fbsvc@ultimo-web.iam.gserviceaccount.com',
-        client_id: '114302719770690184033',
-      });
-      return fullJson;
+      console.log('   ✅ FCM_PRIVATE_KEY caricato dal database app_secrets');
+      // Ritorna direttamente il JSON completo
+      return data.value;
     }
   } catch (dbError) {
-    console.log('   ℹ️  Tabella app_secrets non trovata o key FCM_PRIVATE_KEY_B64 non trovata');
+    console.log('   ℹ️  app_secrets non trovata o FCM_PRIVATE_KEY non trovata');
   }
 
   // Fallback: usa il secret ambientale

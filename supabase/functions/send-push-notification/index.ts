@@ -369,14 +369,43 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
     const encoder = new TextEncoder();
     const data = encoder.encode(signatureInput);
 
+/**
+ * Riforma una chiave PEM che ha spazi al posto di newline
+ */
+function reformatPEMKey(keyStr: string): string {
+  // Estrai il contenuto tra BEGIN e END
+  const match = keyStr.match(/-----BEGIN[^-]*-----\s*([\s\S]*?)\s*-----END[^-]*-----/);
+  if (!match || !match[1]) {
+    return keyStr; // Se non è in formato PEM, torna come è
+  }
+
+  const base64Content = match[1].replace(/\s/g, ''); // Rimuovi TUTTI gli spazi/newline
+  const keyType = keyStr.includes('PRIVATE KEY') ? 'PRIVATE KEY' : 'PUBLIC KEY';
+
+  // Riforma la chiave con righe di 64 caratteri
+  let formattedKey = `-----BEGIN ${keyType}-----\n`;
+  for (let i = 0; i < base64Content.length; i += 64) {
+    formattedKey += base64Content.substring(i, i + 64) + '\n';
+  }
+  formattedKey += `-----END ${keyType}-----`;
+
+  return formattedKey;
+}
+
     // Estrai e processa la private key
     let keyPem = privateKey.private_key;
     if (typeof keyPem === 'string') {
-      // Gestisci sia \\n che \n
+      // Gestisci sia \\n che \n e spazi
       keyPem = keyPem.replace(/\\n/g, '\n').replace(/\\r/g, '\r');
+      
+      // Se la chiave ha spazi al posto di newline, riforma
+      if (keyPem.includes('-----BEGIN') && !keyPem.includes('\n')) {
+        console.log(`   🔧 Riformattando PEM con spazi...`);
+        keyPem = reformatPEMKey(keyPem);
+      }
     }
 
-    console.log(`   🔍 Private key prima di elaborazione (primi 100 char): ${keyPem.substring(0, 100)}`);
+    console.log(`   🔍 Private key dopo riformattazione (primi 100 char): ${keyPem.substring(0, 100)}`);
     console.log(`   🔍 Private key contiene '-----BEGIN': ${keyPem.includes('-----BEGIN PRIVATE KEY-----')}`);
     console.log(`   🔍 Private key lunghezza: ${keyPem.length}`);
     console.log(`   🔍 Newline count in key: ${(keyPem.match(/\n/g) || []).length}`);

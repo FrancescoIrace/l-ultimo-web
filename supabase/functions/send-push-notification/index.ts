@@ -268,38 +268,36 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
 
     // 3. COSTRUZIONE BODY "A PROVA DI BOMBA"
     // Usiamo String() per evitare l'errore "No number after minus sign"
+    // Assicurati che 'message' sia l'oggetto restituito da buildPushMessage
     const payload = {
-  message: {
-    token: deviceToken,
-    // Usiamo 'notification' per Android e come fallback universale
-    notification: {
-      title: String(message.title).trim(),
-      body: String(message.body).trim(),
-    },
-    // Configurazione specifica per iOS
-    apns: {
-      payload: {
-        aps: {
-          alert: {
-            title: String(message.title).trim(),
-            body: String(message.body).trim(),
+      message: {
+        token: deviceToken,
+        notification: {
+          title: message.title || "Titolo non pervenuto",
+          body: message.body || "Contenuto non pervenuto",
+        },
+        data: {
+          // FCM V1 vuole solo stringhe in 'data'
+          notificationId: String(message.data?.notificationId || ""),
+          link: String(message.data?.link || "/"),
+          // Forziamo titolo e corpo anche qui per il Service Worker
+          title: String(message.title || ""),
+          body: String(message.body || ""),
+        },
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                title: message.title,
+                body: message.body,
+              },
+              sound: "default",
+              badge: 1,
+            },
           },
-          sound: "default",
-          badge: 1,
-          "mutable-content": 1,
         },
       },
-      headers: {
-        "apns-priority": "10",
-        "apns-push-type": "alert",
-      },
-    },
-    // Dati per il Service Worker (utili per il click sulla notifica)
-    data: Object.fromEntries(
-      Object.entries(message.data || {}).map(([k, v]) => [k, String(v)])
-    ),
-  },
-};
+    };
 
     console.log(`📡 Invio a Google V1...`);
 

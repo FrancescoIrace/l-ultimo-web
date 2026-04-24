@@ -290,16 +290,35 @@ async function sendToFCM(endpoint: string, message: PushMessage) {
  */
 async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
   try {
+    // Fix: la chiave potrebbe non avere newline corretti
+    // Formato atteso: -----BEGIN PRIVATE KEY-----\n{base64}\n-----END PRIVATE KEY-----
+    let fixedKey = privateKeyJson
+      .replace(/-----BEGIN PRIVATE KEY-----\s+/g, '-----BEGIN PRIVATE KEY-----\n')
+      .replace(/\s+-----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----');
+
+    console.log(`   🔧 Key fixed, length: ${fixedKey.length}`);
+    console.log(`   🔧 First chars: ${fixedKey.substring(0, 60)}`);
+
     // Pulisci la stringa - potrebbe avere escape characters
-    let cleanJson = privateKeyJson.trim();
+    let cleanJson = fixedKey.trim();
     
     // Se è una stringa JSON con doppi escape, puliscila
     if (cleanJson.startsWith('"') && cleanJson.endsWith('"')) {
       cleanJson = JSON.parse(cleanJson);
     }
     
-    // Prova a parserizare
-    const privateKey = typeof cleanJson === 'string' ? JSON.parse(cleanJson) : cleanJson;
+    // Prova a parserizare - se è già JSON, parsalo
+    let privateKey;
+    try {
+      privateKey = typeof cleanJson === 'string' ? JSON.parse(cleanJson) : cleanJson;
+    } catch (e) {
+      // Se non è JSON, assume che sia la PEM key raw
+      console.log('   ℹ️  Non è JSON, assume PEM key raw');
+      privateKey = {
+        private_key: fixedKey,
+        client_email: 'firebase-adminsdk@example.com'
+      };
+    }
     
     console.log(`   🔑 Private key client email: ${privateKey.client_email}`);
     
@@ -336,10 +355,15 @@ async function generateFCMAccessToken(privateKeyJson: string): Promise<string> {
       keyPem = keyPem.replace(/\\n/g, '\n');
     }
 
+    console.log(`   📄 Key PEM length: ${keyPem.length}`);
+
     const keyData = keyPem
       .replace(/-----BEGIN PRIVATE KEY-----/g, '')
       .replace(/-----END PRIVATE KEY-----/g, '')
-      .replace(/\n/g, '');
+      .replace(/\n/g, '')
+      .replace(/\s/g, '');
+
+    console.log(`   🔐 Key data (base64) length: ${keyData.length}`);
 
     const binaryString = atob(keyData);
     const bytes = new Uint8Array(binaryString.length);

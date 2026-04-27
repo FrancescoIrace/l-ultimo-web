@@ -23,6 +23,9 @@ export default function MatchDetail({ user }) {
     const [comment, setComment] = useState('');
     const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
     const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
+    const [confirmedPlayers, setConfirmedPlayers] = useState([]);
+    const [waitingPlayers, setWaitingPlayers] = useState([]);
+
 
     // Funzione per aprire la modal
     const openReviewModal = (player, id_target) => {
@@ -69,7 +72,7 @@ export default function MatchDetail({ user }) {
                 .from('matches')
                 .select('*')
                 .eq('id', id)
-                .single();
+                .maybeSingle();
 
             setMatch(matchData);
             if (matchData) {
@@ -78,80 +81,67 @@ export default function MatchDetail({ user }) {
                     .select('*')
                     .eq('match_id', matchData.id)
                     .eq('user_id', user.id)
-                    .single();
+                    .maybeSingle();
                 setIsJoined(!!participantData);
             }
 
             // 2. Partecipanti + Dati del Profilo (JOIN)
             const { data: partData, error: partError } = await supabase
                 .from('participants')
-                .select(`id, user_id,profiles (username,avatar_url, gender)`) // JOIN con profiles per avere username e avatar dei partecipanti
+                .select(`id, user_id,status, waitlist_order, profiles (username,avatar_url, gender)`) // JOIN con profiles per avere username e avatar dei partecipanti
                 .eq('match_id', id);
 
             if (partError) console.error(partError);
-            else setParticipants(partData || []);
+            else {
+                setParticipants(partData || []);
+                setConfirmedPlayers(partData.filter(p => p.status === 'confirmed'));
+                setWaitingPlayers(partData.filter(p => p.status === 'waiting')
+                    .sort((a, b) => a.waitlist_order - b.waitlist_order));
+            }
 
             setLoading(false);
         }
         getDetails();
 
-        // Real-time subscription ai cambiamenti dei partecipanti
+        // Real-time subscription ai cambiamenti dei partecipanti (INSERT e DELETE) per aggiornare la lista senza ricaricare la pagina
+        //Aggiunta controllo per i confermati e lista d'attesa per mantenere l'ordine corretto
+        if (!id || !user?.id) return;
+
         const channel = supabase
-            .channel(`public:participants:match_id=eq.${id}`)
+            .channel(`match_participants_${id}`)
             .on(
                 'postgres_changes',
                 {
-                    event: 'INSERT',
+                    event: '*', // Ascolta INSERT, UPDATE e DELETE
                     schema: 'public',
                     table: 'participants',
                     filter: `match_id=eq.${id}`,
                 },
-                async (payload) => {
-                    const { data: updatedParticipants } = await supabase
+                async () => {
+                    console.log('🔄 Cambiamento rilevato, ricarico i dati...');
+
+                    // Riesegui la query completa per aggiornare tutti gli stati
+                    const { data: partData, error: partError } = await supabase
                         .from('participants')
-                        .select(`id, user_id, profiles (username, avatar_url, gender)`)
+                        .select(`id, user_id, status, waitlist_order, profiles (username, avatar_url, gender)`)
                         .eq('match_id', id);
 
-                    if (updatedParticipants) {
-                        setParticipants(updatedParticipants);
-                    }
-                }
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'DELETE',
-                    schema: 'public',
-                    table: 'participants',
-                },
-                async (payload) => {
-                    // Ricarica i partecipanti quando c'è un DELETE
-                    const { data: updatedParticipants } = await supabase
-                        .from('participants')
-                        .select(`id, user_id, profiles (username, avatar_url, gender)`)
-                        .eq('match_id', id);
+                    if (!partError && partData) {
+                        setParticipants(partData);
+                        setConfirmedPlayers(partData.filter(p => p.status === 'confirmed'));
+                        setWaitingPlayers(partData.filter(p => p.status === 'waiting')
+                            .sort((a, b) => a.waitlist_order - b.waitlist_order));
 
-                    if (updatedParticipants) {
-                        setParticipants(updatedParticipants);
-                    }
-
-                    // Aggiorna isJoined
-                    if (user.id) {
-                        const { data: currentUserParticipant } = await supabase
-                            .from('participants')
-                            .select('*')
-                            .eq('match_id', id)
-                            .eq('user_id', user.id)
-                            .maybeSingle();
-                        
-                        setIsJoined(!!currentUserParticipant);
+                        // Aggiorna isJoined cercando l'utente nei nuovi dati
+                        const userSub = partData.find(p => p.user_id === user.id);
+                        setIsJoined(!!userSub);
                     }
                 }
             )
             .subscribe();
 
         return () => {
-            channel.unsubscribe();
+            supabase.removeChannel(channel);
         };
     }, [id, user.id]);
 
@@ -161,55 +151,67 @@ export default function MatchDetail({ user }) {
             return;
         }
 
-        // Calcola il tempo rimanente prima della partita
-        const now = new Date();
-        const matchTime = new Date(match.datetime);
-        const timeUntilMatch = matchTime - now;
-        const hoursUntilMatch = timeUntilMatch / (1000 * 60 * 60);
+        //Creiamo un messaggio di avviso diverso a seconda se fai parte dei confermati o della lista d'attesa
+        const isConfirmed = confirmedPlayers.some(p => p.user_id === user.id);
+        const isWaiting = waitingPlayers.some(p => p.user_id === user.id);
+        const isWaitingListPopulated = waitingPlayers.length > 0 ? "(Entrerà un giocatore della lista d'attesa)" : "(Lista d'attesa vuota)";
 
-        // Determina il messaggio in base al tempo rimanente
-        let warningMessage = "Vuoi davvero abbandonare la partita?";
-        if (hoursUntilMatch <= 1) {
-            warningMessage = "⚠️ Manca meno di 1 ora alla partita! Sei sicuro di voler abbandonare?";
-        } else if (hoursUntilMatch <= 4) {
-            warningMessage = "⚠️ Mancano meno di 4 ore alla partita! Sei sicuro di voler abbandonare?";
-        } else if (hoursUntilMatch <= 8) {
-            warningMessage = "⚠️ Mancano meno di 8 ore alla partita! Sei sicuro di voler abbandonare?";
-        }
 
-    confirmDangerous(warningMessage, async () => {
-        try {
-            // 1. Rimuovi dai partecipanti
-            const { error: partError } = await supabase
-                .from('participants')
-                .delete()
-                .eq('match_id', id)
-                .eq('user_id', user.id);
+        if (isConfirmed) {
+            // Calcola il tempo rimanente prima della partita
+            const now = new Date();
+            const matchTime = new Date(match.datetime);
+            const timeUntilMatch = matchTime - now;
+            const hoursUntilMatch = timeUntilMatch / (1000 * 60 * 60);
 
-            if (partError) {
-                console.error('❌ Errore delete partecipante:', partError);
-                error('Errore durante l\'abbandono: ' + partError.message);
-                return;
+            // Determina il messaggio in base al tempo rimanente
+            let warningMessage = `Vuoi davvero abbandonare la partita? ${isWaitingListPopulated}`;
+            if (hoursUntilMatch <= 1) {
+                warningMessage = `⚠️ Manca meno di 1 ora alla partita! Sei sicuro di voler abbandonare? ${isWaitingListPopulated}`;
+            } else if (hoursUntilMatch <= 4) {
+                warningMessage = `⚠️ Mancano meno di 4 ore alla partita! Sei sicuro di voler abbandonare? ${isWaitingListPopulated}`;
+            } else if (hoursUntilMatch <= 8) {
+                warningMessage = `⚠️ Mancano meno di 8 ore alla partita! Sei sicuro di voler abbandonare? ${isWaitingListPopulated}`;
             }
 
-            console.log('✅ Partecipante rimosso');
+            confirmDangerous(warningMessage, async () => {
+                try {
+                    // 1. Rimuovi dai partecipanti
+                    const { error: partError } = await supabase
+                        .from('participants')
+                        .delete()
+                        .eq('match_id', id)
+                        .eq('user_id', user.id);
 
-            // 2. Decrementa il contatore in matches
-            const { error: rpcError } = await supabase.rpc('decrement_match_players', { match_id: id });
-            
-            if (rpcError) {
-                console.error('❌ Errore RPC decrement:', rpcError);
-                error('Errore durante l\'aggiornamento: ' + rpcError.message);
-                return;
-            }
+                    if (partError) {
+                        console.error('❌ Errore delete partecipante:', partError);
+                        error('Errore durante l\'abbandono: ' + partError.message);
+                        return;
+                    }
 
-            console.log('✅ Contatore decrementato');
-            success('Hai abbandonato la partita!');
-        } catch (err) {
-            console.error('❌ Errore generale:', err);
-            error('Errore: ' + err.message);
+                    success('Hai abbandonato la partita!');
+                } catch (err) {
+                    console.error('❌ Errore generale:', err);
+                    error('Errore: ' + err.message);
+                }
+            });
+        } else if (isWaiting) {
+            confirm('Sei in lista d\'attesa. Vuoi rimuovere la tua richiesta di partecipazione?', async () => {
+                const { error: partError } = await supabase
+                    .from('participants')
+                    .delete()
+                    .eq('match_id', id)
+                    .eq('user_id', user.id);
+
+                if (partError) {
+                    console.error('❌ Errore uscita da lista d\'attesa:', partError);
+                    error('Errore durante l\'abbandono: ' + partError.message);
+                    return;
+                } else {
+                    success('✅ Hai rimosso la tua richiesta di partecipazione!');
+                }
+            });
         }
-    });
     };
 
     const handleDeleteMatch = async () => {
@@ -324,28 +326,35 @@ Scopri di più qui: ${window.location.href}`;
     };
 
     const handleJoin = async () => {
-        const { error: partError } = await supabase
-            .from('participants')
-            .insert([{ match_id: match.id, user_id: user.id }]);
+        // Chiamiamo la RPC che gestisce tutto: controllo posti, inserimento, incremento e notifiche
+        const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
+            p_match_id: match.id,
+            p_user_id: user.id,
+            p_username: user.user_metadata?.username || 'Un giocatore'
+        });
 
-        if (!partError) {
-            // Incrementa il contatore in matches (usando SQL, non il valore locale)
-            await supabase.rpc('increment_match_players', { match_id: match.id });
-
-            // Crea la notifica per l'organizzatore
-            await notifyMatchJoin(
-                match.id,
-                match.title,
-                user.user_metadata?.username || 'Un giocatore',
-                match.creator_id,
-                user.id
-            );
-
-            success("Iscritto con successo!");
-            // La real-time subscription aggiornerà automaticamente i dati
-        } else {
-            error("Errore durante l'iscrizione: " + partError.message);
+        if (rpcError) {
+            error("Errore durante l'iscrizione: " + rpcError.message);
+            return;
         }
+
+        // Gestiamo il feedback all'utente in base a cosa ha deciso il database
+        switch (status) {
+            case 'confirmed':
+                success("Iscritto con successo! Sei in campo.");
+                break;
+            case 'waiting':
+                success("Partita piena: sei stato inserito in lista d'attesa.");
+                break;
+            case 'already_registered':
+                error("Sei già iscritto a questa partita.");
+                break;
+            default:
+                success("Richiesta elaborata.");
+        }
+
+        // Non serve chiamare manualmente increment_match_players o notifyMatchJoin
+        // perché lo fa già la funzione SQL join_match_v2!
     };
 
 
@@ -457,7 +466,7 @@ Scopri di più qui: ${window.location.href}`;
                 >
                     TORNA INDIETRO
                 </button>
-                <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
+                <h2 className="text-3xl font-black uppercase mb-2">{match.title || match.sport}</h2>
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                     <div className="relative location-menu-btn mb-3">
                         <button
@@ -537,11 +546,11 @@ Scopri di più qui: ${window.location.href}`;
                     <p className={`text-slate-600 mb-3 ${!match.description ? 'opacity-50' : ''}`}>📝 {match.description || 'Nessuna descrizione disponibile'}</p>
                 </div>
 
-                <h3 className="font-bold text-lg mb-4">Giocatori ({participants.length}/{match.max_players})</h3>
+                <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>
 
-                {/* Sezione Partecipanti nel return */}
+                {/* Sezione Confermati */}
                 <div className="space-y-3">
-                    {participants.map((p, index) => (
+                    {confirmedPlayers.map((p, index) => (
 
                         <div
                             key={p.id}
@@ -589,6 +598,45 @@ Scopri di più qui: ${window.location.href}`;
                         </div>
                     ))}
                 </div>
+
+                {/* Sezione Lista d'attesa */}
+                {waitingPlayers.length > 0 && (
+                    <>
+                        <h3 className="font-bold text-lg mt-8 mb-4">Lista d'attesa ({waitingPlayers.length})</h3>
+                        <div className="space-y-3">
+                            {waitingPlayers.map((p, index) => (
+                                <div
+                                    key={p.id}
+                                    className={`flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-95 transition-all cursor-pointer  ${p.user_id === user.id ? 'border-blue-200 bg-blue-50 ' : 'border-slate-100 bg-white'
+                                        }`}
+                                    onClick={() => { (p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        {/* Avatar o Iniziale */}
+                                        <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden">
+                                            {p.profiles?.avatar_url ? (
+                                                <img src={p.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                                            ) : (
+                                                p.profiles?.username?.charAt(0).toUpperCase() || '?'
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <p className="font-bold text-slate-800">
+                                                {p.profiles?.username || 'Utente anonimo'}
+                                                {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                                                {p.profiles?.gender === 'M' ? 'Uomo' : p.profiles?.gender === 'F' ? 'Donna' : 'Player'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+
                 {/* BOTTONI VARI */}
                 <div className="mt-10 pt-6 border-t border-slate-100">
                     {match.datetime && new Date(match.datetime) < new Date() && (
@@ -602,21 +650,32 @@ Scopri di più qui: ${window.location.href}`;
 
                     )}
 
-                    {participants.some(p => p.user_id === user.id) ? (
+                    {confirmedPlayers.some(p => p.user_id === user.id) ? (
                         <button
                             onClick={handleLeave}
                             disabled={isMatchFinished}
-                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50 disabled:hover:cursor-not-allowed0"
+                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700"
                         >
                             ABBANDONA PARTITA
                         </button>
+                    ) : waitingPlayers.some(p => p.user_id === user.id) ? (
+                        <button
+                            onClick={handleLeave}
+                            disabled={isMatchFinished}
+                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700"
+                        >
+                            ESCI DALLA LISTA D'ATTESA
+                        </button>
                     ) : (
                         <button
-                            disabled={participants.length >= match.max_players || isMatchFinished}
+                            disabled={isMatchFinished}
                             onClick={handleJoin}
-                            className="w-full cursor-pointer bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all active:scale-95 disabled:opacity-50 disabled:hover:cursor-not-allowed"
+                            className={`w-full cursor-pointer py-4 rounded-2xl font-bold shadow-lg ${confirmedPlayers.length >= match.max_players
+                                ? 'bg-yellow-500 text-white shadow-yellow-200'
+                                : 'bg-green-600 text-white shadow-green-200'
+                                }`}
                         >
-                            {participants.length >= match.max_players ? 'PARTITA PIENA' : 'UNISCITI ORA'}
+                            {confirmedPlayers.length >= match.max_players ? 'UNISCITI ALLA LISTA D\'ATTESA' : 'UNISCITI ORA'}
                         </button>
                     )}
 

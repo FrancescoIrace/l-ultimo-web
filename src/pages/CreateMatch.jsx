@@ -37,7 +37,8 @@ export default function CreateMatch() {
         'Basket (5vs5)': 10,
         'Tennis singolo': 2,
         'Tennis doppio': 4,
-        'Volley': 12
+        'Volley': 12,
+        'Personalizzato': formData.max_players
     };
 
     const handleSportChange = (e) => {
@@ -55,7 +56,7 @@ export default function CreateMatch() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 setUserId(user.id);
-                
+
                 // Conta le partite attive (datetime > now)
                 const now = new Date().toISOString();
                 const { data: activeMatches, error: countError } = await supabase
@@ -63,13 +64,13 @@ export default function CreateMatch() {
                     .select('id', { count: 'exact' })
                     .eq('creator_id', user.id)
                     .gt('datetime', now);
-                
+
                 if (!countError && activeMatches) {
                     setActiveMatchCount(activeMatches.length);
                 }
             }
         }
-        
+
         loadUserAndCountMatches();
     }, []);
 
@@ -84,7 +85,7 @@ export default function CreateMatch() {
                     .single();
 
                 if (data) {
-                 setFormData(data);
+                    setFormData(data);
                 }
             }
             loadMatchData();
@@ -106,7 +107,7 @@ export default function CreateMatch() {
         const localDate = new Date(formData.datetime);
         // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
         const datetimeUTC = localDate.toISOString();
-        
+
         //Se il luogo non è stato selezionato, inseriamo la posizione salvata dall'utente (se presente)
         let locationData = {};
         if (formData.location_lat && formData.location_lng) {
@@ -172,7 +173,7 @@ export default function CreateMatch() {
         }
 
         success("Partita organizzata! Sei già in lista.");
-        navigate('/match/' + newMatch.id, {replace: true}, '', {timeout: 2000}); // ricarica la pagina dopo 1 secondo per vedere la nuova partita
+        navigate('/match/' + newMatch.id, { replace: true }, '', { timeout: 2000 }); // ricarica la pagina dopo 1 secondo per vedere la nuova partita
         setLoading(false);
     };
 
@@ -243,6 +244,7 @@ export default function CreateMatch() {
                             <option>Tennis singolo</option>
                             <option>Tennis doppio</option>
                             <option>Volley</option>
+                            <option>Personalizza</option>
                         </select>
                     </div>
 
@@ -276,7 +278,7 @@ export default function CreateMatch() {
                             <input
                                 type="number"
                                 required
-                                disabled
+                                disabled={formData.sport !== 'Personalizza'}
                                 min="2"
                                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
                                 value={formData.max_players}
@@ -370,6 +372,7 @@ export default function CreateMatch() {
                         <option>Tennis singolo</option>
                         <option>Tennis doppio</option>
                         <option>Volley</option>
+                        <option>Personalizza</option>
                     </select>
                 </div>
 
@@ -404,7 +407,7 @@ export default function CreateMatch() {
                         <input
                             type="number"
                             required
-                            disabled
+                            disabled={formData.sport !== 'Personalizza'}
                             min="2"
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.max_players}

@@ -1,5 +1,20 @@
 [
   {
+    "date": "28 aprile 2026",
+    "title": "Merge pull request #3 from FrancescoIrace/feature-lista-attesa",
+    "description": "Feature lista attesa"
+  },
+  {
+    "date": "28 aprile 2026",
+    "title": "Fix notifica in app + fix titolo vuoto in matchDetail + fix pannello notifiche e aggiunta opacità sfondo",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "27 aprile 2026",
+    "title": "Fix Tasto torna indietro in CreateMatch",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "27 aprile 2026",
     "title": "Add gestione lista d'attesa in matchCard",
     "description": "Co-authored-by: Copilot <copilot@github.com>"
@@ -27,21 +42,6 @@
   {
     "date": "24 aprile 2026",
     "title": "fix",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "fix",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "fix iphone",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 aprile 2026",
-    "title": "fix messaggi notifica",
     "description": "Modifica all'app"
   },
   {

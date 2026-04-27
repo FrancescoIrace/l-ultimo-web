@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Calendar, Bell } from 'lucide-react';
+import { Loader, Calendar, Bell, Share2, UserPlus, UserMinus, Pencil, Trash2 } from 'lucide-react';
 import { useAlert } from '../components/AlertComponent';
 import { notifyMatchReminder, notifyMatchJoin } from '../lib/notificationService';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
@@ -462,7 +462,7 @@ Scopri di più qui: ${window.location.href}`;
                 <button
                     onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}
                     type="button"
-                    className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                 >
                     TORNA INDIETRO
                 </button>
@@ -650,67 +650,80 @@ Scopri di più qui: ${window.location.href}`;
 
                     )}
 
+                    {/* Azione principale — full width */}
                     {confirmedPlayers.some(p => p.user_id === user.id) ? (
                         <button
                             onClick={handleLeave}
                             disabled={isMatchFinished}
-                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700"
+                            className="w-full cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                         >
-                            ABBANDONA PARTITA
+                            <UserMinus size={24} />
+                            Abbandona Partita
                         </button>
                     ) : waitingPlayers.some(p => p.user_id === user.id) ? (
                         <button
                             onClick={handleLeave}
                             disabled={isMatchFinished}
-                            className="w-full cursor-pointer bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-200 hover:bg-red-700"
+                            className="w-full cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                         >
-                            ESCI DALLA LISTA D'ATTESA
+                            <UserMinus size={24} />
+                            Esci dalla Lista d'Attesa
                         </button>
                     ) : (
                         <button
                             disabled={isMatchFinished}
                             onClick={handleJoin}
-                            className={`w-full cursor-pointer py-4 rounded-2xl font-bold shadow-lg ${confirmedPlayers.length >= match.max_players
-                                ? 'bg-yellow-500 text-white shadow-yellow-200'
-                                : 'bg-green-600 text-white shadow-green-200'
-                                }`}
+                            className={`w-full cursor-pointer p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 ${
+                                confirmedPlayers.length >= match.max_players
+                                    ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white'
+                                    : 'bg-gradient-to-br from-green-500 to-green-600 text-white'
+                            }`}
                         >
-                            {confirmedPlayers.length >= match.max_players ? 'UNISCITI ALLA LISTA D\'ATTESA' : 'UNISCITI ORA'}
+                            <UserPlus size={24} />
+                            {confirmedPlayers.length >= match.max_players ? "Unisciti alla Lista d'Attesa" : 'Unisciti Ora'}
                         </button>
                     )}
 
-                    <button
-                        onClick={handleShare}
-                        className="w-full mt-4 cursor-pointer bg-slate-100 text-slate-800 py-4 rounded-2xl font-bold border border-slate-300 shadow-sm hover:bg-slate-200 transition-all active:scale-95"
-                    >
-                        CONDIVIDI PARTITA
-                    </button>
+                    {/* Azioni secondarie — griglia 2 colonne */}
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                        <button
+                            onClick={handleShare}
+                            className="cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 text-slate-800 p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 border border-slate-200 shadow-lg hover:shadow-xl transition-all active:scale-95"
+                        >
+                            <Share2 size={24} />
+                            Condividi
+                        </button>
 
-                    {user.id === match.creator_id && (
-                        <>
+                        {user.id === match.creator_id && (
                             <button
                                 onClick={handleSendReminders}
                                 disabled={isRemindersLoading}
-                                className="w-full mt-4 cursor-pointer bg-blue-50 text-blue-600 border border-blue-600 py-4 rounded-2xl font-bold shadow-sm hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                             >
-                                <Bell size={20} />
+                                <Bell size={24} />
                                 Invia Reminder
                             </button>
+                        )}
+                    </div>
+
+                    {user.id === match.creator_id && (
+                        <div className="grid grid-cols-2 gap-3 mt-3">
                             <button
                                 onClick={() => { navigate(`/modifica/${match.id}`) }}
-                                className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                className="cursor-pointer bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                                 disabled={isMatchFinished}
                             >
-                                Modifica Partita (Admin)
+                                <Pencil size={24} />
+                                Modifica
                             </button>
                             <button
                                 onClick={handleDeleteMatch}
-                                className="w-full mt-4 cursor-pointer bg-red-50 text-red-600 border border-red-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-red-200 transition-all active:scale-95 disabled:opacity-50"
+                                className="cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                             >
-                                Annulla Partita (Admin)
+                                <Trash2 size={24} />
+                                Annulla Partita
                             </button>
-                        </>
-
+                        </div>
                     )}
                 </div>
             </div>

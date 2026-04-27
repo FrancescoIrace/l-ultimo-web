@@ -2,14 +2,24 @@ import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useAlert } from './AlertComponent';
 
 
 export default function MatchCard({ match, user }) {
+  const { alert, success, error, confirm, confirmDangerous } = useAlert();
   const [isJoined, setIsJoined] = useState(false);
-  const isFull = match.current_players >= match.max_players;
   const isCreator = match.creator_id === user.id;
   const navigate = useNavigate();
   const isPast = new Date(match.datetime) < new Date();
+  const [participants, setParticipants] = useState([]);
+  const [waitingPlayers, setWaitingPlayers] = useState([]);
+  const [confirmedPlayers, setConfirmedPlayers] = useState([]);
+
+  // La partita è piena solo se i CONFERMATI raggiungono il limite
+  const isFull = confirmedPlayers.length >= match.max_players;
+  const isConfirmed = confirmedPlayers.some(p => p.user_id === user.id);
+  const isWaiting = waitingPlayers.some(p => p.user_id === user.id);
+
 
   const date = new Date(match.datetime).toLocaleDateString('it-IT', {
     weekday: 'long',
@@ -44,50 +54,74 @@ export default function MatchCard({ match, user }) {
   const timeInfo = getTimeUntilMatch();
   const timeLabel = timeInfo?.label;
 
-  // Controlliamo se l'utente è già tra i partecipanti al caricamento
+  // In MatchCard.jsx
   useEffect(() => {
+    if (!match.id || !user?.id) return;
 
-    async function checkUserRegistration() {
+    const fetchParticipants = async () => {
       const { data, error } = await supabase
         .from('participants')
-        .select('id')
-        .eq('match_id', match.id)
-        .eq('user_id', user.id)
-        .single();
+        .select('user_id, status')
+        .eq('match_id', match.id);
 
-      if (data) {
-        setIsJoined(true);
+      if (!error && data) {
+        setConfirmedPlayers(data.filter(p => p.status === 'confirmed'));
+        setWaitingPlayers(data.filter(p => p.status === 'waiting'));
+        // Verifica se l'utente loggato è tra i partecipanti (confermati o in attesa)
+        setIsJoined(data.some(p => p.user_id === user.id));
       }
-    }
+    };
 
-    checkUserRegistration();
+    fetchParticipants();
+
+    // Canale Real-time per la card
+    const channel = supabase
+      .channel(`match_card_${match.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'participants',
+          filter: `match_id=eq.${match.id}`,
+        },
+        () => {
+          fetchParticipants(); // Ricarica i dati locali alla card quando cambia qualcosa
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [match.id, user.id]);
 
-  const handleJoin = async () => {
-    if (isJoined) {
-      alert("Sei già iscritto a questa partita!");
-      return;
-    } // Evita click doppi se già unito
 
-    if (isFull) {
-      alert("Partita piena!"); // Qui poi metteremo la lista d'attesa
+  const handleJoin = async () => {
+    const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
+      p_match_id: match.id,
+      p_user_id: user.id,
+      p_username: user.user_metadata?.username || 'Un giocatore'
+    });
+
+    if (rpcError) {
+      error("Errore durante l'iscrizione: " + rpcError.message);
       return;
     }
 
-    const { error: partError } = await supabase
-      .from('participants')
-      .insert([{ match_id: match.id, user_id: user.id }]);
-
-    if (!partError) {
-      await supabase
-        .from('matches')
-        .update({ current_players: match.current_players + 1 })
-        .eq('id', match.id);
-
-      alert("Iscritto con successo!");
-      setIsJoined(true);
-    } else {
-      alert("Errore durante l'iscrizione: " + partError.message);
+    // Gestiamo il feedback all'utente in base a cosa ha deciso il database
+    switch (status) {
+      case 'confirmed':
+        success("Iscritto con successo! Sei in campo.");
+        break;
+      case 'waiting':
+        success("Partita piena: sei stato inserito in lista d'attesa.");
+        break;
+      case 'already_registered':
+        error("Sei già iscritto a questa partita.");
+        break;
+      default:
+        success("Richiesta elaborata.");
     }
   };
 
@@ -109,7 +143,7 @@ export default function MatchCard({ match, user }) {
       {isPast && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-300 to-slate-200 rounded-t-xl"></div>
       )}
-      
+
       {/* Overlay obliquo "Partita Finita" */}
       {isPast && (
         <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
@@ -158,57 +192,79 @@ export default function MatchCard({ match, user }) {
         )}
         <div className="flex items-center gap-2">
           <Users size={16} color={isFull ? 'red' : 'green'} />
-          <span className={`font-semibold ${isFull ? 'text-red-500' : 'text-green-500'}`}>{match.current_players} / {match.max_players} Giocatori  </span>
-          {/* {isPast ? (
-            <span className="text-[10px] font-medium text-red-500">PARTITA PASSATA </span>
-          ) : (
-            <span className={`text-[10px] font-medium ${isFull ? 'text-red-500' : 'text-green-500'}`}>
-              {isFull ? 'PARTITA PIENA' : 'POSTI DISPONIBILI'}
-            </span>
-          )} */}
+          <span className={`font-semibold ${isFull ? 'text-red-500' : 'text-green-500'}`}>{confirmedPlayers.length} / {match.max_players} Giocatori </span>
         </div>
+        {waitingPlayers.length > 0 && (
+          <>
+            <div className="flex items-center gap-2">
+              <Users size={16} color={'orange'} />
+              <span className="text-orange-400">Giocatori in attesa: {waitingPlayers.length}</span>
+            </div>
+          </>
+        )}
+
         <div className={`flex items-center gap-2 ${match.description ? '' : 'opacity-50 italic'}`}>
           <Pencil size={16} />
           <span className="font-semibold">{match.description ? match.description : "Nessuna nota"}</span>
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-6">
-        {/* Se sei il creatore, magari vuoi un tasto rosso piccolo per cancellare */}
-        {isCreator && !isPast && (
+
+      <div className="mt-6">
+        {isPast ? (
+          /* STATO 1: PARTITA CONCLUSA */
           <button
-            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
-            className="text-xs text-red-400 font-bold hover:text-red-600 transition-colors"
+            disabled
+            className="w-full py-3 rounded-2xl font-bold text-sm bg-slate-100 text-slate-400 cursor-not-allowed"
           >
-            Annulla Partita
+            PARTITA CONCLUSA
           </button>
-        )}
-
-        {!isPast ? (
+        ) : isConfirmed ? (
+          /* STATO 2: GIOCATORE CONFERMATO */
           <button
-            onClick={(e) => { e.stopPropagation(); handleJoin(); }}
-            disabled={isJoined || isFull}
-            className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 ${isFull
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : isJoined
-                ? 'bg-green-600 text-white cursor-default'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/match/${match.id}`);
+            }}
+            className="w-full py-3 rounded-2xl font-bold text-sm bg-green-600 text-white shadow-lg shadow-green-100 active:scale-95 transition-all"
           >
-            {isJoined ? '✓ GIÀ UNITO' : isFull ? 'PIENA' : 'UNISCITI'}
-
+            ✓ SEI IN CAMPO
           </button>
-
+        ) : isWaiting ? (
+          /* STATO 3: GIOCATORE IN LISTA D'ATTESA */
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/match/${match.id}`);
+            }}
+            className="w-full py-3 rounded-2xl font-bold text-sm bg-amber-500 text-white shadow-lg shadow-amber-100 active:scale-95 transition-all"
+          >
+            ⏳ IN LISTA D'ATTESA
+          </button>
+        ) : isFull ? (
+          /* STATO 4: PARTITA PIENA (MA UTENTE ESTERNO) */
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleJoin();
+            }}
+            className="w-full py-3 rounded-2xl font-bold text-sm bg-slate-800 text-white shadow-lg shadow-slate-200 hover:bg-slate-900 active:scale-95 transition-all"
+          >
+            UNISCITI ALLA LISTA
+          </button>
         ) : (
+          /* STATO 5: POSTI DISPONIBILI (UTENTE ESTERNO) */
           <button
-            onClick={(e) => { e.stopPropagation(); }}
-            className={` px-6 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95 bg-slate-100 text-slate-400 cursor-not-allowed`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleJoin();
+            }}
+            className="w-full py-3 rounded-2xl font-bold text-sm bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all"
           >
-            {isJoined ? '✓ HAI PARTECIPATO' : 'PARTITA PASSATA'}          </button>
+            UNISCITI ORA
+          </button>
         )}
-
       </div>
-
 
 
     </div >

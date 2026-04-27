@@ -1,12 +1,31 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
+// ─── SWITCH: true = aggiornamenti manuali, false = prende dai commit ──────────
+const USE_MANUAL_UPDATES = true;
+
+const MANUAL_UPDATES = [
+  {
+    date: '27 Aprile 2026',
+    title: 'Lista d\'attesa',
+    description: 'Aggiunta possibilità di entrare in lista d\'attesa quando una partita è piena, con notifiche ed entrata automatica quando si libera un posto.'
+  },
+  // Aggiungi qui le tue modifiche ↓
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function WelcomeModal({ onClose, username }) {
   const [isVisible, setIsVisible] = useState(true);
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (USE_MANUAL_UPDATES) {
+      setUpdates(MANUAL_UPDATES);
+      setLoading(false);
+      return;
+    }
+
     const fetchCommits = async () => {
       try {
         const response = await fetch('/commits.json');
@@ -17,7 +36,6 @@ export default function WelcomeModal({ onClose, username }) {
         setLoading(false);
       } catch (error) {
         console.log('Errore lettura commit:', error);
-        // Se c'è errore, usa aggiornamenti di default
         setUpdates([
           {
             date: '20 Aprile 2026',

@@ -10,6 +10,16 @@ const MANUAL_UPDATES = [
     title: 'Lista d\'attesa',
     description: 'Aggiunta possibilità di entrare in lista d\'attesa quando una partita è piena, con notifiche ed entrata automatica quando si libera un posto.'
   },
+  {
+    date: '28 Aprile 2026',
+    title: 'Miglioramenti UI notifiche',
+    description: 'Aggiunta icone e colori distintivi per ogni tipo di notifica, per riconoscerle a colpo d\'occhio.'
+  },
+  {
+    date: '28 Aprile 2026',
+    title: 'Nuovo stile bottoni dettaglio partita',
+    description: 'Cambiati i colori e le icone dei bottoni nella pagina di dettaglio partita, con aggiunta di stato disabilitato per azioni non più disponibili.'
+  }
   // Aggiungi qui le tue modifiche ↓
 ];
 // ─────────────────────────────────────────────────────────────────────────────

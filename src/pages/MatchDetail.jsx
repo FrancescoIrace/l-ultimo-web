@@ -697,7 +697,7 @@ Scopri di più qui: ${window.location.href}`;
                         {user.id === match.creator_id && (
                             <button
                                 onClick={handleSendReminders}
-                                disabled={isRemindersLoading}
+                                disabled={isMatchFinished || isRemindersLoading}
                                 className="cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                             >
                                 <Bell size={24} />
@@ -719,9 +719,10 @@ Scopri di più qui: ${window.location.href}`;
                             <button
                                 onClick={handleDeleteMatch}
                                 className="cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                                
                             >
                                 <Trash2 size={24} />
-                                Annulla Partita
+                                Elimina Partita
                             </button>
                         </div>
                     )}

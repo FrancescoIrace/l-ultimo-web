@@ -466,7 +466,7 @@ Scopri di più qui: ${window.location.href}`;
                 >
                     TORNA INDIETRO
                 </button>
-                <h2 className="text-3xl font-black uppercase mb-2">{match.title}</h2>
+                <h2 className="text-3xl font-black uppercase mb-2">{match.title || match.sport}</h2>
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                     <div className="relative location-menu-btn mb-3">
                         <button

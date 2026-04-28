@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, useNavigate,Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion'; // Assicurati che sia installato
 import { supabase } from './lib/supabase';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import Auth from './pages/Auth';
@@ -18,21 +19,40 @@ import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import ResetPasswordHandler from './pages/ResetPasswordHandler';
 import { NotificationBell } from './components/NotificationBell';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
 
 function App() {
   const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true); // Stato per gestire il caricamento iniziale
   const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
   const isPWA = usePWAMode();
   const { isSupported, isSubscribed, subscribeToPushNotifications } = usePushNotifications(session?.user?.id);
 
   useEffect(() => {
+    // 1. Gestione Sessione Iniziale
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // 2. Ascolto Cambiamenti di Stato (Login/Logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!session?.user?.id) return;
 
+    // Recupero Avatar
     supabase
       .from('profiles')
       .select('avatar_url')
@@ -46,48 +66,43 @@ function App() {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    // Mostra alert per i nuovi registrati al primo accesso
+    // Welcome Modal e Messaggi PWA
     if (session?.user?.id && localStorage.getItem('newUserRegistered') === 'true') {
-      alert('👋 Benvenuto! Per la miglior esperienza con l\'app, ti consigliamo di salvarla sulla homepage del tuo smartphone.\n\n📱 Su iPhone: Premi il bottone Condividi → Aggiungi alla schermata iniziale\n\n🤖 Su Android: Premi il menù (≡) → Installa app');
+      alert('👋 Benvenuto! Per la miglior esperienza, aggiungi l\'app alla tua home.');
       localStorage.removeItem('newUserRegistered');
     }
-  }, [session?.user?.id]);
 
-  useEffect(() => {
-    //DEBUG: mostra il welcome modal a ogni accesso (per testarlo)
-    // setShowWelcome(true);
-
-    // Mostra il welcome modal una volta al giorno
-    if (!session?.user?.id) return;
-
-    const today = new Date().toDateString();
-    const lastWelcomeDay = localStorage.getItem('lastWelcomeDay');
-
-    // Se è un nuovo giorno o non è mai stato mostrato, mostra il modal
-    if (lastWelcomeDay !== today) {
-      setShowWelcome(true);
-      localStorage.setItem('lastWelcomeDay', today);
+    if (session?.user?.id) {
+      const today = new Date().toDateString();
+      if (localStorage.getItem('lastWelcomeDay') !== today) {
+        setShowWelcome(true);
+        localStorage.setItem('lastWelcomeDay', today);
+      }
     }
   }, [session?.user?.id]);
 
-  useEffect(() => {
-    // Gestione Sessione
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+  // SCHERMATA DI CARICAMENTO (Previene il flash del Login)
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: [1, 1.1, 1], opacity: 1 }}
+          transition={{ duration: 1, repeat: Infinity }}
+          className="flex flex-col items-center"
+        >
+          <h1 className="text-5xl font-black tracking-tighter">L'ULTIMO</h1>
+          <div className="mt-4 flex gap-1">
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-
-
-  // Se non c'è sessione, mostra Auth e consenti l'accesso alla privacy policy
+  // ROTTE PUBBLICHE (Se non loggato)
   if (!session) {
     return (
       <AlertProvider>
@@ -95,8 +110,6 @@ function App() {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/install-guide" element={<InstallGuide />} />
           <Route path="/match/:id" element={<PublicMatchLanding />} />
-          <Route path="/signup" element={<Auth />} />
-          <Route path="/login" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="*" element={<Auth />} />
@@ -105,6 +118,7 @@ function App() {
     );
   }
 
+  // APP COMPLETA (Se loggato)
   return (
     <AlertProvider>
       {showWelcome && (
@@ -113,72 +127,46 @@ function App() {
           username={session.user?.user_metadata?.username || 'Giocatore'}
         />
       )}
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"></meta>
-      <div className="w-full max-w-md mx-auto bg-slate-50">
+      <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen">
         <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform active:scale-95">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform">
             <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
-            {/* <h1 className="text-2xl font-black text-green-600 tracking-tighter">InCampo</h1> */}
           </button>
 
           <div className="flex items-center gap-2">
-            {session?.user?.id && <NotificationBell userId={session.user.id} />}
+            <NotificationBell userId={session.user.id} />
             
             {isSupported && !isSubscribed && (
-              <button
-                onClick={subscribeToPushNotifications}
-                className="text-2xl hover:scale-110 transition-transform active:scale-95"
-                title="Attiva notifiche push"
-              >
+              <button onClick={subscribeToPushNotifications} className="text-2xl active:scale-95 transition-transform">
                 🔔
               </button>
             )}
             
             <button
               onClick={() => navigate('/profile')}
-              className="mr-3 text-blue-500 font-bold border border-blue-600 border-2 rounded-full hover:bg-blue-50 active:scale-95 transition-all ease-in-out"
+              className="mr-3 border-2 border-blue-600 rounded-full hover:bg-blue-50 transition-all overflow-hidden"
             >
-              {/* <CircleUser size={76} strokeWidth={1.75} /> */}
-              <div className="">
-                {session.avatar_url ? (
-                  <img src={session.avatar_url} alt="avatar" className="w-12 h-12 rounded-full object-cover" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-3xl font-semibold text-slate-600">
-                    {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
+              {session.avatar_url ? (
+                <img src={session.avatar_url} alt="avatar" className="w-12 h-12 object-cover" />
+              ) : (
+                <div className="w-12 h-12 bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-600">
+                  {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
+                </div>
+              )}
             </button>
           </div>
-
-          {/* <button
-          onClick={() => supabase.auth.signOut()}
-          className="text-xs text-red-500 font-bold border border-red-200 px-3 py-1 rounded-full hover:bg-red-50"
-        >
-          LOGOUT
-        </button> */}
         </header>
 
         <Routes>
           <Route path="/" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
           <Route path="/partite" element={<Home session={session} isPWA={false} />} />
           <Route path="/organizza" element={<CreateMatch />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/modifica/:id" element={<CreateMatch />} />
-
           <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
-
           <Route path="/profile" element={<Profile session={session} />} />
           <Route path="/settings" element={<AppSettings session={session} />} />
-
           <Route path="/profile/:id" element={<PublicProfile />} />
-
           <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/install-guide" element={<InstallGuide />} />
-          <Route path="/demo-pwa" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
-          <Route path="/PWADashboard" element={<PWADashboard user={session.user} onLogout={() => setSession(null)} />} />
-
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

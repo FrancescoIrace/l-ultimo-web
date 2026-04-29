@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Calendar, Bell, Share2, UserPlus, UserMinus, Pencil, Trash2 } from 'lucide-react';
+import { Loader, Calendar, Bell, Share2, UserPlus, UserMinus, Pencil, Trash2, Building2, MapPin } from 'lucide-react';
 import { useAlert } from '../components/AlertComponent';
 import { notifyMatchReminder, notifyMatchJoin } from '../lib/notificationService';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
@@ -70,7 +70,16 @@ export default function MatchDetail({ user }) {
             // 1. Prendi i dati della partita
             const { data: matchData } = await supabase
                 .from('matches')
-                .select('*')
+                .select(`
+                *,
+                sports_courts (
+                name,sport_type,center_id,
+                    profiles (
+                   full_name,
+                   username
+                  )
+                 )
+                 `)
                 .eq('id', id)
                 .maybeSingle();
 
@@ -357,7 +366,6 @@ Scopri di più qui: ${window.location.href}`;
         // perché lo fa già la funzione SQL join_match_v2!
     };
 
-
     const submitReview = async (targetId, rating, comment) => {
         const { error: reviewError } = await supabase
             .from('reviews')
@@ -466,6 +474,53 @@ Scopri di più qui: ${window.location.href}`;
                 >
                     TORNA INDIETRO
                 </button>
+                {match.court_id && (
+                    <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 ${match.reservation_status === 'confirmed' ? 'bg-green-50 border-green-100' :
+                        match.reservation_status === 'rejected' ? 'bg-red-50 border-red-100' :
+                            'bg-amber-50 border-amber-100'
+                        }`}>
+                        {/* Icona dinamica in base allo stato */}
+                        <div className={`p-3 rounded-xl ${match.reservation_status === 'confirmed' ? 'bg-green-600 text-white' :
+                            match.reservation_status === 'rejected' ? 'bg-red-600 text-white' :
+                                'bg-amber-500 text-white'
+                            }`}>
+                            <Building2 size={24} />
+                        </div>
+
+                        <div className="flex-1">
+                            {/* Nome del Centro Sportivo */}
+                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">
+                                Prenotazione presso
+                            </p>
+                            <h3
+                                onClick={() => navigate(`/profile/${match.sports_courts.center_id}`)}
+                                className="font-bold text-slate-800 text-lg leading-tight cursor-pointer hover:text-blue-600 transition-colors"
+                            >
+                                {match.sports_courts?.profiles?.username}
+                            </h3>
+
+                            {/* Nome del Campo specifico */}
+                            <div className="flex items-center gap-2 mt-1 text-slate-600">
+                                <MapPin size={14} className="text-blue-500" />
+                                <span className="text-sm font-medium">{match.sports_courts?.name} ({match.sports_courts?.sport_type})</span>
+                            </div>
+
+                            {/* Badge di Stato */}
+                            <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${match.reservation_status === 'confirmed' ? 'bg-green-200 text-green-800' :
+                                match.reservation_status === 'rejected' ? 'bg-red-200 text-red-800' :
+                                    'bg-amber-200 text-amber-800'
+                                }`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${match.reservation_status === 'confirmed' ? 'bg-green-600' :
+                                    match.reservation_status === 'rejected' ? 'bg-red-600' :
+                                        'bg-amber-600 animate-pulse'
+                                    }`} />
+                                {match.reservation_status === 'confirmed' && "Campo Confermato"}
+                                {match.reservation_status === 'rejected' && "Prenotazione Rifiutata"}
+                                {match.reservation_status === 'requested' && "In attesa del centro..."}
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <h2 className="text-3xl font-black uppercase mb-2">{match.title || match.sport}</h2>
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                     <div className="relative location-menu-btn mb-3">
@@ -475,6 +530,11 @@ Scopri di più qui: ${window.location.href}`;
                         >
                             <span>📍 {match.location}</span>
                             {(match.location_lat && match.location_lng) && <span className="text-xs text-blue-500">↗</span>}
+                            {match.sports_courts && (
+                                <p className="text-xs text-blue-600 font-bold uppercase tracking-tight">
+                                    {match.sports_courts.name}
+                                </p>
+                            )}
                         </button>
 
                         {isLocationMenuOpen && (match.location_lat && match.location_lng) && (
@@ -673,11 +733,10 @@ Scopri di più qui: ${window.location.href}`;
                         <button
                             disabled={isMatchFinished}
                             onClick={handleJoin}
-                            className={`w-full cursor-pointer p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 ${
-                                confirmedPlayers.length >= match.max_players
-                                    ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white'
-                                    : 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-                            }`}
+                            className={`w-full cursor-pointer p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 ${confirmedPlayers.length >= match.max_players
+                                ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white'
+                                : 'bg-gradient-to-br from-green-500 to-green-600 text-white'
+                                }`}
                         >
                             <UserPlus size={24} />
                             {confirmedPlayers.length >= match.max_players ? "Unisciti alla Lista d'Attesa" : 'Unisciti Ora'}
@@ -719,7 +778,7 @@ Scopri di più qui: ${window.location.href}`;
                             <button
                                 onClick={handleDeleteMatch}
                                 className="cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
-                                
+
                             >
                                 <Trash2 size={24} />
                                 Elimina Partita

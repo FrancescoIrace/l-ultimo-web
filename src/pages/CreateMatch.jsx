@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
 import { Info } from 'lucide-react';
+import { validateBookingTime } from '../pages/business/BusinessUtils';
 
 
 
@@ -133,87 +134,93 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
-        // Verifica il limite di partite attive
-        if (activeMatchCount >= 5) {
-            error(`Hai già ${activeMatchCount} partite attive. Non puoi crearne altre finché una non finisce.`);
-            setLoading(false);
-            return;
-        }
+        try {
+            // 1. Recuperiamo l'utente una volta sola per tutto il processo
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError || !user) throw new Error("Utente non autenticato");
 
-        // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
-        const localDate = new Date(formData.datetime);
-        // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
-        const datetimeUTC = localDate.toISOString();
+            // 2. Verifica limite partite attive
+            if (activeMatchCount >= 5) {
+                error(`Hai già ${activeMatchCount} partite attive.`);
+                setLoading(false);
+                return;
+            }
 
-        //Se il luogo non è stato selezionato, inseriamo la posizione salvata dall'utente (se presente)
-        let locationData = {};
-        if (formData.location_lat && formData.location_lng) {
-            locationData = {
+            // 3. Validazione Orari se c'è un centro selezionato
+            if (selectedCenter) {
+                const { isValid, message } = await validateBookingTime(supabase, formData.datetime, selectedCenter.id);
+                if (!isValid) {
+                    error(message);
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // 4. Gestione Posizione (se non inserita, prendi quella del profilo)
+            let locationData = {
                 location: formData.location,
                 location_lat: formData.location_lat,
                 location_lng: formData.location_lng,
             };
-        } else {
-            const { data: userProfile } = await supabase
-                .from('profiles')
-                .select('location, location_lat, location_lng')
-                .eq('id', (await supabase.auth.getUser()).data.user.id)
-                .single();
 
-            if (userProfile) {
-                locationData = {
-                    location: userProfile.location,
-                    location_lat: userProfile.location_lat,
-                    location_lng: userProfile.location_lng,
-                };
-            }
-        }
+            if (!locationData.location_lat || !locationData.location_lng) {
+                const { data: userProfile } = await supabase
+                    .from('profiles')
+                    .select('location, location_lat, location_lng')
+                    .eq('id', user.id)
+                    .single();
 
-        console.log("Location da salvare:", locationData);
-
-        // 1. Inseriamo la partita
-        // .select() alla fine ci permette di ricevere indietro i dati appena creati
-        const { data: newMatch, error: matchError } = await supabase
-            .from('matches')
-            .insert([
-                {
-                    ...formData,
-                    ...locationData,
-                    datetime: datetimeUTC, // Usa la data convertita in UTC
-                    current_players: 1, // L'organizzatore è il primo
-                    creator_id: (await supabase.auth.getUser()).data.user.id, // Assicuriamoci di passare l'ID
-                    court_id: formData.court_id || null, // Aggiungi questo
-                    reservation_status: formData.court_id ? 'requested' : 'none' // Aggiungi questo
+                if (userProfile) {
+                    locationData = {
+                        location: userProfile.location,
+                        location_lat: userProfile.location_lat,
+                        location_lng: userProfile.location_lng,
+                    };
                 }
-            ])
-            .select()
-            .single();
+            }
 
-        if (matchError) {
-            alert("Errore creazione partita: " + matchError.message);
-            setLoading(false);
-            return;
-        }
-
-        // 2. Se la partita è creata, aggiungiamo il creatore ai partecipanti
-        if (newMatch) {
-            const { error: partError } = await supabase
-                .from('participants')
+            // 5. Inserimento Partita
+            const { data: newMatch, error: matchError } = await supabase
+                .from('matches')
                 .insert([
                     {
-                        match_id: newMatch.id,
-                        user_id: newMatch.creator_id
+                        ...formData,
+                        ...locationData,
+                        datetime: new Date(formData.datetime).toISOString(),
+                        current_players: 1,
+                        creator_id: user.id,
+                        court_id: formData.court_id || null,
+                        reservation_status: formData.court_id ? 'requested' : 'none'
                     }
-                ]);
+                ])
+                .select()
+                .single();
 
-            if (partError) {
-                console.error("Errore aggiunta creatore ai partecipanti:", partError.message);
-            }
+            if (matchError) throw matchError;
+
+            // 6. Aggiunta automatica del creatore ai partecipanti
+            const { error: partError } = await supabase
+                .from('participants')
+                .insert([{
+                    match_id: newMatch.id,
+                    user_id: user.id
+                }]);
+
+            if (partError) console.error("Errore partecipanti:", partError.message);
+
+            // 7. Feedback e Navigazione
+            success(formData.court_id
+                ? "Partita creata! In attesa di conferma dal centro."
+                : "Partita organizzata con successo!");
+
+            navigate(`/match/${newMatch.id}`, { replace: true });
+
+        } catch (err) {
+            error("Errore: " + err.message);
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
-
-        success("Partita organizzata! Sei già in lista.");
-        navigate('/match/' + newMatch.id, { replace: true }, '', { timeout: 2000 }); // ricarica la pagina dopo 1 secondo per vedere la nuova partita
-        setLoading(false);
     };
 
     const handleUpdate = async (e) => {

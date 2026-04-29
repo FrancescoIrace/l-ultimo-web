@@ -35,4 +35,45 @@ export default function GetSportStyle(sport) {
     }
 }
 
+/**
+ * Verifica se un orario è valido per un determinato centro sportivo
+ */
+export const validateBookingTime = async (supabase, dateTimeString, centerId) => {
+    if (!centerId) return { isValid: true };
+
+    try {
+        const selectedDate = new Date(dateTimeString);
+        const dayOfWeek = selectedDate.getDay(); 
+        const selectedTime = selectedDate.toTimeString().slice(0, 5); // "HH:mm"
+
+        const { data: businessHours, error } = await supabase
+            .from('business_hours')
+            .select('*')
+            .eq('center_id', centerId)
+            .eq('day_of_week', dayOfWeek)
+            .single();
+
+        if (error || !businessHours) return { isValid: true };
+
+        if (businessHours.is_closed) {
+            return { isValid: false, message: "Il centro è chiuso in questo giorno." };
+        }
+
+        const open = businessHours.open_time.slice(0, 5);
+        const close = businessHours.close_time.slice(0, 5);
+
+        if (selectedTime < open || selectedTime > close) {
+            return { 
+                isValid: false, 
+                message: `Orario non valido. Il centro è aperto dalle ${open} alle ${close}.` 
+            };
+        }
+
+        return { isValid: true };
+    } catch (err) {
+        console.error("Errore validazione orari:", err);
+        return { isValid: true }; // In caso di errore, non blocchiamo l'utente
+    }
+};
+
 export { GetSportStyle };

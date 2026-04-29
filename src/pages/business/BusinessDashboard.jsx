@@ -1,6 +1,6 @@
 import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
@@ -14,7 +14,9 @@ export default function BusinessDashboard({ user, name }) {
     const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
     const [isOrariOpen, setIsOrariOpen] = useState(false);
     const [requests, setRequests] = useState([]);
-    const { success, error, alert } = useAlert();
+    const [appointments, setAppointments] = useState([]);
+    const [processingId, setProcessingId] = useState(null);
+    const { success, error, alert, confirm } = useAlert();
 
     async function fetchHours() {
         const { data } = await supabase.from('business_hours').select('*').eq('center_id', user.id).order('day_of_week');
@@ -77,44 +79,110 @@ export default function BusinessDashboard({ user, name }) {
         }
     };
 
-    const handleUpdateStatus = async (matchId, newStatus) => {
-        // 1. Aggiorna lo stato della partita
-        const { data: updatedMatch, error: matchError } = await supabase
+    const fetchAppointments = async () => {
+        const { data: matches, error: mError } = await supabase
             .from('matches')
-            .update({ reservation_status: newStatus })
-            .eq('id', matchId)
-            .select('creator_id, title, sport') // Ci servono per la notifica
-            .single();
+            .select(`
+            id,
+            sport,
+            datetime,
+            title,
+            reservation_status,
+            creator_id,
+            sports_courts!inner (
+                name,
+                center_id
+            )
+        `)
+            .eq('sports_courts.center_id', user.id)
+            .eq('reservation_status', 'confirmed')
+            .order('datetime', { ascending: true });
 
-        if (matchError) {
-            alert("Errore aggiornamento: " + matchError.message);
+        if (mError) {
+            console.error("Errore matches:", mError);
             return;
         }
 
-        // 2. Crea la notifica per il creatore (Tabella notifications)
-        const notificationContent = newStatus === 'confirmed'
-            ? `La tua richiesta per la partita di ${updatedMatch.sport} è stata ACCETTATA!`
-            : `Spiacenti, la richiesta per la partita "${updatedMatch.title}" è stata rifiutata dal centro sportivo.`;
+        if (matches && matches.length > 0) {
+            // 2. Recuperiamo i profili dei creatori separatamente
+            // Dato che creator_id è un UUID di auth, lo usiamo per cercare nel profilo public
+            const creatorIds = matches.map(m => m.creator_id);
 
-        const { error: notifError } = await supabase
-            .from('notifications')
-            .insert([
-                {
-                    user_id: updatedMatch.creator_id, // Il destinatario è il creatore
-                    sender_id: user.id,     // Il mittente è il centro sportivo
-                    type: 'match_update',
-                    title: newStatus === 'confirmed' ? 'Prenotazione Confermata! ✅' : 'Prenotazione Rifiutata ❌',
-                    content: notificationContent,
-                    link: `/match/${matchId}`,      // Link per cliccare e andare alla partita
-                    is_read: false
-                }
-            ]);
+            const { data: profiles, error: pError } = await supabase
+                .from('profiles')
+                .select('id, username, full_name')
+                .in('id', creatorIds);
 
-        if (notifError) console.error("Errore invio notifica:", notifError);
+            if (pError) {
+                console.error("Errore profili:", pError);
+            }
 
-        // 3. Feedback UI
-        setRequests(prev => prev.filter(r => r.id !== matchId));
-        success(newStatus === 'confirmed' ? "Confermata e notifica inviata!" : "Rifiutata.");
+            // 3. Uniamo i dati manualmente nel frontend
+            const enrichedAppointments = matches.map(match => ({
+                ...match,
+                profiles: profiles?.find(p => p.id === match.creator_id) || { username: "Utente" }
+            }));
+
+            setAppointments(enrichedAppointments);
+        } else {
+            setAppointments([]);
+        }
+    };
+
+    const handleUpdateStatus = (matchId, newStatus) => {
+        const isConfirming = newStatus === 'confirmed';
+        const actionText = isConfirming ? "ACCETTARE" : "RIFIUTARE";
+
+        // Messaggio per l'alert
+        const message = `Sei sicuro di voler ${actionText} questa richiesta di prenotazione?`;
+
+        // Utilizzo del tuo alert: confirm(messaggio, callback)
+        confirm(message, async () => {
+            setProcessingId(matchId); // Inizia caricamento (mostra spinner sul bottone)
+
+            try {
+                // 1. Aggiorna lo stato della partita
+                const { data: updatedMatch, error: matchError } = await supabase
+                    .from('matches')
+                    .update({ reservation_status: newStatus })
+                    .eq('id', matchId)
+                    .select('creator_id, title, sport')
+                    .single();
+
+                if (matchError) throw matchError;
+
+                // 2. Crea la notifica per il creatore
+                const notificationContent = isConfirming
+                    ? `La tua richiesta per la partita di ${updatedMatch.sport} è stata ACCETTATA!`
+                    : `Spiacenti, la richiesta per la partita "${updatedMatch.title}" è stata rifiutata dal centro sportivo.`;
+
+                const { error: notifError } = await supabase
+                    .from('notifications')
+                    .insert([
+                        {
+                            user_id: updatedMatch.creator_id,
+                            sender_id: user.id, // ID del centro
+                            type: 'match_update',
+                            title: isConfirming ? 'Prenotazione Confermata! ✅' : 'Prenotazione Rifiutata ❌',
+                            content: notificationContent,
+                            link: `/match/${matchId}`,
+                            is_read: false
+                        }
+                    ]);
+
+                if (notifError) throw notifError;
+
+                // 3. Feedback UI e aggiornamento lista locale
+                setRequests(prev => prev.filter(r => r.id !== matchId));
+                success(isConfirming ? "Confermata e notifica inviata!" : "Richiesta rifiutata.");
+
+            } catch (err) {
+                console.error(err);
+                error("Errore durante l'operazione: " + err.message);
+            } finally {
+                setProcessingId(null); // Fine caricamento
+            }
+        });
     };
 
     useEffect(() => {
@@ -130,7 +198,7 @@ export default function BusinessDashboard({ user, name }) {
         loadCampi();
         fetchHours();
         fetchIncomingRequests();
-
+        fetchAppointments();
         // Sottoscrizione Realtime
         const channel = supabase
             .channel('business_requests')
@@ -144,6 +212,7 @@ export default function BusinessDashboard({ user, name }) {
                 () => {
                     // Ricarichiamo i dati quando succede qualcosa
                     fetchIncomingRequests();
+                    fetchAppointments();
                 }
             )
             .subscribe();
@@ -172,83 +241,91 @@ export default function BusinessDashboard({ user, name }) {
                 <p className="text-sm text-slate-500">Anche i tuoi orari di apertura e chiusura. ⏱️</p>
             </div>
 
-            <div className="max-w-md mx-auto p-4 space-y-6">
-                <header className="flex items-center justify-between">
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">
-                        Richieste <span className="text-blue-600">Campo</span>
+            <div className="py-6">
+                <div className="px-4 mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
+                        Richieste <span className="text-blue-600">Pendenti</span>
                     </h2>
-                    <div className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase">
-                        {requests.length} Pendenti
-                    </div>
-                </header>
+                    <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                        {requests.length} da gestire
+                    </span>
+                </div>
 
-                <div className="space-y-4">
+                {/* CAROUSEL CONTAINER */}
+                <div className="flex gap-4 overflow-x-auto px-4 pb-8 scrollbar-hide snap-x snap-mandatory">
                     {requests.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
-                            <div className="bg-slate-200 p-4 rounded-full mb-4">
-                                <Search className="text-slate-400" size={32} />
-                            </div>
-                            <p className="text-slate-500 font-bold text-center">Nessuna richiesta in questo momento.</p>
+                        <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center">
+                            <p className="text-slate-400 font-bold text-sm">Nessuna richiesta attiva</p>
                         </div>
                     ) : (
-                        requests.map((req) => (
-                            <div key={req.id} className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-xl shadow-slate-200/50">
-                                {/* Header della Card */}
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-2 py-1 bg-blue-50 rounded-lg">
-                                            {req.sport}
-                                        </span>
-                                        <h3 className="font-bold text-slate-800 text-lg mt-2 leading-tight">
-                                            {req.title}
-                                        </h3>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Campo</p>
-                                        <p className="font-black text-slate-800 uppercase text-sm">{req.sports_courts?.name}</p>
-                                    </div>
-                                </div>
+                        <>
+                            {requests.map((req) => {
+                                const dateObj = new Date(req.datetime);
+                                const giorno = dateObj.toLocaleDateString('it-IT', { day: '2-digit' });
+                                const mese = dateObj.toLocaleDateString('it-IT', { month: 'short' }).replace('.', '');
+                                const orario = dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
-                                {/* Data e Ora */}
-                                <div className="flex items-center gap-4 py-3 border-y border-slate-50 mb-4">
-                                    <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
-                                        <Calendar size={14} className="text-blue-500" />
-                                        {new Date(req.datetime).toLocaleDateString('it-IT')}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
-                                        <Clock size={14} className="text-blue-500" />
-                                        {new Date(req.datetime).toLocaleTimeString('it-IT').slice(0, 5)}
-                                    </div>
-                                </div>
+                                return (
+                                    <div key={req.id} className="flex-shrink-0 w-[80vw] md:w-[350px] bg-white rounded-[40px] p-2 border border-slate-100 shadow-2xl shadow-slate-200/50 snap-center">
+                                        <div className="flex flex-col h-full">
 
-                                {/* Dati Organizzatore */}
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-white font-black text-sm">
-                                        {req.profiles?.username?.[0].toUpperCase()}
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">Organizzato da</p>
-                                        <p className="font-bold text-slate-700">{req.profiles?.full_name || req.profiles?.username}</p>
-                                    </div>
-                                </div>
+                                            {/* 1. SEZIONE TEMPO (Il focus principale) */}
+                                            <div className="flex items-center gap-4 p-4 bg-slate-900 rounded-[35px] text-white">
+                                                {/* Blocco Data */}
+                                                <div className="flex flex-col items-center justify-center bg-blue-600 rounded-[25px] w-16 h-16 shadow-lg shadow-blue-500/30">
+                                                    <span className="text-xl font-black leading-none">{giorno}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider">{mese}</span>
+                                                </div>
 
-                                {/* Bottoni Azione */}
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => handleUpdateStatus(req.id, 'rejected')}
-                                        className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase active:scale-95 transition-all"
-                                    >
-                                        Rifiuta
-                                    </button>
-                                    <button
-                                        onClick={() => handleUpdateStatus(req.id, 'confirmed')}
-                                        className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg shadow-blue-200 active:scale-95 transition-all"
-                                    >
-                                        Accetta
-                                    </button>
-                                </div>
-                            </div>
-                        ))
+                                                {/* Blocco Orario */}
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Orario Inizio</span>
+                                                    <span className="text-2xl font-black tracking-tighter">{orario}</span>
+                                                </div>
+
+                                                <div className="ml-auto pr-2">
+                                                    <div className="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center">
+                                                        <Clock size={18} className="text-blue-500" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* 2. SEZIONE CAMPO (Identificazione immediata) */}
+                                            <div className="px-6 py-5">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Risorsa Richiesta</span>
+                                                </div>
+                                                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter truncate">
+                                                    {req.sports_courts?.name || "Campo non specificato"}
+                                                </h3>
+                                                <p className="text-sm font-bold text-blue-600 mt-1">
+                                                    {req.sport} • {req.title}
+                                                </p>
+                                            </div>
+
+                                            {/* 3. AZIONI RAPIDE */}
+                                            <div className="mt-auto p-2 flex gap-2">
+                                                <button
+                                                    disabled={processingId === req.id}
+                                                    onClick={() => handleUpdateStatus(req.id, 'rejected')}
+                                                    className="w-14 h-14 flex items-center justify-center bg-slate-50 text-slate-400 rounded-[25px] hover:bg-red-50 hover:text-red-600 transition-all"
+                                                >
+                                                    <X size={24} />
+                                                </button>
+                                                <button
+                                                    disabled={processingId === req.id}
+                                                    onClick={() => handleUpdateStatus(req.id, 'confirmed')}
+                                                    className="flex-1 h-14 bg-blue-600 text-white rounded-[25px] font-bold text-sm uppercase tracking-widest shadow-xl shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    {processingId === req.id ? "Elaborazione..." : "Approva Prenotazione"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </>
                     )}
                 </div>
             </div>
@@ -262,7 +339,48 @@ export default function BusinessDashboard({ user, name }) {
                     <h3 className="font-bold text-slate-800">Calendario Prenotazioni</h3>
                 </div>
                 {/* Qui andrà un mini-calendario o la lista del giorno */}
-                <p className="text-sm text-slate-500">3 partite in programma per oggi.</p>
+                {appointments.length === 0 ? (
+                    <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center">
+                        <p className="text-slate-400 font-bold text-sm">Nessuna prenotazione confermata</p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="space-y-4">
+                            {appointments.map(app => {
+                                const dateObj = new Date(app.datetime);
+                                const giorno = dateObj.getDate();
+                                const mese = dateObj.toLocaleString('it-IT', { month: 'long' });
+                                const orario = dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                                return (
+                                    <div key={app.id} className="bg-slate-50 rounded-[32px] p-4 border-2 border-dashed border-slate-200 flex items-center gap-4">
+                                        {/* Blocco Giorno */}
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl font-black leading-none">{giorno}</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">{mese}</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-400">{orario}</span>
+                                        </div>
+
+                                        {/* Blocco Campo */}
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Campo</span>
+                                            </div>
+                                            <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter truncate">
+                                                {app.sports_courts?.name || "Campo non specificato"}
+                                            </h3>
+                                            <p className="text-sm font-bold text-blue-600 mt-1">
+                                                {app.sport} • {app.title}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* PANNELLO CAMPI */}

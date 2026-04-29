@@ -41,39 +41,40 @@ export default function GetSportStyle(sport) {
 export const validateBookingTime = async (supabase, dateTimeString, centerId) => {
     if (!centerId) return { isValid: true };
 
-    try {
-        const selectedDate = new Date(dateTimeString);
-        const dayOfWeek = selectedDate.getDay(); 
-        const selectedTime = selectedDate.toTimeString().slice(0, 5); // "HH:mm"
+    // Creiamo l'oggetto data. dateTimeString è quello che arriva dal picker
+    const selectedDate = new Date(dateTimeString);
 
-        const { data: businessHours, error } = await supabase
-            .from('business_hours')
-            .select('*')
-            .eq('center_id', centerId)
-            .eq('day_of_week', dayOfWeek)
-            .single();
+    // Day of week e orario estratti in LOCALE (quello che l'utente ha scelto)
+    const dayOfWeek = selectedDate.getDay();
+    const hours = String(selectedDate.getHours()).padStart(2, '0');
+    const minutes = String(selectedDate.getMinutes()).padStart(2, '0');
+    const selectedTime = `${hours}:${minutes}`;
 
-        if (error || !businessHours) return { isValid: true };
+    console.log("Check orario locale scelto dall'utente:", selectedTime);
 
-        if (businessHours.is_closed) {
-            return { isValid: false, message: "Il centro è chiuso in questo giorno." };
-        }
+    const { data: hoursData } = await supabase
+        .from('business_hours')
+        .select('*')
+        .eq('center_id', centerId)
+        .eq('day_of_week', dayOfWeek)
+        .single();
 
-        const open = businessHours.open_time.slice(0, 5);
-        const close = businessHours.close_time.slice(0, 5);
-
-        if (selectedTime < open || selectedTime > close) {
-            return { 
-                isValid: false, 
-                message: `Orario non valido. Il centro è aperto dalle ${open} alle ${close}.` 
-            };
-        }
-
-        return { isValid: true };
-    } catch (err) {
-        console.error("Errore validazione orari:", err);
-        return { isValid: true }; // In caso di errore, non blocchiamo l'utente
+    if (!hoursData || hoursData.is_closed) {
+        return { isValid: false, message: "Il centro è chiuso o non ha orari definiti." };
     }
+
+    const open = hoursData.open_time.slice(0, 5);
+    const close = hoursData.close_time.slice(0, 5);
+
+    // Ora il confronto è coerente: Locale vs Locale
+    if (selectedTime < open || selectedTime > close) {
+        return {
+            isValid: false,
+            message: `Il centro è aperto dalle ${open} alle ${close}.`
+        };
+    }
+
+    return { isValid: true };
 };
 
 export { GetSportStyle };

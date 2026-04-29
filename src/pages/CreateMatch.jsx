@@ -113,29 +113,64 @@ export default function CreateMatch() {
 
     // 1. Se c'è un ID, carichiamo i dati attuali dal DB
     useEffect(() => {
-        if (id) {
-            async function loadMatchData() {
-                const { data, error } = await supabase
+        if (id) { // id preso da useParams
+            const fetchMatchData = async () => {
+                // Recuperiamo il match includendo i dati del campo e del profilo del centro
+                const { data: matchData } = await supabase
                     .from('matches')
-                    .select('*')
+                    .select(`
+                    *,
+                    sports_courts (
+                        *,
+                        profiles (*) 
+                    )
+                `)
                     .eq('id', id)
                     .single();
 
-                if (data) {
-                    setFormData(data);
+                if (matchData) {
+                    // 1. Popoliamo il form (ricorda di formattare la data per il picker locale)
+                    const formattedDate = new Date(matchData.datetime).toISOString().slice(0, 16);
+                    setFormData({
+                        ...matchData,
+                        datetime: formattedDate
+                    });
+
+                    // 2. IMPOSTIAMO IL CENTRO (Questo farà apparire il centro selezionato)
+                    if (matchData.sports_courts?.profiles) {
+                        const center = matchData.sports_courts.profiles;
+                        setSelectedCenter(center);
+
+                        // 3. CARICHIAMO I CAMPI DI QUEL CENTRO (Questo farà apparire la lista campi)
+                        const { data: courts } = await supabase
+                            .from('sports_courts')
+                            .select('*')
+                            .eq('center_id', center.id);
+                        setAvailableCourts(courts || []);
+                    }
                 }
-            }
-            fetchCenters();
-            loadMatchData();
+            };
+            fetchMatchData();
         }
     }, [id]);
+
+    useEffect(() => {
+        const fetchCenters = async () => {
+            const { data } = await supabase
+                .from('profiles')
+                .select('id, username, full_name') // Adatta i campi al tuo schema
+                .eq('role', 'center');
+            setCenters(data || []);
+        };
+        fetchCenters();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            // 1. Recuperiamo l'utente una volta sola per tutto il processo
+            // 1. Recuperiamo l'utente
             const { data: { user }, error: userError } = await supabase.auth.getUser();
             if (userError || !user) throw new Error("Utente non autenticato");
 
@@ -146,17 +181,19 @@ export default function CreateMatch() {
                 return;
             }
 
-            // 3. Validazione Orari se c'è un centro selezionato
+            // 3. VALIDAZIONE ORARI (CORRETTA PER FUSO ORARIO)
             if (selectedCenter) {
+                // Passiamo formData.datetime così com'è (stringa locale dal picker)
                 const { isValid, message } = await validateBookingTime(supabase, formData.datetime, selectedCenter.id);
+
                 if (!isValid) {
                     error(message);
                     setLoading(false);
-                    return;
+                    return; // Blocca la creazione se l'orario non è valido nel fuso locale
                 }
             }
 
-            // 4. Gestione Posizione (se non inserita, prendi quella del profilo)
+            // 4. Gestione Posizione
             let locationData = {
                 location: formData.location,
                 location_lat: formData.location_lat,
@@ -179,45 +216,59 @@ export default function CreateMatch() {
                 }
             }
 
-            // 5. Inserimento Partita
-            const { data: newMatch, error: matchError } = await supabase
-                .from('matches')
-                .insert([
-                    {
-                        ...formData,
-                        ...locationData,
-                        datetime: new Date(formData.datetime).toISOString(),
-                        current_players: 1,
-                        creator_id: user.id,
-                        court_id: formData.court_id || null,
-                        reservation_status: formData.court_id ? 'requested' : 'none'
-                    }
-                ])
-                .select()
-                .single();
+            // 5. INSERIMENTO / AGGIORNAMENTO PARTITA
+            // Usiamo l'ID se presente per capire se è un update o un insert
+            const isUpdate = !!matchId;
 
-            if (matchError) throw matchError;
+            const matchPayload = {
+                title: formData.title,
+                sport: formData.sport,
+                datetime: new Date(formData.datetime).toISOString(), // Conversione UTC per il DB
+                location: locationData.location,
+                location_lat: locationData.location_lat,
+                location_lng: locationData.location_lng,
+                max_players: formData.max_players,
+                description: formData.description,
+                court_id: formData.court_id || null,
+                creator_id: user.id,
+                reservation_status: formData.court_id ? (matchId ? undefined : 'requested') : 'none'
+                // Nota: se è un update, potresti voler NON sovrascrivere lo stato della prenotazione
+            };
 
-            // 6. Aggiunta automatica del creatore ai partecipanti
-            const { error: partError } = await supabase
-                .from('participants')
-                .insert([{
-                    match_id: newMatch.id,
-                    user_id: user.id
+            let query = supabase.from('matches');
+
+            if (matchId) {
+                // Rimuoviamo campi che non devono cambiare durante l'update se necessario
+                delete matchPayload.creator_id;
+                const { data, error: updateError } = await query
+                    .update(matchPayload)
+                    .eq('id', matchId)
+                    .select()
+                    .single();
+
+                if (updateError) throw updateError;
+                success("Partita aggiornata con successo!");
+                navigate(`/match/${matchId}`, { replace: true });
+            } else {
+                const { data, error: insertError } = await query
+                    .insert([{ ...matchPayload, current_players: 1 }])
+                    .select()
+                    .single();
+
+                if (insertError) throw insertError;
+
+                // Aggiunta creatore ai partecipanti (solo su INSERT)
+                await supabase.from('participants').insert([{
+                    match_id: data.id,
+                    user_id: user.id,
+                    status: 'confirmed'
                 }]);
 
-            if (partError) console.error("Errore partecipanti:", partError.message);
-
-            // 7. Feedback e Navigazione
-            success(formData.court_id
-                ? "Partita creata! In attesa di conferma dal centro."
-                : "Partita organizzata con successo!");
-
-            navigate(`/match/${newMatch.id}`, { replace: true });
-
+                success(formData.court_id ? "Richiesta inviata al centro!" : "Partita creata!");
+                navigate(`/match/${data.id}`, { replace: true });
+            };
         } catch (err) {
-            error("Errore: " + err.message);
-            console.error(err);
+            error("Errore creazione partita: " + err.message);
         } finally {
             setLoading(false);
         }
@@ -258,6 +309,7 @@ export default function CreateMatch() {
         setLoading(false);
     };
 
+    // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
         return (
             <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
@@ -345,7 +397,7 @@ export default function CreateMatch() {
                             }}
                         >
                             <option value="">Seleziona un centro...</option>
-                            {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
                         </select>
 
                         {availableCourts.length > 0 && (
@@ -390,6 +442,7 @@ export default function CreateMatch() {
         );
     }
 
+    // SE NON C'È UN ID, MOSTRIAMO IL FORM DI CREAZIONE NORMALE
     return (
         <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
             <button
@@ -491,34 +544,32 @@ export default function CreateMatch() {
                 </div>
 
                 {/* SELEZIONE CENTRO AFFILIATO */}
-                {centers.length > 0 && (
-                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                        <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Prenota in un centro affiliato (Opzionale)</label>
-                        <select
-                            className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none mb-3"
-                            onChange={(e) => {
-                                const centerId = e.target.value;
-                                setSelectedCenter(centerId);
-                                handleCenterChange(centerId);
-                            }}
-                        >
-                            <option value="">Seleziona un centro...</option>
-                            {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
-                        </select>
+                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                    <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Prenota in un centro affiliato (Opzionale)</label>
+                    <select
+                        className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none mb-3"
+                        onChange={(e) => {
+                            const centerId = e.target.value;
+                            setSelectedCenter(centerId);
+                            handleCenterChange(centerId);
+                        }}
+                    >
+                        <option value="">Seleziona un centro...</option>
+                        {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
+                    </select>
 
-                        {availableCourts.length > 0 && (
-                            <select
-                                className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none"
-                                onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
-                            >
-                                <option value="">Scegli il campo...</option>
-                                {availableCourts.map(court => (
-                                    <option key={court.id} value={court.id}>{court.name} ({court.sport_type})</option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-                )}
+                    {availableCourts.length > 0 && (
+                        <select
+                            className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none"
+                            onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
+                        >
+                            <option value="">Scegli il campo...</option>
+                            {availableCourts.map(court => (
+                                <option key={court.id} value={court.id}>{court.name} ({court.sport_type})</option>
+                            ))}
+                        </select>
+                    )}
+                </div>
 
                 {/* LUOGO E DESCRIZIONE */}
                 <LocationPicker

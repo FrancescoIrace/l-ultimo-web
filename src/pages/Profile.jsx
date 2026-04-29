@@ -54,6 +54,12 @@ export default function Profile({ session }) {
         setProfile(profileData);
         setEditData(normalizeProfileData(profileData)); // Pre-compila il form con i dati attuali del profilo
 
+        //Se l'utente è un centro sportivo, non carichiamo le partite a cui partecipa, ma solo quelle inerenti al suo centro.
+        if (profileData?.role === 'center') {
+            setLoading(false);
+            return;
+        }
+
         // 2. Recupera le partite a cui l'utente partecipa
         const { data: matchesData } = await supabase
             .from('participants')
@@ -211,13 +217,11 @@ export default function Profile({ session }) {
     // if (loading) return <div className="p-10 text-center uppercase font-black">Caricamento...</div>;
     if (loading && !isEditing) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
 
-    return (
-        <div className="max-w-md mx-auto p-6 min-h-screen bg-white">
-            {!isEditing ? (
-                <>
-                    {/* --- SEZIONE PROFILO --- */}
-
-                    {/* Header Profilo */}
+    // Se è un centro sportivo, mostriamo una dashboard semplificata con accesso alla gestione del centro
+    if (profile?.role === 'center') {
+        return (
+            <>
+                <div className="max-w-md mx-auto p-6 min-h-screen bg-white">
                     <button
                         onClick={() => navigate(-1)}
                         type="button"
@@ -225,98 +229,14 @@ export default function Profile({ session }) {
                     >
                         TORNA INDIETRO
                     </button>
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-white shadow-lg">
-                            {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
-                            ) : (
-                                profile?.username?.charAt(0).toUpperCase()
-                            )}
-                        </div>
-                        <h2 className="text-2xl font-black uppercase tracking-tight">{profile?.username}</h2>
-                        <p className="text-slate-400 text-sm font-bold">
-                            📍 {profile?.location || profile?.province}
-                            {profile?.location ? ` (${profile?.zip_code})` : ''}
-                        </p>
-                    </div>
-
-                    {/* Info Account */}
-                    <div className="bg-slate-50 p-4 rounded-2xl mb-8 space-y-2 text-sm relative">
-                        <span className="text-slate-400 font-bold uppercase text-[10px] top-0 left-25 absolute">📅 Profilo creato il {new Date(session?.user.created_at).toLocaleDateString('it-IT')}</span>
-                        <div className="flex justify-between">
-                            <span className="text-slate-400 font-bold uppercase text-[10px]">Genere</span>
-                            <span className="font-bold">{profile?.gender === 'M' ? 'Uomo' : profile?.gender === 'F' ? 'Donna' : 'Altro'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-400 font-bold uppercase text-[10px]">Email</span>
-                            <span className="font-bold">{session.user.email}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-400 font-bold uppercase text-[10px]">Sport Preferito</span>
-                            <span className="font-bold">{profile?.favorite_sport}</span>
-                        </div>
-                        <div className="flex justify-between border-t border-slate-200 pt-2 mt-2 items-center">
-                            <div className="flex items-center gap-1">
-                                <span className="text-slate-400 font-bold uppercase text-[10px]">Partite Attive</span>
-                                <div className="relative cursor-help">
-                                    <button
-                                        type="button"
-                                        onClick={() => setTooltipActive(!tooltipActive)}
-                                        className="p-1 hover:opacity-70 transition-opacity"
-                                    >
-                                        <Info size={14} className="text-slate-400" />
-                                    </button>
-                                    {tooltipActive && (
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 max-w-xs z-10 animate-fade-in whitespace-normal text-center">
-                                            Puoi avere max 5 partite attive contemporaneamente
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            <span className={`font-black text-sm ${activeMatchCount >= 5 ? 'text-red-600' : 'text-blue-600'}`}>{activeMatchCount}/5</span>
-                        </div>
-                    </div>
-
-                    {/* Le Mie Partite */}
-                    <div className="mb-8">
-                        <AccordionItem 
-                            title={"Prossime Partite"} 
-                            matches={myMatches
-                                .filter((item) => new Date(item.matches.datetime) > new Date())
-                                .sort((a, b) => new Date(a.matches.datetime) - new Date(b.matches.datetime))
-                                .map((item) => ({
-                                    ...item,
-                                    isCreator: item.matches.creator_id === session.user.id
-                                }))
-                            } 
-                            isOpen={true} 
-                            titleColor="text-blue-600" 
-                            userId={session.user.id}
-                        />
-                    </div>
-
-                    {/*Partite Create */}
-                    <div className="mb-8">
-                        <AccordionCreatedMatches title={"Partite Create"} matches={myCreatedMatches} isOpen={false} isCreatedMatches={true} />
-                    </div>
-
-                    {/*Partite Passate */}
-                    <div className="mb-8">
-                        <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" opacity="opacity-30" />
-                    </div>
-
-                    {/*Recensioni ricevute*/}
-                    <div className="mb-8">
-                        <AccorditionReviews title={"Recensioni Ricevute"} reviews={myReviews.filter((item) => new Date(item.created_at) < new Date())} isOpen={false} />
-                    </div>
-
-                    {/* Pulsanti Azione */}
-                    <div className="space-y-3">
+                    <h1 className="text-2xl font-black mb-4">Dashboard Centro Sportivo</h1>
+                    <p className="text-slate-600 mb-6">Ciao {profile.username}, questa è la tua dashboard dedicata alla gestione del centro sportivo. Qui potrai creare e gestire le partite, visualizzare le prenotazioni e interagire con i tuoi clienti.</p>
+                    <div className='space-y-6'>
                         <button
-                            onClick={() => setIsEditing(true)}
-                            className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                            onClick={() => navigate('/')}
+                            className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-blue-600 text-white border border-blue-800 py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
                         >
-                            MODIFICA PROFILO
+                            Vai alla Dashboard
                         </button>
                         <button
                             onClick={() => navigate('/settings')}
@@ -331,134 +251,263 @@ export default function Profile({ session }) {
                             Logout
                         </button>
                     </div>
-                </>
-            ) : (
-                <>
-                    {/* --- FORM DI MODIFICA --- */}
-                    <h2 className="text-2xl font-black mb-6 uppercase">Modifica Dati</h2>
-                    <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        {/* Foto */}
-                        <div className="flex flex-col items-center mb-6">
-                            <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
-                                {/* {profile.avatar_url ? (
+
+                </div>
+            </>
+
+        );
+    } else {
+        // Se è un giocatore, mostriamo il profilo completo con partite e recensioni
+        return (
+            <div className="max-w-md mx-auto p-6 min-h-screen bg-white">
+                {!isEditing ? (
+                    <>
+                        {/* --- SEZIONE PROFILO --- */}
+
+                        {/* Header Profilo */}
+                        <button
+                            onClick={() => navigate(-1)}
+                            type="button"
+                            className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            TORNA INDIETRO
+                        </button>
+                        <div className="flex flex-col items-center mb-8">
+                            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-white shadow-lg">
+                                {profile?.avatar_url ? (
+                                    <img src={profile.avatar_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                    profile?.username?.charAt(0).toUpperCase()
+                                )}
+                            </div>
+                            <h2 className="text-2xl font-black uppercase tracking-tight">{profile?.username}</h2>
+                            <p className="text-slate-400 text-sm font-bold">
+                                📍 {profile?.location || profile?.province}
+                                {profile?.location ? ` (${profile?.zip_code})` : ''}
+                            </p>
+                        </div>
+
+                        {/* Info Account */}
+                        <div className="bg-slate-50 p-4 rounded-2xl mb-8 space-y-2 text-sm relative">
+                            <span className="text-slate-400 font-bold uppercase text-[10px] top-0 left-25 absolute">📅 Profilo creato il {new Date(session?.user.created_at).toLocaleDateString('it-IT')}</span>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400 font-bold uppercase text-[10px]">Genere</span>
+                                <span className="font-bold">{profile?.gender === 'M' ? 'Uomo' : profile?.gender === 'F' ? 'Donna' : 'Altro'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400 font-bold uppercase text-[10px]">Email</span>
+                                <span className="font-bold">{session.user.email}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400 font-bold uppercase text-[10px]">Sport Preferito</span>
+                                <span className="font-bold">{profile?.favorite_sport}</span>
+                            </div>
+                            <div className="flex justify-between border-t border-slate-200 pt-2 mt-2 items-center">
+                                <div className="flex items-center gap-1">
+                                    <span className="text-slate-400 font-bold uppercase text-[10px]">Partite Attive</span>
+                                    <div className="relative cursor-help">
+                                        <button
+                                            type="button"
+                                            onClick={() => setTooltipActive(!tooltipActive)}
+                                            className="p-1 hover:opacity-70 transition-opacity"
+                                        >
+                                            <Info size={14} className="text-slate-400" />
+                                        </button>
+                                        {tooltipActive && (
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 max-w-xs z-10 animate-fade-in whitespace-normal text-center">
+                                                Puoi avere max 5 partite attive contemporaneamente
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <span className={`font-black text-sm ${activeMatchCount >= 5 ? 'text-red-600' : 'text-blue-600'}`}>{activeMatchCount}/5</span>
+                            </div>
+                        </div>
+
+                        {/* Le Mie Partite */}
+                        <div className="mb-8">
+                            <AccordionItem
+                                title={"Prossime Partite"}
+                                matches={myMatches
+                                    .filter((item) => new Date(item.matches.datetime) > new Date())
+                                    .sort((a, b) => new Date(a.matches.datetime) - new Date(b.matches.datetime))
+                                    .map((item) => ({
+                                        ...item,
+                                        isCreator: item.matches.creator_id === session.user.id
+                                    }))
+                                }
+                                isOpen={true}
+                                titleColor="text-blue-600"
+                                userId={session.user.id}
+                            />
+                        </div>
+
+                        {/*Partite Create */}
+                        <div className="mb-8">
+                            <AccordionCreatedMatches title={"Partite Create"} matches={myCreatedMatches} isOpen={false} isCreatedMatches={true} />
+                        </div>
+
+                        {/*Partite Passate */}
+                        <div className="mb-8">
+                            <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" opacity="opacity-30" />
+                        </div>
+
+                        {/*Recensioni ricevute*/}
+                        <div className="mb-8">
+                            <AccorditionReviews title={"Recensioni Ricevute"} reviews={myReviews.filter((item) => new Date(item.created_at) < new Date())} isOpen={false} />
+                        </div>
+
+                        {/* Pulsanti Azione */}
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                MODIFICA PROFILO
+                            </button>
+                            <button
+                                onClick={() => navigate('/settings')}
+                                className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-slate-600 text-white border border-slate-800 py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-700 transition-all active:scale-95"
+                            >
+                                IMPOSTAZIONI APP
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl shadow-md border border-red-600 flex items-center justify-center hover:bg-red-100 transition-all uppercase tracking-widest text-xs"
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {/* --- FORM DI MODIFICA --- */}
+                        <h2 className="text-2xl font-black mb-6 uppercase">Modifica Dati</h2>
+                        <form onSubmit={handleUpdateProfile} className="space-y-4">
+                            {/* Foto */}
+                            <div className="flex flex-col items-center mb-6">
+                                <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
+                                    {/* {profile.avatar_url ? (
                                     <img src={} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-slate-400">📸</div>
                                 )} */}
-                                {editData.avatar_url ? (
-                                    <img
-                                        // src={editData.avatar_url}
-                                        src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
-                                        className="w-full h-full object-cover"
-                                        alt="Anteprima avatar"
+                                    {editData.avatar_url ? (
+                                        <img
+                                            // src={editData.avatar_url}
+                                            src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
+                                            className="w-full h-full object-cover"
+                                            alt="Anteprima avatar"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
+                                            {editData.username?.charAt(0).toUpperCase() || '?'}
+                                        </div>
+                                    )}
+                                </div>
+                                <label className="cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-100">
+                                    CAMBIA FOTO
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={uploadAvatar}
+                                        disabled={loading}
+                                        className="hidden"
                                     />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
-                                        {editData.username?.charAt(0).toUpperCase() || '?'}
-                                    </div>
-                                )}
+                                </label>
                             </div>
-                            <label className="cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-100">
-                                CAMBIA FOTO
+
+                            {/* Username */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
                                 <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={uploadAvatar}
-                                    disabled={loading}
-                                    className="hidden"
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                    value={editData.username ?? ''}
+                                    onChange={(e) => setEditData({ ...editData, username: e.target.value })}
                                 />
-                            </label>
-                        </div>
+                            </div>
 
-                        {/* Username */}
-                        <div>
-                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
-                            <input
-                                className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                value={editData.username ?? ''}
-                                onChange={(e) => setEditData({ ...editData, username: e.target.value })}
-                            />
-                        </div>
+                            {/* Full Name */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                                <input
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                    value={editData.full_name ?? ''}
+                                    onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                                />
+                            </div>
 
-                        {/* Full Name */}
-                        <div>
-                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
-                            <input
-                                className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                value={editData.full_name ?? ''}
-                                onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
-                            />
-                        </div>
+                            {/* Posizione di base */}
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                                <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
+                                <UserLocationInput
+                                    value={{
+                                        location: editData.location ?? '',
+                                        province: editData.province,
+                                        zip_code: editData.zip_code,
+                                    }}
+                                    onChange={(value) => setEditData({ ...editData, ...value })}
+                                />
+                            </div>
 
-                        {/* Posizione di base */}
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                            <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
-                            <UserLocationInput
-                                value={{
-                                    location: editData.location ?? '',
-                                    province: editData.province,
-                                    zip_code: editData.zip_code,
-                                }}
-                                onChange={(value) => setEditData({ ...editData, ...value })}
-                            />
-                        </div>
+                            {/* Genere */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
+                                <select
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                    value={editData.gender ?? 'Other'}
+                                    onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
+                                >
+                                    <option value="M">Uomo</option>
+                                    <option value="F">Donna</option>
+                                    <option value="Other">Altro</option>
+                                </select>
+                            </div>
 
-                        {/* Genere */}
-                        <div>
-                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
-                            <select
-                                className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                value={editData.gender ?? 'Other'}
-                                onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
-                            >
-                                <option value="M">Uomo</option>
-                                <option value="F">Donna</option>
-                                <option value="Other">Altro</option>
-                            </select>
-                        </div>
+                            {/* Sport preferito */}
+                            <div>
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
+                                <select
+                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                    value={editData.favorite_sport ?? 'Calcetto'}
+                                    onChange={(e) => handleSportChange(e)}
+                                >
+                                    <option>Calcetto</option>
+                                    <option>Calcio a 7</option>
+                                    <option>Calcio a 11</option>
+                                    <option>Padel</option>
+                                    <option>Basket (3vs3)</option>
+                                    <option>Basket (5vs5)</option>
+                                    <option>Tennis singolo</option>
+                                    <option>Tennis doppio</option>
+                                    <option>Volley</option>
+                                </select>
+                            </div>
 
-                        {/* Sport preferito */}
-                        <div>
-                            <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
-                            <select
-                                className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                value={editData.favorite_sport ?? 'Calcetto'}
-                                onChange={(e) => handleSportChange(e)}
-                            >
-                                <option>Calcetto</option>
-                                <option>Calcio a 7</option>
-                                <option>Calcio a 11</option>
-                                <option>Padel</option>
-                                <option>Basket (3vs3)</option>
-                                <option>Basket (5vs5)</option>
-                                <option>Tennis singolo</option>
-                                <option>Tennis doppio</option>
-                                <option>Volley</option>
-                            </select>
-                        </div>
-
-                        <div className="flex gap-3 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                                className="flex-1 p-3 uppercase cursor-pointer bg-slate-100 text-slate-600 border border-slate-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                Annulla
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 p-3 uppercase cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                Salva
-                            </button>
-                        </div>
-                        <div>
-                            <span className='text-slate-400'>Ultima modifica: {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('it-IT') : 'N/A'} alle {profile.updated_at ? new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5) : 'N/A'}</span>
-                        </div>
-                    </form>
-                </>
-            )
-            }
-        </div>
-    );
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="flex-1 p-3 uppercase cursor-pointer bg-slate-100 text-slate-600 border border-slate-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 p-3 uppercase cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    Salva
+                                </button>
+                            </div>
+                            <div>
+                                <span className='text-slate-400'>Ultima modifica: {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('it-IT') : 'N/A'} alle {profile.updated_at ? new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5) : 'N/A'}</span>
+                            </div>
+                        </form>
+                    </>
+                )
+                }
+            </div>
+        );
+    }
 }
+

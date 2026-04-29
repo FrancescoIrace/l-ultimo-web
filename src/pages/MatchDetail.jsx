@@ -266,7 +266,7 @@ export default function MatchDetail({ user }) {
         }
 
         //le icone vanno messe qui
-        const shareText = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT').slice(0, -3)} a ${match.location}.
+        const shareText = `Partecipa a ${match.title} il ${new Date(match.datetime).toLocaleString('it-IT', { timeZone: 'UTC' }).slice(0, -3)} a ${match.location}.
 Scopri di più qui: ${window.location.href}`;
 
         if (navigator.share) {
@@ -587,7 +587,7 @@ Scopri di più qui: ${window.location.href}`;
                             onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
                             className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
                         >
-                            <span>⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long' })}</span>
+                            <span>⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long', timeZone: 'UTC' })}</span>
                             <Calendar size={16} className="text-blue-500" />
                         </button>
 

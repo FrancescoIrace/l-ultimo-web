@@ -130,11 +130,7 @@ export default function CreateMatch() {
 
                 if (matchData) {
                     // 1. Popoliamo il form (ricorda di formattare la data per il picker locale)
-                    const formattedDate = new Date(matchData.datetime).toISOString().slice(0, 16);
-                    setFormData({
-                        ...matchData,
-                        datetime: formattedDate
-                    });
+                    setFormData(matchData);
 
                     // 2. IMPOSTIAMO IL CENTRO (Questo farà apparire il centro selezionato)
                     if (matchData.sports_courts?.profiles) {
@@ -218,12 +214,12 @@ export default function CreateMatch() {
 
             // 5. INSERIMENTO / AGGIORNAMENTO PARTITA
             // Usiamo l'ID se presente per capire se è un update o un insert
-            const isUpdate = !!matchId;
+            const isUpdate = !!id;
 
             const matchPayload = {
                 title: formData.title,
                 sport: formData.sport,
-                datetime: new Date(formData.datetime).toISOString(), // Conversione UTC per il DB
+                datetime: formData.datetime, // Stringa locale, salvata as-is
                 location: locationData.location,
                 location_lat: locationData.location_lat,
                 location_lng: locationData.location_lng,
@@ -231,24 +227,24 @@ export default function CreateMatch() {
                 description: formData.description,
                 court_id: formData.court_id || null,
                 creator_id: user.id,
-                reservation_status: formData.court_id ? (matchId ? undefined : 'requested') : 'none'
+                reservation_status: formData.court_id ? (id ? undefined : 'requested') : 'none'
                 // Nota: se è un update, potresti voler NON sovrascrivere lo stato della prenotazione
             };
 
             let query = supabase.from('matches');
 
-            if (matchId) {
+            if (id) {
                 // Rimuoviamo campi che non devono cambiare durante l'update se necessario
                 delete matchPayload.creator_id;
                 const { data, error: updateError } = await query
                     .update(matchPayload)
-                    .eq('id', matchId)
+                    .eq('id', id)
                     .select()
                     .single();
 
                 if (updateError) throw updateError;
                 success("Partita aggiornata con successo!");
-                navigate(`/match/${matchId}`, { replace: true });
+                navigate(`/match/${id}`, { replace: true });
             } else {
                 const { data, error: insertError } = await query
                     .insert([{ ...matchPayload, current_players: 1 }])
@@ -278,11 +274,6 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
-        // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
-        const localDate = new Date(formData.datetime);
-        // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
-        const datetimeUTC = localDate.toISOString();
-
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase
             .from('matches')
@@ -291,7 +282,7 @@ export default function CreateMatch() {
                 location: formData.location,
                 location_lat: formData.location_lat,
                 location_lng: formData.location_lng,
-                datetime: datetimeUTC, // Usa la data convertita in UTC
+                datetime: formData.datetime, // Stringa locale, salvata as-is
                 description: formData.description,
             })
             .eq('id', id)

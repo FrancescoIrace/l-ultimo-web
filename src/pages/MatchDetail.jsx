@@ -73,13 +73,10 @@ export default function MatchDetail({ user }) {
                 .select(`
                 *,
                 sports_courts (
-                name,sport_type,center_id,
-                    profiles (
-                   full_name,
-                   username
-                  )
-                 )
-                 `)
+                    name, sport_type, center_id,
+                    profiles (full_name, username)
+                )
+            `)
                 .eq('id', id)
                 .maybeSingle();
 
@@ -94,10 +91,10 @@ export default function MatchDetail({ user }) {
                 setIsJoined(!!participantData);
             }
 
-            // 2. Partecipanti + Dati del Profilo (JOIN)
+            // 2. Partecipanti + Dati del Profilo
             const { data: partData, error: partError } = await supabase
                 .from('participants')
-                .select(`id, user_id,status, waitlist_order, profiles (username,avatar_url, gender)`) // JOIN con profiles per avere username e avatar dei partecipanti
+                .select(`id, user_id, status, waitlist_order, profiles (username, avatar_url, gender)`)
                 .eq('match_id', id);
 
             if (partError) console.error(partError);
@@ -107,51 +104,64 @@ export default function MatchDetail({ user }) {
                 setWaitingPlayers(partData.filter(p => p.status === 'waiting')
                     .sort((a, b) => a.waitlist_order - b.waitlist_order));
             }
-
             setLoading(false);
         }
+
         getDetails();
 
-        // Real-time subscription ai cambiamenti dei partecipanti (INSERT e DELETE) per aggiornare la lista senza ricaricare la pagina
-        //Aggiunta controllo per i confermati e lista d'attesa per mantenere l'ordine corretto
         if (!id || !user?.id) return;
 
-        const channel = supabase
-            .channel(`match_participants_${id}`)
+        // CREIAMO UN UNICO CANALE PER LA PAGINA
+        const matchChannel = supabase
+            .channel(`match_page_${id}`)
+            // 1. Sottoscrizione ai Partecipanti
             .on(
                 'postgres_changes',
                 {
-                    event: '*', // Ascolta INSERT, UPDATE e DELETE
+                    event: '*',
                     schema: 'public',
                     table: 'participants',
                     filter: `match_id=eq.${id}`,
                 },
                 async () => {
-                    console.log('🔄 Cambiamento rilevato, ricarico i dati...');
-
-                    // Riesegui la query completa per aggiornare tutti gli stati
-                    const { data: partData, error: partError } = await supabase
+                    console.log('🔄 Cambio partecipanti rilevato');
+                    const { data: partData } = await supabase
                         .from('participants')
                         .select(`id, user_id, status, waitlist_order, profiles (username, avatar_url, gender)`)
                         .eq('match_id', id);
 
-                    if (!partError && partData) {
+                    if (partData) {
                         setParticipants(partData);
                         setConfirmedPlayers(partData.filter(p => p.status === 'confirmed'));
-                        setWaitingPlayers(partData.filter(p => p.status === 'waiting')
-                            .sort((a, b) => a.waitlist_order - b.waitlist_order));
-
-                        // Aggiorna isJoined cercando l'utente nei nuovi dati
-                        const userSub = partData.find(p => p.user_id === user.id);
-                        setIsJoined(!!userSub);
+                        setWaitingPlayers(partData.filter(p => p.status === 'waiting').sort((a, b) => a.waitlist_order - b.waitlist_order));
+                        setIsJoined(!!partData.find(p => p.user_id === user.id));
                     }
                 }
             )
+            // 2. Sottoscrizione allo Stato Partita (AGGIUNTA QUI PRIMA DI SUBSCRIBE)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'matches',
+                    filter: `id=eq.${id}`
+                },
+                (payload) => {
+                    console.log('✅ Stato prenotazione aggiornato:', payload.new.reservation_status);
+                    setMatch((prevMatch) => ({
+                        ...prevMatch,
+                        reservation_status: payload.new.reservation_status
+                    }));
+                }
+            )
+            // 3. ORA CHIAMIAMO SUBSCRIBE UNA VOLTA SOLA
             .subscribe();
 
         return () => {
-            supabase.removeChannel(channel);
+            supabase.removeChannel(matchChannel);
         };
+        
     }, [id, user.id]);
 
     const handleLeave = async () => {
@@ -486,6 +496,7 @@ Scopri di più qui: ${window.location.href}`;
                             }`}>
                             <Building2 size={24} />
                         </div>
+
 
                         <div className="flex-1">
                             {/* Nome del Centro Sportivo */}

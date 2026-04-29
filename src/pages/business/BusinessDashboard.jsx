@@ -1,9 +1,10 @@
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2 } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
+import { useAlert } from '../../components/AlertComponent';
 
 
 export default function BusinessDashboard({ user, name }) {
@@ -13,6 +14,7 @@ export default function BusinessDashboard({ user, name }) {
     const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
     const [isOrariOpen, setIsOrariOpen] = useState(false);
     const [requests, setRequests] = useState([]);
+    const { success, error, alert } = useAlert();
 
     async function fetchHours() {
         const { data } = await supabase.from('business_hours').select('*').eq('center_id', user.id).order('day_of_week');
@@ -24,32 +26,96 @@ export default function BusinessDashboard({ user, name }) {
         }
     }
 
-    async function fetchIncomingRequests() {
-        const { data } = await supabase
+    const fetchIncomingRequests = async () => {
+        // 1. Recuperiamo le partite per i campi di questo centro
+        const { data: matches, error: mError } = await supabase
             .from('matches')
             .select(`
-      id, 
-      sport, 
-      datetime, 
-      match_time, 
-      court_id!inner(name, center_id),
-    profiles!matches_creator_id_fkey(username)    
-    `)
+            id,
+            sport,
+            datetime,
+            title,
+            reservation_status,
+            creator_id,
+            sports_courts!inner (
+                name,
+                center_id
+            )
+        `)
+            .eq('sports_courts.center_id', user.id)
             .eq('reservation_status', 'requested')
-            .filter('court_id.center_id', 'eq', user.id); // Logica per filtrare i tuoi campi
-    }
+            .order('datetime', { ascending: true });
 
-    async function updateStatus(matchId, newStatus) {
-    const { error } = await supabase
-        .from('matches')
-        .update({ reservation_status: newStatus })
-        .eq('id', matchId);
+        if (mError) {
+            console.error("Errore matches:", mError);
+            return;
+        }
 
-    if (!error) {
-        success(newStatus === 'confirmed' ? 'Prenotazione confermata!' : 'Richiesta rifiutata');
-        fetchIncomingRequests(); // Ricarica la lista
-    }
-}
+        if (matches && matches.length > 0) {
+            // 2. Recuperiamo i profili dei creatori separatamente
+            // Dato che creator_id è un UUID di auth, lo usiamo per cercare nel profilo public
+            const creatorIds = matches.map(m => m.creator_id);
+
+            const { data: profiles, error: pError } = await supabase
+                .from('profiles')
+                .select('id, username, full_name')
+                .in('id', creatorIds);
+
+            if (pError) {
+                console.error("Errore profili:", pError);
+            }
+
+            // 3. Uniamo i dati manualmente nel frontend
+            const enrichedRequests = matches.map(match => ({
+                ...match,
+                profiles: profiles?.find(p => p.id === match.creator_id) || { username: "Utente" }
+            }));
+
+            setRequests(enrichedRequests);
+        } else {
+            setRequests([]);
+        }
+    };
+
+    const handleUpdateStatus = async (matchId, newStatus) => {
+        // 1. Aggiorna lo stato della partita
+        const { data: updatedMatch, error: matchError } = await supabase
+            .from('matches')
+            .update({ reservation_status: newStatus })
+            .eq('id', matchId)
+            .select('creator_id, title, sport') // Ci servono per la notifica
+            .single();
+
+        if (matchError) {
+            alert("Errore aggiornamento: " + matchError.message);
+            return;
+        }
+
+        // 2. Crea la notifica per il creatore (Tabella notifications)
+        const notificationContent = newStatus === 'confirmed'
+            ? `La tua richiesta per la partita di ${updatedMatch.sport} è stata ACCETTATA!`
+            : `Spiacenti, la richiesta per la partita "${updatedMatch.title}" è stata rifiutata dal centro sportivo.`;
+
+        const { error: notifError } = await supabase
+            .from('notifications')
+            .insert([
+                {
+                    user_id: updatedMatch.creator_id, // Il destinatario è il creatore
+                    sender_id: user.id,     // Il mittente è il centro sportivo
+                    type: 'match_update',
+                    title: newStatus === 'confirmed' ? 'Prenotazione Confermata! ✅' : 'Prenotazione Rifiutata ❌',
+                    content: notificationContent,
+                    link: `/match/${matchId}`,      // Link per cliccare e andare alla partita
+                    is_read: false
+                }
+            ]);
+
+        if (notifError) console.error("Errore invio notifica:", notifError);
+
+        // 3. Feedback UI
+        setRequests(prev => prev.filter(r => r.id !== matchId));
+        success(newStatus === 'confirmed' ? "Confermata e notifica inviata!" : "Rifiutata.");
+    };
 
     useEffect(() => {
         async function loadCampi() {
@@ -64,6 +130,28 @@ export default function BusinessDashboard({ user, name }) {
         loadCampi();
         fetchHours();
         fetchIncomingRequests();
+
+        // Sottoscrizione Realtime
+        const channel = supabase
+            .channel('business_requests')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*', // Ascolta insert, update e delete
+                    schema: 'public',
+                    table: 'matches'
+                },
+                () => {
+                    // Ricarichiamo i dati quando succede qualcosa
+                    fetchIncomingRequests();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+
     }, [user.id]);
 
 
@@ -84,31 +172,86 @@ export default function BusinessDashboard({ user, name }) {
                 <p className="text-sm text-slate-500">Anche i tuoi orari di apertura e chiusura. ⏱️</p>
             </div>
 
-            {requests.length > 0 && (
-                <div className="mb-8">
-                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <Zap className="text-amber-500" size={20} /> Richieste di Prenotazione
-                    </h3>
-                    <div className="space-y-3">
-                        {requests.map(req => (
-                            <div key={req.id} className="bg-white p-4 rounded-2xl border-2 border-amber-100 shadow-sm flex justify-between items-center">
-                                <div>
-                                    <p className="font-bold text-slate-800">{req.sport} - {req.court_id.name}</p>
-                                    <p className="text-xs text-slate-500">Da: {req.profiles?.username} il {new Date(req.datetime).toLocaleString()}</p>
+            <div className="max-w-md mx-auto p-4 space-y-6">
+                <header className="flex items-center justify-between">
+                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">
+                        Richieste <span className="text-blue-600">Campo</span>
+                    </h2>
+                    <div className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase">
+                        {requests.length} Pendenti
+                    </div>
+                </header>
+
+                <div className="space-y-4">
+                    {requests.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
+                            <div className="bg-slate-200 p-4 rounded-full mb-4">
+                                <Search className="text-slate-400" size={32} />
+                            </div>
+                            <p className="text-slate-500 font-bold text-center">Nessuna richiesta in questo momento.</p>
+                        </div>
+                    ) : (
+                        requests.map((req) => (
+                            <div key={req.id} className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-xl shadow-slate-200/50">
+                                {/* Header della Card */}
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-2 py-1 bg-blue-50 rounded-lg">
+                                            {req.sport}
+                                        </span>
+                                        <h3 className="font-bold text-slate-800 text-lg mt-2 leading-tight">
+                                            {req.title}
+                                        </h3>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Campo</p>
+                                        <p className="font-black text-slate-800 uppercase text-sm">{req.sports_courts?.name}</p>
+                                    </div>
                                 </div>
-                                <div className="flex gap-2">
+
+                                {/* Data e Ora */}
+                                <div className="flex items-center gap-4 py-3 border-y border-slate-50 mb-4">
+                                    <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
+                                        <Calendar size={14} className="text-blue-500" />
+                                        {new Date(req.datetime).toLocaleDateString('it-IT')}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-600 font-bold text-xs">
+                                        <Clock size={14} className="text-blue-500" />
+                                        {new Date(req.datetime).toLocaleTimeString('it-IT').slice(0, 5)}
+                                    </div>
+                                </div>
+
+                                {/* Dati Organizzatore */}
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 bg-slate-800 rounded-2xl flex items-center justify-center text-white font-black text-sm">
+                                        {req.profiles?.username?.[0].toUpperCase()}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">Organizzato da</p>
+                                        <p className="font-bold text-slate-700">{req.profiles?.full_name || req.profiles?.username}</p>
+                                    </div>
+                                </div>
+
+                                {/* Bottoni Azione */}
+                                <div className="flex gap-3">
                                     <button
-                                        onClick={() => updateStatus(req.id, 'confirmed')}
-                                        className="p-2 bg-green-600 text-white rounded-xl active:scale-95 transition-all"
+                                        onClick={() => handleUpdateStatus(req.id, 'rejected')}
+                                        className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase active:scale-95 transition-all"
+                                    >
+                                        Rifiuta
+                                    </button>
+                                    <button
+                                        onClick={() => handleUpdateStatus(req.id, 'confirmed')}
+                                        className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-lg shadow-blue-200 active:scale-95 transition-all"
                                     >
                                         Accetta
                                     </button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        ))
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* PANNELLO CALENDARIO - Il più importante */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">

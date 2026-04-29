@@ -12,6 +12,7 @@ export default function BusinessDashboard({ user, name }) {
     const [orari, setOrari] = useState([]);
     const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
     const [isOrariOpen, setIsOrariOpen] = useState(false);
+    const [requests, setRequests] = useState([]);
 
     async function fetchHours() {
         const { data } = await supabase.from('business_hours').select('*').eq('center_id', user.id).order('day_of_week');
@@ -22,6 +23,33 @@ export default function BusinessDashboard({ user, name }) {
             setOrari(data);
         }
     }
+
+    async function fetchIncomingRequests() {
+        const { data } = await supabase
+            .from('matches')
+            .select(`
+      id, 
+      sport, 
+      datetime, 
+      match_time, 
+      court_id!inner(name, center_id),
+    profiles!matches_creator_id_fkey(username)    
+    `)
+            .eq('reservation_status', 'requested')
+            .filter('court_id.center_id', 'eq', user.id); // Logica per filtrare i tuoi campi
+    }
+
+    async function updateStatus(matchId, newStatus) {
+    const { error } = await supabase
+        .from('matches')
+        .update({ reservation_status: newStatus })
+        .eq('id', matchId);
+
+    if (!error) {
+        success(newStatus === 'confirmed' ? 'Prenotazione confermata!' : 'Richiesta rifiutata');
+        fetchIncomingRequests(); // Ricarica la lista
+    }
+}
 
     useEffect(() => {
         async function loadCampi() {
@@ -35,6 +63,7 @@ export default function BusinessDashboard({ user, name }) {
         }
         loadCampi();
         fetchHours();
+        fetchIncomingRequests();
     }, [user.id]);
 
 
@@ -54,6 +83,32 @@ export default function BusinessDashboard({ user, name }) {
                 <p className="text-sm text-slate-500">Potrai gestire le prenotazioni, le partite e i campi. 🤓</p>
                 <p className="text-sm text-slate-500">Anche i tuoi orari di apertura e chiusura. ⏱️</p>
             </div>
+
+            {requests.length > 0 && (
+                <div className="mb-8">
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <Zap className="text-amber-500" size={20} /> Richieste di Prenotazione
+                    </h3>
+                    <div className="space-y-3">
+                        {requests.map(req => (
+                            <div key={req.id} className="bg-white p-4 rounded-2xl border-2 border-amber-100 shadow-sm flex justify-between items-center">
+                                <div>
+                                    <p className="font-bold text-slate-800">{req.sport} - {req.court_id.name}</p>
+                                    <p className="text-xs text-slate-500">Da: {req.profiles?.username} il {new Date(req.datetime).toLocaleString()}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => updateStatus(req.id, 'confirmed')}
+                                        className="p-2 bg-green-600 text-white rounded-xl active:scale-95 transition-all"
+                                    >
+                                        Accetta
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* PANNELLO CALENDARIO - Il più importante */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">

@@ -26,6 +26,9 @@ export default function CreateMatch() {
         max_players: 10, // Default per Calcetto
         description: ''
     });
+    const [centers, setCenters] = useState([]);
+    const [selectedCenter, setSelectedCenter] = useState(null);
+    const [availableCourts, setAvailableCourts] = useState([]);
 
     const SPORT_MAX_PLAYERS = {
         'Calcetto': 10,
@@ -40,6 +43,39 @@ export default function CreateMatch() {
         'Volley': 12,
         'Personalizzato': formData.max_players
     };
+
+    async function fetchCenters() {
+        const { data } = await supabase.from('profiles').select('id, username,business_address,lat,lng').eq('role', 'center');
+        setCenters(data);
+        console.log("Centri affiliati:", data);
+    }
+
+    async function handleCenterChange(centerId) {
+        setSelectedCenter(centerId);
+        if (!centerId) {
+            setAvailableCourts([]);
+            return;
+        }
+
+        const center = centers.find(c => c.id === centerId);
+
+        if (center && center.business_address) {
+            // Aggiorniamo la posizione nel form automaticamente
+            setFormData(prev => ({
+                ...prev,
+                location: center.business_address,
+                location_lat: center.lat,
+                location_lng: center.lng
+            }));
+        }
+
+        const { data } = await supabase
+            .from('sports_courts')
+            .select('*')
+            .eq('center_id', centerId)
+            .eq('is_active', true);
+        setAvailableCourts(data || []);
+    }
 
     const handleSportChange = (e) => {
         const selectedSport = e.target.value;
@@ -70,7 +106,7 @@ export default function CreateMatch() {
                 }
             }
         }
-
+        fetchCenters();
         loadUserAndCountMatches();
     }, []);
 
@@ -88,6 +124,7 @@ export default function CreateMatch() {
                     setFormData(data);
                 }
             }
+            fetchCenters();
             loadMatchData();
         }
     }, [id]);
@@ -144,7 +181,9 @@ export default function CreateMatch() {
                     ...locationData,
                     datetime: datetimeUTC, // Usa la data convertita in UTC
                     current_players: 1, // L'organizzatore è il primo
-                    creator_id: (await supabase.auth.getUser()).data.user.id // Assicuriamoci di passare l'ID
+                    creator_id: (await supabase.auth.getUser()).data.user.id, // Assicuriamoci di passare l'ID
+                    court_id: formData.court_id || null, // Aggiungi questo
+                    reservation_status: formData.court_id ? 'requested' : 'none' // Aggiungi questo
                 }
             ])
             .select()
@@ -287,6 +326,34 @@ export default function CreateMatch() {
                         </div>
                     </div>
 
+                    {/* SELEZIONE CENTRO AFFILIATO */}
+                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                        <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Prenota in un centro affiliato (Opzionale)</label>
+                        <select
+                            className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none mb-3"
+                            onChange={(e) => {
+                                const centerId = e.target.value;
+                                setSelectedCenter(centerId);
+                                handleCenterChange(centerId);
+                            }}
+                        >
+                            <option value="">Seleziona un centro...</option>
+                            {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+
+                        {availableCourts.length > 0 && (
+                            <select
+                                className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none"
+                                onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
+                            >
+                                <option value="">Scegli il campo...</option>
+                                {availableCourts.map(court => (
+                                    <option key={court.id} value={court.id}>{court.name} ({court.sport_type})</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
                     {/* LUOGO E DESCRIZIONE */}
                     <LocationPicker
                         value={formData}
@@ -415,6 +482,36 @@ export default function CreateMatch() {
                         />
                     </div>
                 </div>
+
+                {/* SELEZIONE CENTRO AFFILIATO */}
+                {centers.length > 0 && (
+                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                        <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Prenota in un centro affiliato (Opzionale)</label>
+                        <select
+                            className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none mb-3"
+                            onChange={(e) => {
+                                const centerId = e.target.value;
+                                setSelectedCenter(centerId);
+                                handleCenterChange(centerId);
+                            }}
+                        >
+                            <option value="">Seleziona un centro...</option>
+                            {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
+                        </select>
+
+                        {availableCourts.length > 0 && (
+                            <select
+                                className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none"
+                                onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
+                            >
+                                <option value="">Scegli il campo...</option>
+                                {availableCourts.map(court => (
+                                    <option key={court.id} value={court.id}>{court.name} ({court.sport_type})</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                )}
 
                 {/* LUOGO E DESCRIZIONE */}
                 <LocationPicker

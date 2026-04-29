@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
-import { Loader, Info } from 'lucide-react';
+import { Loader, Info, MapPin } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
+import LocationPicker from '../components/LocationPicker';
 
 export default function Profile({ session }) {
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Profile({ session }) {
     const [isEditing, setIsEditing] = useState(false);
     const [activeMatchCount, setActiveMatchCount] = useState(0);
     const [tooltipActive, setTooltipActive] = useState(false);
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
 
     // Stato per il form di modifica
     const [editData, setEditData] = useState({
@@ -31,6 +33,10 @@ export default function Profile({ session }) {
         updated_at: '',
         avatar_url: '',
         favorite_sport: '',
+        role: '',
+        business_address: '',
+        lat: null,
+        lng: null
     });
 
     const handleSportChange = (e) => {
@@ -135,7 +141,10 @@ export default function Profile({ session }) {
                 location_lng: editData.location_lng,
                 updated_at: new Date(),
                 avatar_url: editData.avatar_url,
-                favorite_sport: editData.favorite_sport
+                favorite_sport: editData.favorite_sport,
+                business_address: editData.business_address,
+                lat: editData.lat,
+                lng: editData.lng
             })
             .eq('id', session.user.id);
 
@@ -214,6 +223,22 @@ export default function Profile({ session }) {
         profile?.data_consent ?? session.user?.user_metadata?.data_consent
     );
 
+    const saveBusinessAddress = async (locationData) => {
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                business_address: locationData.location,
+                lat: locationData.location_lat,
+                lng: locationData.location_lng
+            })
+            .eq('id', user.id);
+
+        if (!error) {
+            success("Indirizzo salvato!");
+            setIsEditingAddress(false);
+        }
+    };
+
     // if (loading) return <div className="p-10 text-center uppercase font-black">Caricamento...</div>;
     if (loading && !isEditing) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
 
@@ -222,35 +247,227 @@ export default function Profile({ session }) {
         return (
             <>
                 <div className="max-w-md mx-auto p-6 min-h-screen bg-white">
-                    <button
-                        onClick={() => navigate(-1)}
-                        type="button"
-                        className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        TORNA INDIETRO
-                    </button>
-                    <h1 className="text-2xl font-black mb-4">Dashboard Centro Sportivo</h1>
-                    <p className="text-slate-600 mb-6">Ciao {profile.username}, questa è la tua dashboard dedicata alla gestione del centro sportivo. Qui potrai creare e gestire le partite, visualizzare le prenotazioni e interagire con i tuoi clienti.</p>
-                    <div className='space-y-6'>
-                        <button
-                            onClick={() => navigate('/')}
-                            className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-blue-600 text-white border border-blue-800 py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            Vai alla Dashboard
-                        </button>
-                        <button
-                            onClick={() => navigate('/settings')}
-                            className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-slate-600 text-white border border-slate-800 py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-700 transition-all active:scale-95"
-                        >
-                            IMPOSTAZIONI APP
-                        </button>
-                        <button
-                            onClick={handleLogout}
-                            className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl shadow-md border border-red-600 flex items-center justify-center hover:bg-red-100 transition-all uppercase tracking-widest text-xs"
-                        >
-                            Logout
-                        </button>
-                    </div>
+
+
+                    {!isEditing && (
+                        <>
+                            <div className='space-y-6'>
+                                <button
+                                    onClick={() => navigate(-1)}
+                                    type="button"
+                                    className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    TORNA INDIETRO
+                                </button>
+                                <h1 className="text-2xl font-black mb-4">Dashboard Centro Sportivo</h1>
+                                <p className="text-slate-600 mb-6">Ciao {profile.username}, questa è la tua dashboard dedicata alla gestione del centro sportivo. Qui potrai creare e gestire le partite, visualizzare le prenotazioni e interagire con i tuoi clienti.</p>
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-blue-600 text-white border border-blue-800 py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    Vai alla Dashboard
+                                </button>
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    MODIFICA PROFILO
+                                </button>
+                                <button
+                                    onClick={() => navigate('/settings')}
+                                    className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-slate-600 text-white border border-slate-800 py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-700 transition-all active:scale-95"
+                                >
+                                    IMPOSTAZIONI APP
+                                </button>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl shadow-md border border-red-600 flex items-center justify-center hover:bg-red-100 transition-all uppercase tracking-widest text-xs"
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        </>
+                    )}
+
+                    {isEditing && (
+                        <>
+                            {/* --- FORM DI MODIFICA --- */}
+                            <h2 className="text-2xl font-black mb-6 uppercase">Modifica Dati</h2>
+                            <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                {/* Foto */}
+                                <div className="flex flex-col items-center mb-6">
+                                    <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
+                                        {/* {profile.avatar_url ? (
+                                    <img src={} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-400">📸</div>
+                                )} */}
+                                        {editData.avatar_url ? (
+                                            <img
+                                                // src={editData.avatar_url}
+                                                src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
+                                                className="w-full h-full object-cover"
+                                                alt="Anteprima avatar"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
+                                                {editData.username?.charAt(0).toUpperCase() || '?'}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <label className="cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-100">
+                                        CAMBIA FOTO
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={uploadAvatar}
+                                            disabled={loading}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                </div>
+
+                                {/* Username */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
+                                    <input
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.username ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, username: e.target.value })}
+                                    />
+                                </div>
+
+                                {/* Full Name */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                                    <input
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.full_name ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                                    />
+                                </div>
+
+                                {profile?.role === 'center' ? (
+                                    <>
+                                        {/* Sezione Indirizzo Business nel Profilo Centro */}
+                                        <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm mt-4">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm uppercase">
+                                                    <MapPin size={16} className="text-blue-600" /> Sede del Centro
+                                                </h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsEditingAddress(!isEditingAddress)}
+                                                    className="text-[10px] font-black text-blue-600 uppercase bg-blue-50 px-3 py-1 rounded-full"
+                                                >
+                                                    {isEditingAddress ? 'Chiudi Mappa' : 'Modifica Posizione'}
+                                                </button>
+                                            </div>
+
+                                            {isEditingAddress ? (
+                                                <div className="space-y-4 min-h-[300px]">
+                                                    <LocationPicker
+                                                        value={{
+                                                            location: editData.business_address,
+                                                            location_lat: editData.lat,
+                                                            location_lng: editData.lng
+                                                        }}
+                                                        onChange={(locationData) => setEditData({
+                                                            ...editData,
+                                                            business_address: locationData.location,
+                                                            lat: locationData.location_lat,
+                                                            lng: locationData.location_lng
+                                                        })}
+                                                    />
+                                                    <p className="text-[10px] text-slate-400 italic">
+                                                        * Trascina il marker sulla mappa per la massima precisione
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="p-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                                    <p className="text-sm text-slate-600">
+                                                        {profile.business_address || "Nessun indirizzo impostato"}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Posizione di base */}
+                                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                                            <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
+                                            <UserLocationInput
+                                                value={{
+                                                    location: editData.location ?? '',
+                                                    province: editData.province,
+                                                    zip_code: editData.zip_code,
+                                                }}
+                                                onChange={(value) => setEditData({ ...editData, ...value })}
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+
+
+
+                                {/* Genere */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
+                                    <select
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.gender ?? 'Other'}
+                                        onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
+                                    >
+                                        <option value="M">Uomo</option>
+                                        <option value="F">Donna</option>
+                                        <option value="Other">Altro</option>
+                                    </select>
+                                </div>
+
+                                {/* Sport preferito */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
+                                    <select
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.favorite_sport ?? 'Calcetto'}
+                                        onChange={(e) => handleSportChange(e)}
+                                    >
+                                        <option>Calcetto</option>
+                                        <option>Calcio a 7</option>
+                                        <option>Calcio a 11</option>
+                                        <option>Padel</option>
+                                        <option>Basket (3vs3)</option>
+                                        <option>Basket (5vs5)</option>
+                                        <option>Tennis singolo</option>
+                                        <option>Tennis doppio</option>
+                                        <option>Volley</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditing(false)}
+                                        className="flex-1 p-3 uppercase cursor-pointer bg-slate-100 text-slate-600 border border-slate-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        Annulla
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 p-3 uppercase cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                    >
+                                        Salva
+                                    </button>
+                                </div>
+                                <div>
+                                    <span className='text-slate-400'>Ultima modifica: {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('it-IT') : 'N/A'} alle {profile.updated_at ? new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5) : 'N/A'}</span>
+                                </div>
+                            </form>
+                        </>
+                    )}
+
 
                 </div>
             </>
@@ -387,11 +604,6 @@ export default function Profile({ session }) {
                             {/* Foto */}
                             <div className="flex flex-col items-center mb-6">
                                 <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
-                                    {/* {profile.avatar_url ? (
-                                    <img src={} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-slate-400">📸</div>
-                                )} */}
                                     {editData.avatar_url ? (
                                         <img
                                             // src={editData.avatar_url}
@@ -436,6 +648,7 @@ export default function Profile({ session }) {
                                     onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
                                 />
                             </div>
+
 
                             {/* Posizione di base */}
                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">

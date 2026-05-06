@@ -215,7 +215,7 @@ export default function Auth() {
 
         <button
           onClick={() => navigate(isSignUp ? '/login' : '/signup')}
-          className="w-full mt-4 text-sm text-slate-500 hover:underline"
+          className="w-full mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {isSignUp ? 'Hai già un account? Accedi' : 'Nuovo su L\'Ultimo? Registrati'}
         </button>

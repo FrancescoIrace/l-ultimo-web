@@ -21,18 +21,12 @@ export default function MatchCard({ match, user }) {
   const isWaiting = waitingPlayers.some(p => p.user_id === user.id);
 
 
-  const date = new Date(match.datetime).toLocaleDateString('it-IT', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const date = formatDateTimeForDisplay(match.datetime);
 
   // Calcola il tempo rimanente
   const getTimeUntilMatch = () => {
     const now = new Date();
-    const matchTime = new Date(match.datetime);
+    const matchTime = date;
     const diff = matchTime - now;
     const hours = diff / (1000 * 60 * 60);
     const days = Math.floor(hours / 24);

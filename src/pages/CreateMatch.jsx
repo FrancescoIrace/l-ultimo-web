@@ -7,7 +7,13 @@ import { useAlert } from '../components/AlertComponent';
 import { Info } from 'lucide-react';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
 
-
+// Converti da local datetime string a ISO UTC string considerando il timezone
+function localDateTimeToISO(dateTimeString) {
+    if (!dateTimeString) return null;
+    const date = new Date(dateTimeString);
+    const offset = new Date().getTimezoneOffset() * 60000; // ms
+    return new Date(date.getTime() - offset).toISOString();
+}
 
 export default function CreateMatch() {
     const { id } = useParams(); // Se c'è un ID, siamo in modalità modifica
@@ -129,8 +135,14 @@ export default function CreateMatch() {
                     .single();
 
                 if (matchData) {
-                    // 1. Popoliamo il form (ricorda di formattare la data per il picker locale)
-                    setFormData(matchData);
+                    // Converti la datetime UTC dal DB in ora locale italiana per il form
+                    const date = new Date(matchData.datetime);
+
+                    // 1. Popoliamo il form con la data convertita
+                    setFormData({
+                        ...matchData,
+                        datetime: date.toISOString().slice(0, 16), // Imposta in formato locale YYYY-MM-DDTHH:MM
+                    });
 
                     // 2. IMPOSTIAMO IL CENTRO (Questo farà apparire il centro selezionato)
                     if (matchData.sports_courts?.profiles) {
@@ -164,6 +176,7 @@ export default function CreateMatch() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        console.log(formData.datetime);
 
         try {
             // 1. Recuperiamo l'utente
@@ -219,7 +232,7 @@ export default function CreateMatch() {
             const matchPayload = {
                 title: formData.title,
                 sport: formData.sport,
-                datetime: formData.datetime, // Stringa locale, salvata as-is
+                datetime: localDateTimeToISO(formData.datetime), // Converti da locale a UTC per salvare correttamente
                 location: locationData.location,
                 location_lat: locationData.location_lat,
                 location_lng: locationData.location_lng,
@@ -273,6 +286,7 @@ export default function CreateMatch() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
+        console.log(formData.datetime);
 
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase
@@ -282,7 +296,7 @@ export default function CreateMatch() {
                 location: formData.location,
                 location_lat: formData.location_lat,
                 location_lng: formData.location_lng,
-                datetime: formData.datetime, // Stringa locale, salvata as-is
+                datetime: localDateTimeToISO(formData.datetime), // Converti da locale a UTC per salvare correttamente
                 description: formData.description,
             })
             .eq('id', id)
@@ -358,7 +372,7 @@ export default function CreateMatch() {
                                 lang="it-IT"
                                 required
                                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                                value={formData.datetime ? formData.datetime.slice(0, 16) : ''} // Formatta per input datetime-local
+                                value={formData.datetime || ''} // Ora è già in formato locale YYYY-MM-DDTHH:MM
                                 onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
                             />
                         </div>

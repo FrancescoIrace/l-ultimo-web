@@ -1,6 +1,11 @@
 [
   {
     "date": "30 aprile 2026",
+    "title": "Fix Salvataggio orario db",
+    "description": "Co-authored-by: Copilot <copilot@github.com>"
+  },
+  {
+    "date": "30 aprile 2026",
     "title": "Update Dashboard business + Fix CreateMatch stato modifica",
     "description": "Co-authored-by: Copilot <copilot@github.com>"
   },
@@ -43,10 +48,5 @@
     "date": "28 aprile 2026",
     "title": "Refactor Nuovi Bottoni in matchDetail",
     "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "28 aprile 2026",
-    "title": "Merge pull request #3 from FrancescoIrace/feature-lista-attesa",
-    "description": "Feature lista attesa"
   }
 ]

@@ -29,6 +29,7 @@ export default function MatchCard({ match, user }) {
     const matchTime = date;
     const diff = matchTime - now;
     const hours = diff / (1000 * 60 * 60);
+    const minutes = Math.floor(diff / (1000 * 60));
     const days = Math.floor(hours / 24);
 
     if (hours < 0) return null; // Non mostrare se la partita è passata
@@ -39,8 +40,10 @@ export default function MatchCard({ match, user }) {
       return { label: 'Domani', urgent: false };
     } else if (hours >= 12) {
       return { label: `Oggi (${Math.floor(hours)}h)`, urgent: false };
-    } else if (hours > 0) {
+    } else if (hours >= 1) {
       return { label: `Tra ${Math.floor(hours)}h`, urgent: true };
+    } else if (minutes > 0) {
+      return { label: `Tra ${minutes}m`, urgent: true };
     }
     return null;
   };

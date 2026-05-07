@@ -192,10 +192,23 @@ export default function Home({ session, isPWA }) {
 
   const nearbyMatches = useMemo(() => {
     if (!position) return [];
-    return distances
+    let filtered = distances
       .filter((match) => match.distance <= radiusKm)
       .sort((a, b) => a.distance - b.distance);
-  }, [distances, position, radiusKm]);
+    
+    // Filtrare le partite passate se showPastMatches è false
+    if (!showPastMatches) {
+      const now = new Date();
+      filtered = filtered.filter((match) => {
+        const fullMatch = matches.find(m => m.id === match.id);
+        if (!fullMatch) return true;
+        const matchDateTime = new Date(fullMatch.datetime);
+        return matchDateTime >= now;
+      });
+    }
+    
+    return filtered;
+  }, [distances, position, radiusKm, showPastMatches, matches]);
 
   const normalizeSearch = (value) =>
     value

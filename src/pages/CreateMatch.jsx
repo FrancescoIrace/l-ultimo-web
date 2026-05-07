@@ -54,7 +54,7 @@ export default function CreateMatch() {
     async function fetchCenters() {
         const { data } = await supabase.from('profiles').select('id, username,business_address,lat,lng').eq('role', 'center');
         setCenters(data);
-        console.log("Centri affiliati:", data);
+        // console.log("Centri affiliati:", data);
     }
 
     async function handleCenterChange(centerId) {
@@ -135,6 +135,7 @@ export default function CreateMatch() {
                     .single();
 
                 if (matchData) {
+                    
                     // Per timestamp (senza timezone), Supabase restituisce "2024-05-07 15:30:00" o "2024-05-07T15:30:00"
                     // Convertiamo in formato input datetime-local: "2024-05-07T15:30"
                     let datetimeForInput = '';
@@ -182,7 +183,6 @@ export default function CreateMatch() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        console.log(formData.datetime);
 
         try {
             // 1. Recuperiamo l'utente
@@ -235,10 +235,12 @@ export default function CreateMatch() {
             // Usiamo l'ID se presente per capire se è un update o un insert
             const isUpdate = !!id;
 
+            const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
+            
             const matchPayload = {
                 title: formData.title,
                 sport: formData.sport,
-                datetime: formatDatetimeForTimestamp(formData.datetime), // Formato locale per timestamp (senza timezone)
+                datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
                 location: locationData.location,
                 location_lat: locationData.location_lat,
                 location_lng: locationData.location_lng,
@@ -292,7 +294,8 @@ export default function CreateMatch() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
-        console.log(formData.datetime);
+        
+        const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
 
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase
@@ -302,7 +305,7 @@ export default function CreateMatch() {
                 location: formData.location,
                 location_lat: formData.location_lat,
                 location_lng: formData.location_lng,
-                datetime: formatDatetimeForTimestamp(formData.datetime), // Formato locale per timestamp (senza timezone)
+                datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
                 description: formData.description,
             })
             .eq('id', id)

@@ -401,8 +401,21 @@ Scopri di più qui: ${window.location.href}`;
     // Funzioni per salvare nel calendario
     const generateGoogleCalendarUrl = () => {
         if (!match) return '';
-        const startTime = new Date(match.datetime).toISOString().replace(/-|:|\.\d{3}/g, '');
-        const endTime = new Date(new Date(match.datetime).getTime() + 60 * 60000).toISOString().replace(/-|:|\.\d{3}/g, ''); // +60 minuti
+        // Per timestamp locale, formatta senza convertire a UTC
+        const date = new Date(match.datetime);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        const startTime = `${year}${month}${day}T${hours}${minutes}${seconds}`;
+        const endDate = new Date(date.getTime() + 60 * 60000);
+        const endHours = String(endDate.getHours()).padStart(2, '0');
+        const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+        const endSeconds = String(endDate.getSeconds()).padStart(2, '0');
+        const endTime = `${year}${month}${day}T${endHours}${endMinutes}${endSeconds}`;
         const dettagli = `INFORMAZIONI DELLA PARTITA:\n 📅 ${match.datetime}\n📝 ${match.description}\n📍 ${match.location}`;
 
         const params = new URLSearchParams({
@@ -423,7 +436,14 @@ Scopri di più qui: ${window.location.href}`;
         const endTime = new Date(startTime.getTime() + 90 * 60000); // +90 minuti
 
         const formatICalDate = (date) => {
-            return date.toISOString().replace(/-|:|\.\d{3}/g, '');
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            // Formato locale senza Z (timestamp)
+            return `${year}${month}${day}T${hours}${minutes}${seconds}`;
         };
 
         const icalContent = `BEGIN:VCALENDAR
@@ -587,7 +607,7 @@ Scopri di più qui: ${window.location.href}`;
                             onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
                             className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
                         >
-                            <span>⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long', timeZone: 'UTC' })}</span>
+                            <span>⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long' })}</span>
                             <Calendar size={16} className="text-blue-500" />
                         </button>
 

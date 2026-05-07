@@ -85,6 +85,11 @@ export default function CreateMatch() {
                     .single();
 
                 if (data) {
+                    // Formatta il datetime per l'input datetime-local
+                    // Converti da "2024-05-07 15:30:00" a "2024-05-07T15:30"
+                    if (data.datetime) {
+                        data.datetime = data.datetime.replace(' ', 'T').slice(0, 16);
+                    }
                     setFormData(data);
                 }
             }
@@ -103,10 +108,9 @@ export default function CreateMatch() {
             return;
         }
 
-        // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
-        const localDate = new Date(formData.datetime);
-        // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
-        const datetimeUTC = localDate.toISOString();
+        // Con timestamp (senza timezone), invia il valore locale direttamente
+        // formData.datetime è già nel formato YYYY-MM-DDTHH:mm (da input datetime-local)
+        const datetimeToSave = formData.datetime || '';
 
         //Se il luogo non è stato selezionato, inseriamo la posizione salvata dall'utente (se presente)
         let locationData = {};
@@ -142,7 +146,7 @@ export default function CreateMatch() {
                 {
                     ...formData,
                     ...locationData,
-                    datetime: datetimeUTC, // Usa la data convertita in UTC
+                    datetime: datetimeToSave, // Usa la data nel formato locale (timestamp senza timezone)
                     current_players: 1, // L'organizzatore è il primo
                     creator_id: (await supabase.auth.getUser()).data.user.id // Assicuriamoci di passare l'ID
                 }
@@ -181,10 +185,9 @@ export default function CreateMatch() {
         e.preventDefault();
         setLoading(true);
 
-        // Converti la data locale in UTC e sottrai 2 ore per il salvataggio
-        const localDate = new Date(formData.datetime);
-        // const utcDate = new Date(localDate.getTime() + localDate.getTimezoneOffset() * 60000 - 2 * 60 * 60000);
-        const datetimeUTC = localDate.toISOString();
+        // Con timestamp (senza timezone), invia il valore locale direttamente
+        // formData.datetime è già nel formato YYYY-MM-DDTHH:mm (da input datetime-local)
+        const datetimeToSave = formData.datetime || '';
 
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase
@@ -194,7 +197,7 @@ export default function CreateMatch() {
                 location: formData.location,
                 location_lat: formData.location_lat,
                 location_lng: formData.location_lng,
-                datetime: datetimeUTC, // Usa la data convertita in UTC
+                datetime: datetimeToSave, // Usa la data nel formato locale (timestamp senza timezone)
                 description: formData.description,
             })
             .eq('id', id)

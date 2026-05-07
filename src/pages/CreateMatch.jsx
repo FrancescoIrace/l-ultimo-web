@@ -390,11 +390,15 @@ export default function CreateMatch() {
                         </div>
                     </div>
 
-                    {/* SELEZIONE CENTRO AFFILIATO */}
-                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                        <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Prenota in un centro affiliato (Opzionale)</label>
+                    {/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
+                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
+                            <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">🚧 Work in Progress</span>
+                        </div>
                         <select
-                            className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none mb-3"
+                            disabled
+                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3 cursor-not-allowed"
                             onChange={(e) => {
                                 const centerId = e.target.value;
                                 setSelectedCenter(centerId);
@@ -407,7 +411,8 @@ export default function CreateMatch() {
 
                         {availableCourts.length > 0 && (
                             <select
-                                className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none"
+                                disabled
+                                className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none cursor-not-allowed"
                                 onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
                             >
                                 <option value="">Scegli il campo...</option>
@@ -548,24 +553,29 @@ export default function CreateMatch() {
                     </div>
                 </div>
 
-                {/* SELEZIONE CENTRO AFFILIATO */}
-                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                    <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Prenota in un centro affiliato (Opzionale)</label>
-                    <select
-                        className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none mb-3"
-                        onChange={(e) => {
-                            const centerId = e.target.value;
-                            setSelectedCenter(centerId);
-                            handleCenterChange(centerId);
-                        }}
-                    >
-                        <option value="">Seleziona un centro...</option>
-                        {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
-                    </select>
-
-                    {availableCourts.length > 0 && (
+{/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
+                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
+                            <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">🚧 Work in Progress</span>
+                        </div>
                         <select
-                            className="w-full p-3 bg-white border border-blue-200 rounded-xl outline-none"
+                            disabled
+                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3 cursor-not-allowed"
+                            onChange={(e) => {
+                                const centerId = e.target.value;
+                                setSelectedCenter(centerId);
+                                handleCenterChange(centerId);
+                            }}
+                        >
+                            <option value="">Seleziona un centro...</option>
+                            {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
+                        </select>
+
+                        {availableCourts.length > 0 && (
+                            <select
+                                disabled
+                                className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none cursor-not-allowed"
                             onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
                         >
                             <option value="">Scegli il campo...</option>

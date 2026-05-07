@@ -20,8 +20,8 @@ export default function MatchCard({ match, user }) {
   const isConfirmed = confirmedPlayers.some(p => p.user_id === user.id);
   const isWaiting = waitingPlayers.some(p => p.user_id === user.id);
 
-
-  const date = formatDateTimeForDisplay(match.datetime);
+  // Converti datetime string a oggetto Date
+  const date = new Date(match.datetime);
 
   // Calcola il tempo rimanente
   const getTimeUntilMatch = () => {
@@ -172,7 +172,7 @@ export default function MatchCard({ match, user }) {
       <div className="space-y-2 text-slate-600 text-sm">
         <div className="flex items-center gap-2">
           <Calendar size={16} />
-          <span>{date}</span>
+          <span>{date.toLocaleString('it-IT', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
         </div>
         <div className="flex items-center gap-2">
           <MapPin size={16} />

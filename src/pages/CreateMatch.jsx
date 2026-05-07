@@ -7,12 +7,12 @@ import { useAlert } from '../components/AlertComponent';
 import { Info } from 'lucide-react';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
 
-// Converti da local datetime string a ISO UTC string considerando il timezone
-function localDateTimeToISO(dateTimeString) {
+// Converti da datetime-local string (YYYY-MM-DDTHH:mm) a formato timestamp locale
+// Per colonna timestamp (senza timezone) su Supabase
+function formatDatetimeForTimestamp(dateTimeString) {
     if (!dateTimeString) return null;
-    const date = new Date(dateTimeString);
-    const offset = new Date().getTimezoneOffset() * 60000; // ms
-    return new Date(date.getTime() - offset).toISOString();
+    // Converti "2024-05-07T15:30" a "2024-05-07 15:30:00"
+    return dateTimeString.replace('T', ' ') + ':00';
 }
 
 export default function CreateMatch() {
@@ -135,13 +135,19 @@ export default function CreateMatch() {
                     .single();
 
                 if (matchData) {
-                    // Converti la datetime UTC dal DB in ora locale italiana per il form
-                    const date = new Date(matchData.datetime);
+                    // Per timestamp (senza timezone), Supabase restituisce "2024-05-07 15:30:00" o "2024-05-07T15:30:00"
+                    // Convertiamo in formato input datetime-local: "2024-05-07T15:30"
+                    let datetimeForInput = '';
+                    if (matchData.datetime) {
+                        // Sostituisci spazio con T se presente, altrimenti usa come-is
+                        const dt = matchData.datetime.replace(' ', 'T');
+                        datetimeForInput = dt.slice(0, 16); // Prendi solo YYYY-MM-DDTHH:mm
+                    }
 
-                    // 1. Popoliamo il form con la data convertita
+                    // 1. Popoliamo il form con la data formattata
                     setFormData({
                         ...matchData,
-                        datetime: date.toISOString().slice(0, 16), // Imposta in formato locale YYYY-MM-DDTHH:MM
+                        datetime: datetimeForInput,
                     });
 
                     // 2. IMPOSTIAMO IL CENTRO (Questo farà apparire il centro selezionato)
@@ -232,7 +238,7 @@ export default function CreateMatch() {
             const matchPayload = {
                 title: formData.title,
                 sport: formData.sport,
-                datetime: localDateTimeToISO(formData.datetime), // Converti da locale a UTC per salvare correttamente
+                datetime: formatDatetimeForTimestamp(formData.datetime), // Formato locale per timestamp (senza timezone)
                 location: locationData.location,
                 location_lat: locationData.location_lat,
                 location_lng: locationData.location_lng,
@@ -296,7 +302,7 @@ export default function CreateMatch() {
                 location: formData.location,
                 location_lat: formData.location_lat,
                 location_lng: formData.location_lng,
-                datetime: localDateTimeToISO(formData.datetime), // Converti da locale a UTC per salvare correttamente
+                datetime: formatDatetimeForTimestamp(formData.datetime), // Formato locale per timestamp (senza timezone)
                 description: formData.description,
             })
             .eq('id', id)

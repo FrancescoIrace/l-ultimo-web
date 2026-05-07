@@ -261,18 +261,19 @@ export default function BusinessDashboard({ user, name }) {
                         <>
                             {requests.map((req) => {
                                 const dateObj = new Date(req.datetime);
+                                const isExpired = dateObj < new Date();
                                 const giorno = dateObj.toLocaleDateString('it-IT', { day: '2-digit' });
                                 const mese = dateObj.toLocaleDateString('it-IT', { month: 'short' }).replace('.', '');
                                 const orario = dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
                                 return (
-                                    <div key={req.id} className="flex-shrink-0 w-[80vw] md:w-[350px] bg-white rounded-[40px] p-2 border border-slate-100 shadow-2xl shadow-slate-200/50 snap-center">
+                                    <div key={req.id} className={`flex-shrink-0 w-[80vw] md:w-[350px] rounded-[40px] p-2 border shadow-2xl shadow-slate-200/50 snap-center transition-all ${isExpired ? 'bg-red-50 border-red-200 shadow-red-200/50' : 'bg-white border-slate-100'}`}>
                                         <div className="flex flex-col h-full">
 
                                             {/* 1. SEZIONE TEMPO (Il focus principale) */}
-                                            <div className="flex items-center gap-4 p-4 bg-slate-900 rounded-[35px] text-white">
+                                            <div className={`flex items-center gap-4 p-4 rounded-[35px] text-white ${isExpired ? 'bg-red-700' : 'bg-slate-900'}`}>
                                                 {/* Blocco Data */}
-                                                <div className="flex flex-col items-center justify-center bg-blue-600 rounded-[25px] w-16 h-16 shadow-lg shadow-blue-500/30">
+                                                <div className={`flex flex-col items-center justify-center rounded-[25px] w-16 h-16 shadow-lg ${isExpired ? 'bg-red-600 shadow-red-500/30' : 'bg-blue-600 shadow-blue-500/30'}`}>
                                                     <span className="text-xl font-black leading-none">{giorno}</span>
                                                     <span className="text-[10px] font-bold uppercase tracking-wider">{mese}</span>
                                                 </div>
@@ -285,7 +286,7 @@ export default function BusinessDashboard({ user, name }) {
 
                                                 <div className="ml-auto pr-2">
                                                     <div className="w-10 h-10 rounded-full border-2 border-slate-700 flex items-center justify-center">
-                                                        <Clock size={18} className="text-blue-500" />
+                                                        <Clock size={18} className={isExpired ? 'text-red-500' : 'text-blue-500'} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -309,16 +310,17 @@ export default function BusinessDashboard({ user, name }) {
                                                 <button
                                                     disabled={processingId === req.id}
                                                     onClick={() => handleUpdateStatus(req.id, 'rejected')}
-                                                    className="w-14 h-14 flex items-center justify-center bg-slate-50 text-slate-400 rounded-[25px] hover:bg-red-50 hover:text-red-600 transition-all"
+                                                    className={`w-14 h-14 flex items-center justify-center rounded-[25px] transition-all ${isExpired ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
+                                                    title={isExpired ? "Elimina richiesta scaduta" : "Rifiuta"}
                                                 >
                                                     <X size={24} />
                                                 </button>
                                                 <button
-                                                    disabled={processingId === req.id}
+                                                    disabled={processingId === req.id || isExpired}
                                                     onClick={() => handleUpdateStatus(req.id, 'confirmed')}
-                                                    className="flex-1 h-14 bg-blue-600 text-white rounded-[25px] font-bold text-sm uppercase tracking-widest shadow-xl shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                    className={`flex-1 h-14 rounded-[25px] font-bold text-sm uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 ${isExpired ? 'bg-slate-300 text-slate-400 cursor-not-allowed' : 'bg-blue-600 text-white shadow-xl shadow-blue-200'}`}
                                                 >
-                                                    {processingId === req.id ? "Elaborazione..." : "Approva Prenotazione"}
+                                                    {processingId === req.id ? "Elaborazione..." : (isExpired ? "Scaduta" : "Approva Prenotazione")}
                                                 </button>
                                             </div>
                                         </div>

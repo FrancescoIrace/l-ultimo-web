@@ -1,6 +1,21 @@
 [
   {
     "date": "07 maggio 2026",
+    "title": "Card scaduta rossa",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "07 maggio 2026",
+    "title": "Fix finale data forse",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "07 maggio 2026",
+    "title": "Fix data dopo merge",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "07 maggio 2026",
     "title": "Merge feature/business-management into main with affiliated centers disabled as WIP",
     "description": "Modifica all'app"
   },
@@ -32,21 +47,6 @@
   {
     "date": "30 aprile 2026",
     "title": "Update Dashboard business + Fix CreateMatch stato modifica",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "29 aprile 2026",
-    "title": "Add logica di accetta e rifiuta prenotazione",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "29 aprile 2026",
-    "title": "Add FetchData per centro e campo in matchDetails + aggiunta sezione UI",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
-  },
-  {
-    "date": "29 aprile 2026",
-    "title": "Fix LocationPicker + Profilo e Dashboard aggiornate",
     "description": "Co-authored-by: Copilot <copilot@github.com>"
   }
 ]

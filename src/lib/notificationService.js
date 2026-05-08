@@ -207,3 +207,58 @@ export async function notifyGeneric(userId, type, title, content, link = null, m
     metadata,
   });
 }
+
+/**
+ * Notifica quando qualcuno invia una richiesta di amicizia
+ * @param {string} targetUserId - ID dell'utente che riceve la richiesta
+ * @param {string} senderName - Nome di chi invia la richiesta
+ * @param {string} senderId - ID di chi invia la richiesta
+ */
+export async function notifyFriendRequest(targetUserId, senderName, senderId) {
+  return createNotification({
+    userId: targetUserId,
+    senderId,
+    type: 'friend_request',
+    title: '👤 Richiesta di amicizia',
+    content: `${senderName} vuole aggiungerti come amico`,
+    link: '/richieste-amici',
+    metadata: { senderId, senderName },
+  });
+}
+
+/**
+ * Notifica quando una richiesta di amicizia viene rifiutata
+ * @param {string} targetUserId - ID di chi aveva inviato la richiesta (ora notificato)
+ * @param {string} rejecterName - Nome di chi ha rifiutato
+ * @param {string} rejecterId - ID di chi ha rifiutato
+ */
+export async function notifyFriendRejected(targetUserId, rejecterName, rejecterId) {
+  return createNotification({
+    userId: targetUserId,
+    senderId: rejecterId,
+    type: 'friend_rejected',
+    title: '❌ Richiesta rifiutata',
+    content: `${rejecterName} ha rifiutato la tua richiesta di amicizia`,
+    link: '/trova-amici',
+    metadata: { rejecterId, rejecterName },
+    sendPush: false, // notifica solo in-app, non push
+  });
+}
+
+/**
+ * Notifica quando una richiesta di amicizia viene accettata
+ * @param {string} targetUserId - ID di chi aveva inviato la richiesta (ora notificato)
+ * @param {string} accepterName - Nome di chi ha accettato
+ * @param {string} accepterId - ID di chi ha accettato
+ */
+export async function notifyFriendAccepted(targetUserId, accepterName, accepterId) {
+  return createNotification({
+    userId: targetUserId,
+    senderId: accepterId,
+    type: 'friend_accepted',
+    title: '🤝 Amicizia accettata!',
+    content: `${accepterName} ha accettato la tua richiesta di amicizia`,
+    link: `/profile/${accepterId}`,
+    metadata: { accepterId, accepterName },
+  });
+}

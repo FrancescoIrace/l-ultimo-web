@@ -6,6 +6,8 @@ import { usePushNotifications } from './hooks/usePushNotifications';
 import Auth from './pages/Auth';
 import CreateMatch from './pages/CreateMatch';
 import FindFriends from './pages/FindFriends';
+import FriendRequests from './pages/FriendRequests';
+import MyMatches from './pages/MyMatches';
 import Home from './pages/Home';
 import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
@@ -190,6 +192,8 @@ function App() {
             <>
               <Route path="/partite" element={<Home session={session} isPWA={false} />} />
               <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
+              <Route path="/richieste-amici" element={<FriendRequests user={session.user} />} />
+              <Route path="/le-mie-partite" element={<MyMatches session={session} />} />
               <Route path="/organizza" element={<CreateMatch />} />
               <Route path="/modifica/:id" element={<CreateMatch />} />
             </>

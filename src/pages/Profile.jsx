@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
-import { Loader, Info, MapPin } from 'lucide-react';
+import { Loader, Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
 
@@ -18,6 +18,7 @@ export default function Profile({ session }) {
     const [isEditing, setIsEditing] = useState(false);
     const [activeMatchCount, setActiveMatchCount] = useState(0);
     const [tooltipActive, setTooltipActive] = useState(false);
+    const [friendCount, setFriendCount] = useState(0);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
 
     // Stato per il form di modifica
@@ -114,6 +115,15 @@ export default function Profile({ session }) {
         }
 
         setMyReviews(reviewsData || []);
+
+        // 5. Conta gli amici
+        const { count: friendsCount } = await supabase
+            .from('friendships')
+            .select('id', { count: 'exact', head: true })
+            .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`)
+            .eq('status', 'accepted');
+        setFriendCount(friendsCount ?? 0);
+
         setLoading(false);
     }
 
@@ -476,82 +486,136 @@ export default function Profile({ session }) {
     } else {
         // Se è un giocatore, mostriamo il profilo completo con partite e recensioni
         return (
-            <div className="max-w-md mx-auto p-6 min-h-screen bg-white">
+            <div className="max-w-md mx-auto pb-24 min-h-screen bg-slate-100">
                 {!isEditing ? (
                     <>
-                        {/* --- SEZIONE PROFILO --- */}
+                        {/* ── HEADER ── */}
+                        <div className="bg-white px-6 pt-6 pb-5 mb-4">
+                            <button
+                                onClick={() => navigate(-1)}
+                                type="button"
+                                className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+                            >
+                                <ChevronRight size={14} className="rotate-180" />
+                                Indietro
+                            </button>
 
-                        {/* Header Profilo */}
-                        <button
-                            onClick={() => navigate(-1)}
-                            type="button"
-                            className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            TORNA INDIETRO
-                        </button>
-                        <div className="flex flex-col items-center mb-8">
-                            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-white shadow-lg">
-                                {profile?.avatar_url ? (
-                                    <img src={profile.avatar_url} alt="avatar" className="w-full h-full rounded-full object-cover" />
-                                ) : (
-                                    profile?.username?.charAt(0).toUpperCase()
-                                )}
+                            <div className="flex items-center gap-4 mb-5">
+                                <div className="w-20 h-20 bg-blue-100 rounded-full flex-shrink-0 flex items-center justify-center text-3xl font-black text-blue-600 border-4 border-white shadow-lg overflow-hidden">
+                                    {profile?.avatar_url
+                                        ? <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                                        : profile?.username?.charAt(0).toUpperCase()
+                                    }
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 leading-tight">{profile?.username}</h2>
+                                    <p className="text-slate-400 text-xs font-bold mt-0.5">
+                                        📍 {profile?.location || profile?.province}
+                                        {profile?.location && profile?.zip_code ? ` (${profile.zip_code})` : ''}
+                                    </p>
+                                    <p className="text-slate-300 text-[10px] font-bold mt-1 uppercase">
+                                        Iscritto il {new Date(session?.user.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    </p>
+                                </div>
                             </div>
-                            <h2 className="text-2xl font-black uppercase tracking-tight">{profile?.username}</h2>
-                            <p className="text-slate-400 text-sm font-bold">
-                                📍 {profile?.location || profile?.province}
-                                {profile?.location ? ` (${profile?.zip_code})` : ''}
-                            </p>
+
+                            {/* Stats row */}
+                            <div className="flex items-center rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm">
+                                <button
+                                    onClick={() => navigate('/richieste-amici', { state: { tab: 'friends' } })}
+                                    className="flex-1 flex flex-col items-center py-3 border-r border-slate-100 hover:bg-blue-50 transition active:scale-95"
+                                >
+                                    <span className="text-xl font-black text-slate-800">{friendCount}</span>
+                                    <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Amici</span>
+                                </button>
+                                <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
+                                    <span className="text-xl font-black text-slate-800">{myReviews.length}</span>
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
+                                </div>
+                                <div className="flex-1 flex flex-col items-center py-3">
+                                    <span className="text-xl font-black text-yellow-500">
+                                        {myReviews.length > 0
+                                            ? (myReviews.reduce((acc, r) => acc + r.rating, 0) / myReviews.length).toFixed(1)
+                                            : '—'}
+                                    </span>
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Info Account */}
-                        <div className="bg-slate-50 p-4 rounded-2xl mb-8 space-y-2 text-sm relative">
-                            <span className="text-slate-400 font-bold uppercase text-[10px] top-0 left-25 absolute">📅 Profilo creato il {new Date(session?.user.created_at).toLocaleDateString('it-IT')}</span>
-                            <div className="flex justify-between">
-                                <span className="text-slate-400 font-bold uppercase text-[10px]">Genere</span>
-                                <span className="font-bold">{profile?.gender === 'M' ? 'Uomo' : profile?.gender === 'F' ? 'Donna' : 'Altro'}</span>
+                        {/* ── INFO CARD ── */}
+                        <div className="mx-4 mb-4 bg-white rounded-3xl shadow-sm overflow-hidden">
+                            <div className="px-4 pt-4 pb-2">
+                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Dati Account</p>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-400 font-bold uppercase text-[10px]">Email</span>
-                                <span className="font-bold">{session.user.email}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-400 font-bold uppercase text-[10px]">Sport Preferito</span>
-                                <span className="font-bold">{profile?.favorite_sport}</span>
-                            </div>
-                            <div className="flex justify-between border-t border-slate-200 pt-2 mt-2 items-center">
-                                <div className="flex items-center gap-1">
-                                    <span className="text-slate-400 font-bold uppercase text-[10px]">Partite Attive</span>
-                                    <div className="relative cursor-help">
+                            {[
+                                { icon: <Mail size={15} className="text-blue-500" />, label: 'Email', value: session.user.email },
+                                { icon: <User size={15} className="text-purple-500" />, label: 'Genere', value: profile?.gender === 'M' ? 'Uomo' : profile?.gender === 'F' ? 'Donna' : 'Altro' },
+                                { icon: <Dumbbell size={15} className="text-green-500" />, label: 'Sport preferito', value: profile?.favorite_sport || '—' },
+                                { icon: <ShieldCheck size={15} className="text-slate-400" />, label: 'Stato account', value: 'Attivo' },
+                            ].map(({ icon, label, value }, i, arr) => (
+                                <div key={label} className={`flex items-center gap-3 px-4 py-3 ${i < arr.length - 1 ? 'border-b border-slate-50' : 'pb-4'}`}>
+                                    <div className="w-7 flex justify-center">{icon}</div>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wide w-28 shrink-0">{label}</span>
+                                    <span className="font-bold text-slate-800 text-sm truncate">{value}</span>
+                                </div>
+                            ))}
+
+                            {/* Partite attive con barra progresso */}
+                            <div className="px-4 pt-3 pb-4 border-t border-slate-50">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center gap-2">
+                                        <Trophy size={15} className={activeMatchCount >= 5 ? 'text-red-500' : 'text-amber-500'} />
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Partite attive</span>
                                         <button
                                             type="button"
                                             onClick={() => setTooltipActive(!tooltipActive)}
-                                            className="p-1 hover:opacity-70 transition-opacity"
+                                            className="hover:opacity-70 transition-opacity"
                                         >
-                                            <Info size={14} className="text-slate-400" />
+                                            <Info size={13} className="text-slate-300" />
                                         </button>
                                         {tooltipActive && (
-                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 max-w-xs z-10 animate-fade-in whitespace-normal text-center">
-                                                Puoi avere max 5 partite attive contemporaneamente
+                                            <div className="absolute mt-8 ml-4 bg-slate-900 text-white text-xs rounded-xl px-3 py-1.5 z-10 shadow-lg">
+                                                Massimo 5 partite attive contemporaneamente
                                             </div>
                                         )}
                                     </div>
+                                    <span className={`font-black text-sm ${activeMatchCount >= 5 ? 'text-red-600' : 'text-blue-600'}`}>{activeMatchCount}/5</span>
                                 </div>
-                                <span className={`font-black text-sm ${activeMatchCount >= 5 ? 'text-red-600' : 'text-blue-600'}`}>{activeMatchCount}/5</span>
+                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all ${activeMatchCount >= 5 ? 'bg-red-500' : 'bg-blue-500'}`}
+                                        style={{ width: `${(activeMatchCount / 5) * 100}%` }}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Le Mie Partite */}
-                        <div className="mb-8">
+                        {/* ── NAVIGAZIONE PARTITE ── */}
+                        <div className="mx-4 mb-4">
+                            <button
+                                onClick={() => navigate('/le-mie-partite')}
+                                className="w-full bg-white rounded-3xl shadow-sm px-4 py-4 flex items-center gap-3 hover:bg-slate-50 transition active:scale-95"
+                            >
+                                <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                                    <CalendarDays size={18} className="text-blue-600" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <p className="font-black text-slate-800 text-sm">Le mie partite</p>
+                                    <p className="text-xs text-slate-400">Prossime, create e passate</p>
+                                </div>
+                                <ChevronRight size={18} className="text-slate-300" />
+                            </button>
+                        </div>
+
+                        {/* ── PARTITE PROSSIME (solo anteprima) ── */}
+                        <div className="mx-4 mb-4">
                             <AccordionItem
-                                title={"Prossime Partite"}
+                                title="Prossime Partite"
                                 matches={myMatches
-                                    .filter((item) => new Date(item.matches.datetime) > new Date())
+                                    .filter(item => new Date(item.matches.datetime) > new Date())
                                     .sort((a, b) => new Date(a.matches.datetime) - new Date(b.matches.datetime))
-                                    .map((item) => ({
-                                        ...item,
-                                        isCreator: item.matches.creator_id === session.user.id
-                                    }))
+                                    .map(item => ({ ...item, isCreator: item.matches.creator_id === session.user.id }))
                                 }
                                 isOpen={true}
                                 titleColor="text-blue-600"
@@ -559,39 +623,38 @@ export default function Profile({ session }) {
                             />
                         </div>
 
-                        {/*Partite Create */}
-                        <div className="mb-8">
-                            <AccordionCreatedMatches title={"Partite Create"} matches={myCreatedMatches} isOpen={false} isCreatedMatches={true} />
+                        {/* ── RECENSIONI ── */}
+                        <div className="mx-4 mb-6">
+                            <AccorditionReviews
+                                title="Recensioni Ricevute"
+                                reviews={myReviews}
+                                isOpen={false}
+                            />
                         </div>
 
-                        {/*Partite Passate */}
-                        <div className="mb-8">
-                            <AccordionItem title={"Partite Passate"} matches={myMatches.filter((item) => new Date(item.matches.datetime) < new Date())} isOpen={false} titleColor="text-red-600" opacity="opacity-30" />
-                        </div>
-
-                        {/*Recensioni ricevute*/}
-                        <div className="mb-8">
-                            <AccorditionReviews title={"Recensioni Ricevute"} reviews={myReviews.filter((item) => new Date(item.created_at) < new Date())} isOpen={false} />
-                        </div>
-
-                        {/* Pulsanti Azione */}
-                        <div className="space-y-3">
+                        {/* ── AZIONI ── */}
+                        <div className="mx-4 grid grid-cols-2 gap-3 mb-4">
                             <button
                                 onClick={() => setIsEditing(true)}
-                                className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                className="cursor-pointer bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg shadow-black/10 hover:shadow-xl transition-all active:scale-95"
                             >
-                                MODIFICA PROFILO
+                                <PencilLine size={22} />
+                                Modifica Profilo
                             </button>
                             <button
                                 onClick={() => navigate('/settings')}
-                                className="w-full text-sm uppercase flex items-center justify-center p-2 cursor-pointer bg-slate-600 text-white border border-slate-800 py-4 rounded-2xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-700 transition-all active:scale-95"
+                                className="cursor-pointer bg-gradient-to-br from-slate-600 to-slate-700 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg shadow-black/10 hover:shadow-xl transition-all active:scale-95"
                             >
-                                IMPOSTAZIONI APP
+                                <Settings size={22} />
+                                Impostazioni
                             </button>
+                        </div>
+                        <div className="mx-4 mb-8">
                             <button
                                 onClick={handleLogout}
-                                className="w-full py-4 bg-red-50 text-red-600 font-black rounded-2xl shadow-md border border-red-600 flex items-center justify-center hover:bg-red-100 transition-all uppercase tracking-widest text-xs"
+                                className="w-full cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg shadow-black/10 hover:shadow-xl transition-all active:scale-95"
                             >
+                                <LogOut size={22} />
                                 Logout
                             </button>
                         </div>
@@ -599,6 +662,7 @@ export default function Profile({ session }) {
                 ) : (
                     <>
                         {/* --- FORM DI MODIFICA --- */}
+                        <div className="bg-white px-6 pt-6 pb-8">
                         <h2 className="text-2xl font-black mb-6 uppercase">Modifica Dati</h2>
                         <form onSubmit={handleUpdateProfile} className="space-y-4">
                             {/* Foto */}
@@ -606,8 +670,7 @@ export default function Profile({ session }) {
                                 <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
                                     {editData.avatar_url ? (
                                         <img
-                                            // src={editData.avatar_url}
-                                            src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
+                                            src={`${editData.avatar_url}?t=${Date.now()}`}
                                             className="w-full h-full object-cover"
                                             alt="Anteprima avatar"
                                         />
@@ -648,7 +711,6 @@ export default function Profile({ session }) {
                                     onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
                                 />
                             </div>
-
 
                             {/* Posizione di base */}
                             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
@@ -701,21 +763,24 @@ export default function Profile({ session }) {
                                 <button
                                     type="button"
                                     onClick={() => setIsEditing(false)}
-                                    className="flex-1 p-3 uppercase cursor-pointer bg-slate-100 text-slate-600 border border-slate-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
+                                    className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95"
                                 >
                                     Annulla
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 p-3 uppercase cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                                    className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-yellow-400 to-yellow-500 text-white rounded-2xl font-bold shadow-lg shadow-black/10 hover:shadow-xl transition-all active:scale-95"
                                 >
                                     Salva
                                 </button>
                             </div>
-                            <div>
-                                <span className='text-slate-400'>Ultima modifica: {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString('it-IT') : 'N/A'} alle {profile.updated_at ? new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5) : 'N/A'}</span>
-                            </div>
+                            <p className="text-xs text-slate-300 text-center pt-1">
+                                Ultima modifica: {profile.updated_at
+                                    ? `${new Date(profile.updated_at).toLocaleDateString('it-IT')} alle ${new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5)}`
+                                    : 'N/A'}
+                            </p>
                         </form>
+                        </div>
                     </>
                 )
                 }

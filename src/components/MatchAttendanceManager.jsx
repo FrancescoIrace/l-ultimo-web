@@ -8,10 +8,27 @@ export default function MatchAttendanceManager({ match, user, onUpdate }) {
   const { confirmDangerous } = useAlert();
 
   // Calcola le ore rimanenti - datetime arriva come "YYYY-MM-DD HH:mm:ss" senza timezone
+  // Calcoliamo anche i minuti per una visualizzazione più precisa, ma mostriamo solo le ore con una cifra decimale
   const now = new Date();
   const rawDatetime = match.datetime?.replace(' ', 'T') ?? '';
   const matchDate = new Date(rawDatetime);
   const hoursRemaining = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const minutesRemaining = (matchDate.getTime() - now.getTime()) / (1000 * 60);
+
+  // Funzione per formattare il tempo rimanente in italiano
+  const formatTimeRemaining = () => {
+    const totalMinutes = Math.floor(minutesRemaining);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours === 0) {
+      return `${minutes} minuti`;
+    } else if (hours === 1) {
+      return minutes === 0 ? '1 ora' : `1 ora e ${minutes} minuti`;
+    } else {
+      return minutes === 0 ? `${hours} ore` : `${hours} ore e ${minutes} minuti`;
+    }
+  };
 
   // Controlla se l'utente è partecipante confermato senza risposta - calcolato direttamente nel render
   const participant = match.participants?.find(p => p.user_id === user.id);
@@ -67,38 +84,38 @@ export default function MatchAttendanceManager({ match, user, onUpdate }) {
 
   const handleDecline = () => {
     confirmDangerous('Sicuro di voler rinunciare a partecipare a questa partita?', async () => {
-    setIsLoading(true);
+      setIsLoading(true);
 
-    // 1. Rimuovi il partecipante
-    const { error: deleteError } = await supabase
-      .from('participants')
-      .delete()
-      .eq('match_id', match.id)
-      .eq('user_id', user.id);
+      // 1. Rimuovi il partecipante
+      const { error: deleteError } = await supabase
+        .from('participants')
+        .delete()
+        .eq('match_id', match.id)
+        .eq('user_id', user.id);
 
-    if (deleteError) {
-      console.error("Errore durante la rinuncia:", deleteError);
+      if (deleteError) {
+        console.error("Errore durante la rinuncia:", deleteError);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Invia notifica al creatore
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+
+      await supabase.from('notifications').insert({
+        user_id: match.creator_id,
+        sender_id: user.id,
+        type: 'MATCH_LEAVE',
+        message: `${userProfile?.username || 'Qualcuno'} ha rinunciato alla partita che hai creato.`,
+        related_match_id: match.id,
+      });
+
+      onUpdate();
       setIsLoading(false);
-      return;
-    }
-
-    // 2. Invia notifica al creatore
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', user.id)
-      .single();
-
-    await supabase.from('notifications').insert({
-      user_id: match.creator_id,
-      sender_id: user.id,
-      type: 'MATCH_LEAVE',
-      message: `${userProfile?.username || 'Qualcuno'} ha rinunciato alla partita che hai creato.`,
-      related_match_id: match.id,
-    });
-
-    onUpdate();
-    setIsLoading(false);
     });
   };
 
@@ -113,6 +130,7 @@ export default function MatchAttendanceManager({ match, user, onUpdate }) {
         <div>
           <h3 className="font-black text-xl">Conferma la tua presenza!</h3>
           <p className="text-sm text-blue-100">Manca poco all'inizio della partita.</p>
+          <span className="font-bold text-white">{formatTimeRemaining()} rimanenti.</span>
         </div>
       </div>
       <div className="flex gap-3">

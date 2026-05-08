@@ -276,12 +276,10 @@ export default function FriendRequests({ user }) {
           {friends.map(f => (
             <div
               key={f.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3"
+              onClick={() => navigate(`/profile/${f.profile.id}`)}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3 cursor-pointer hover:shadow-md hover:border-blue-300 transition"
             >
-              <button
-                onClick={() => navigate(`/profile/${f.profile.id}`)}
-                className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex-shrink-0"
-              >
+              <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
                 {f.profile.avatar_url ? (
                   <img
                     src={f.profile.avatar_url}
@@ -293,23 +291,21 @@ export default function FriendRequests({ user }) {
                     {f.profile.username?.charAt(0).toUpperCase() || '?'}
                   </span>
                 )}
-              </button>
+              </div>
               <div className="flex-1">
                 <p className="font-bold text-slate-900">{f.profile.username}</p>
                 <p className="text-xs text-slate-400">Amici dal {new Date(f.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
               </div>
+              <ChevronRight size={20} className="text-slate-300" />
               <button
-                onClick={() => navigate(`/profile/${f.profile.id}`)}
-                className="text-slate-400 hover:text-blue-600 transition"
-              >
-                <ChevronRight size={20} />
-              </button>
-              <button
-                onClick={() => handleRemoveFriend(f.id, f.profile.username)}
-                className="text-slate-300 hover:text-red-500 transition"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveFriend(f.id, f.profile.username);
+                }}
+                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition flex-shrink-0"
                 title="Rimuovi amico"
               >
-                <UserX size={18} />
+                <UserX size={24} />
               </button>
             </div>
           ))}

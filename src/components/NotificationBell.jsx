@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, X, Trash2, RefreshCw, UserPlus, Calendar, AlertTriangle } from 'lucide-react';
+import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, Calendar, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getNotificationStyles(type) {
@@ -40,6 +40,21 @@ function getNotificationStyles(type) {
       bg: 'bg-purple-50',
       dot: 'bg-purple-500',
       hover: 'hover:bg-purple-100',
+    },
+    friend_request: {
+      bg: 'bg-blue-50',
+      dot: 'bg-blue-500',
+      hover: 'hover:bg-blue-100',
+    },
+    friend_accepted: {
+      bg: 'bg-green-50',
+      dot: 'bg-green-500',
+      hover: 'hover:bg-green-100',
+    },
+    friend_rejected: {
+      bg: 'bg-red-50',
+      dot: 'bg-red-400',
+      hover: 'hover:bg-red-100',
     },
   };
   return styles[type] || styles.match_update;
@@ -157,6 +172,12 @@ export function NotificationBell({ userId }) {
                             return <Calendar size={18} className="text-yellow-600" />;
                           case 'match_cancelled':
                             return <AlertTriangle size={18} className="text-slate-600" />;
+                          case 'friend_request':
+                            return <UserPlus size={18} className="text-blue-600" />;
+                          case 'friend_accepted':
+                            return <UserCheck size={18} className="text-green-600" />;
+                          case 'friend_rejected':
+                            return <UserX size={18} className="text-red-500" />;
                           default:
                             return <Bell size={18} className="text-blue-600" />;
                         }

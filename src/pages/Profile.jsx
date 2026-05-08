@@ -18,6 +18,7 @@ export default function Profile({ session }) {
     const [isEditing, setIsEditing] = useState(false);
     const [activeMatchCount, setActiveMatchCount] = useState(0);
     const [tooltipActive, setTooltipActive] = useState(false);
+    const [friendCount, setFriendCount] = useState(0);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
 
     // Stato per il form di modifica
@@ -114,6 +115,15 @@ export default function Profile({ session }) {
         }
 
         setMyReviews(reviewsData || []);
+
+        // 5. Conta gli amici
+        const { count: friendsCount } = await supabase
+            .from('friendships')
+            .select('id', { count: 'exact', head: true })
+            .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`)
+            .eq('status', 'accepted');
+        setFriendCount(friendsCount ?? 0);
+
         setLoading(false);
     }
 
@@ -502,6 +512,29 @@ export default function Profile({ session }) {
                                 📍 {profile?.location || profile?.province}
                                 {profile?.location ? ` (${profile?.zip_code})` : ''}
                             </p>
+
+                            {/* Stats row — clic su Amici porta alla gestione */}
+                            <div className="flex items-center gap-0 mt-5 w-full border border-slate-100 rounded-2xl overflow-hidden bg-slate-50 shadow-sm">
+                                <button
+                                    onClick={() => navigate('/richieste-amici')}
+                                    className="flex-1 flex flex-col items-center py-3 border-r border-slate-100 hover:bg-blue-50 transition active:scale-95"
+                                >
+                                    <span className="text-xl font-black text-slate-800">{friendCount}</span>
+                                    <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Amici</span>
+                                </button>
+                                <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
+                                    <span className="text-xl font-black text-slate-800">{myReviews.length}</span>
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
+                                </div>
+                                <div className="flex-1 flex flex-col items-center py-3">
+                                    <span className="text-xl font-black text-yellow-500">
+                                        {myReviews.length > 0
+                                            ? (myReviews.reduce((acc, r) => acc + r.rating, 0) / myReviews.length).toFixed(1)
+                                            : '—'}
+                                    </span>
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Info Account */}

@@ -74,15 +74,35 @@ export default function LocationPicker({ value, onChange }) {
 
   const handleSearch = async () => {
     if (!searchQuery) return;
+
+    const query = searchQuery.toLowerCase();
+
+    // 1. Cerca prima nei centri sportivi del JSON locale
+    try {
+      const jsonRes = await fetch('/sportsCenters.json');
+      const jsonData = await jsonRes.json();
+      const match = jsonData.centers?.find(c =>
+        c.name.toLowerCase().includes(query) ||
+        c.address.toLowerCase().includes(query)
+      );
+      if (match) {
+        updateLocation(match.lat, match.lng, `${match.name}, ${match.address}`);
+        return;
+      }
+    } catch (err) {
+      console.warn('JSON locale non disponibile:', err);
+    }
+
+    // 2. Fallback: Nominatim limitato alla Campania
+    // viewbox: minLon,minLat,maxLon,maxLat della regione Campania
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&addressdetails=1&countrycodes=it&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&addressdetails=1&countrycodes=it&viewbox=13.7,39.9,16.0,41.5&bounded=1&limit=1`
       );
       const data = await response.json();
 
       if (data.length > 0) {
         const res = data[0];
-        // Costruiamo un indirizzo leggibile col civico
         const street = res.address.road || '';
         const houseNumber = res.address.house_number || '';
         const city = res.address.city || res.address.town || '';

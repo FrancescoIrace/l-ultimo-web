@@ -1,6 +1,11 @@
 [
   {
     "date": "08 maggio 2026",
+    "title": "Fix ui gestione",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "08 maggio 2026",
     "title": "Merge pull request #4 from FrancescoIrace/feature/gestioneAmici",
     "description": "Feature/gestione amici"
   },
@@ -43,10 +48,5 @@
     "date": "07 maggio 2026",
     "title": "Correzione data",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "06 maggio 2026",
-    "title": "Fix orario su createMatch",
-    "description": "Co-authored-by: Copilot <copilot@github.com>"
   }
 ]

@@ -37,8 +37,9 @@ export default function FindFriends({ user }) {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url, gender')
+        .select('id, username, avatar_url, gender,location')
         .neq('id', user.id)
+        .neq('role','center')
         .order('username', { ascending: true });
 
       if (error) {
@@ -159,7 +160,7 @@ export default function FindFriends({ user }) {
                 </button>
                 <button onClick={() => navigate(`/profile/${profile.id}`)} className="flex-1 text-left">
                   <p className="font-bold text-slate-900">{profile.username || 'Utente'}</p>
-                  <p className="text-xs text-slate-500">{profile.city || 'Città non disponibile'}</p>
+                  <p className="text-xs text-slate-500">{profile.location || 'Città non disponibile'}</p>
                 </button>
                 <FriendshipButton
                   status={friendshipMap[profile.id]}

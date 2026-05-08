@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendAccepted, notifyFriendRejected } from '../lib/notificationService';
 import { useAlert } from '../components/AlertComponent';
@@ -7,11 +7,12 @@ import { UserCheck, UserX, Users, Clock, ChevronRight } from 'lucide-react';
 
 export default function FriendRequests({ user }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { confirmDangerous, success } = useAlert();
   const [pending, setPending] = useState([]);   // richieste ricevute in attesa
   const [friends, setFriends] = useState([]);   // amici accettati
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'friends'
+  const [activeTab, setActiveTab] = useState(location.state?.tab ?? 'requests'); // 'requests' | 'friends'
 
   const loadData = useCallback(async () => {
     setLoading(true);

@@ -85,13 +85,15 @@ export function usePushNotifications(userId) {
 
   const saveTokenToDB = async (browserSub, fcmToken) => {
     console.log('📡 5. Inizio salvataggio su DB Supabase...');
-    
+
     if (!userId) {
       console.error('❌ Errore: userId mancante nel salvataggio');
       return;
     }
 
-    const endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
+    // const endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
+    const endpoint = browserSub ? browserSub.endpoint : `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
+
     let p256dh = 'fcm-token';
     let auth = 'fcm-token';
 
@@ -135,5 +137,55 @@ export function usePushNotifications(userId) {
     console.log('✨ 6. DATABASE AGGIORNATO CON SUCCESSO!');
   };
 
-  return { isSupported, isSubscribed, isLoading, error, subscribeToPushNotifications };
+  const unsubscribeFromPushNotifications = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      console.log('--- 🚫 INIZIO DISISCRIZIONE ---');
+
+      // 1. Ottieni la sottoscrizione corrente
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      // 2. Disiscrivi dal browser (se esiste)
+      if (subscription) {
+        const unsubscribed = await subscription.unsubscribe();
+        if (unsubscribed) {
+          console.log('✅ 1. Disiscrizione browser riuscita');
+        } else {
+          console.warn('⚠️ Disiscrizione browser non riuscita');
+        }
+      }
+
+      // 3. Disattiva nel database
+      const { error: dbError } = await supabase
+        .from('push_subscriptions')
+        .update({ is_active: false })
+        .eq('user_id', userId);
+
+      if (dbError) {
+        console.error('❌ Errore Database:', dbError.message);
+        throw dbError;
+      }
+
+      console.log('✅ 2. Database aggiornato');
+      setIsSubscribed(false);
+      return { success: true };
+    } catch (err) {
+      console.error('❌ ERRORE DISISCRIZIONE:', err.message);
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId]);
+
+  return {
+    isSupported,
+    isSubscribed,
+    isLoading,
+    error,
+    subscribeToPushNotifications,
+    unsubscribeFromPushNotifications
+  };
 }

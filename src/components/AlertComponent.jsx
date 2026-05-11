@@ -3,6 +3,8 @@ import { X, AlertCircle } from 'lucide-react';
 
 const AlertContext = createContext();
 
+export { AlertContext };
+
 export function AlertProvider({ children }) {
   const [alert, setAlert] = useState(null);
 

@@ -3,9 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import UserLocationInput from '../components/UserLocationInput';
+import { useContext } from 'react';
+import { AlertContext } from '../components/AlertComponent';
 
 export default function AppSettings({ session }) {
   const navigate = useNavigate();
+  const { showAlert } = useContext(AlertContext);
   const [loading, setLoading] = useState(false);
   const [searchRadius, setSearchRadius] = useState(10);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -64,10 +67,10 @@ export default function AppSettings({ session }) {
       await supabase.from('profiles').delete().eq('id', session.user.id);
       await supabase.auth.signOut();
       localStorage.removeItem('appSettings');
-      alert('Profilo eliminato. A presto!');
+      showAlert('Profilo eliminato. A presto!', 'success');
       navigate('/');
     } catch (error) {
-      alert('Errore durante la cancellazione del profilo: ' + error.message);
+      showAlert('Errore durante la cancellazione del profilo: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -75,7 +78,7 @@ export default function AppSettings({ session }) {
 
   const handleUseDeviceLocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocalizzazione non supportata dal browser.');
+      showAlert('Geolocalizzazione non supportata dal browser.', 'error');
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -89,7 +92,7 @@ export default function AppSettings({ session }) {
         setUseGeolocation(true);
       },
       (error) => {
-        alert('Errore geolocalizzazione: ' + error.message);
+        showAlert('Errore geolocalizzazione: ' + error.message, 'error');
       }
     );
   };
@@ -102,12 +105,12 @@ export default function AppSettings({ session }) {
     try {
       const result = await subscribeToPushNotifications();
       if (result.success) {
-        alert('✅ Notifiche push attivate!');
+        showAlert('✅ Notifiche push attivate!', 'success');
       } else {
-        alert('❌ Errore: ' + result.error);
+        showAlert('❌ Errore: ' + result.error, 'error');
       }
     } catch (error) {
-      alert('❌ Errore: ' + error.message);
+      showAlert('❌ Errore: ' + error.message, 'error');
     } finally {
       setPushLoading(false);
     }
@@ -120,9 +123,9 @@ export default function AppSettings({ session }) {
     setPushLoading(true);
     try {
       await unsubscribeFromPushNotifications();
-      alert('✅ Notifiche push disattivate');
+      showAlert('✅ Notifiche push disattivate', 'success');
     } catch (error) {
-      alert('❌ Errore: ' + error.message);
+      showAlert('❌ Errore: ' + error.message, 'error');
     } finally {
       setPushLoading(false);
     }

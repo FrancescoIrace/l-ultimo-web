@@ -1,5 +1,14 @@
 // Service Worker per gestire le push notifications
 // Questo file riceve le notifiche dal server anche quando l'app è chiusa
+const CACHE_NAME = 'ultimo-cache-v1'; // Incrementa la versione qui
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Forza l'attivazione del nuovo SW ignorando quello vecchio
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim()); // Prende subito il controllo delle pagine aperte
+});
 
 self.addEventListener('push', (event) => {
   console.log('📨 Push ricevuta dal server:', event);

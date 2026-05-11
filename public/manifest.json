@@ -1,11 +1,13 @@
 {
   "short_name": "Ultimo",
-  "name": "Ultimo - Prenota Partite",
+  "name": "Ultimo - Organizza Partite",
+  "description": "L'app definitiva per organizzare le tue partite sportive e trovare nuovi giocatori.",
   "icons": [
     {
       "src": "/favicon.svg",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/svg+xml"
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "monochrome"
     },
     {
       "src": "/logo-192.png",
@@ -16,11 +18,13 @@
     {
       "src": "/logo-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#2563eb",
-  "background_color": "#ffffff"
+  "background_color": "#0F172A"
 }

@@ -37,6 +37,7 @@ export default function Home({ session, isPWA }) {
   const [showPastMatches, setShowPastMatches] = useState(false);
   const [showOngoingMatches, setShowOngoingMatches] = useState(false);
   const [showTodayMatches, setShowTodayMatches] = useState(false);
+  const [selectedSport, setSelectedSport] = useState(''); // Nuovo: filtro sport
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -50,6 +51,8 @@ export default function Home({ session, isPWA }) {
     } else {
       setMatches(data || []);
       console.log('Partite caricate:', data);
+      // Debug sport
+      console.log('Sport disponibili:', data?.map(m => m.sport).filter(s => s));
     }
     setLoading(false);
   };
@@ -240,6 +243,54 @@ export default function Home({ session, isPWA }) {
     return filtered;
   }, [distances, position, radiusKm, showOngoingMatches, showTodayMatches, matches]);
 
+  // Calcola il count di partite per ogni sport (senza il filtro sport, ma con gli altri filtri)
+  const sportsCounts = useMemo(() => {
+    const counts = {};
+    const baseList = showNearby ? nearbyMatches : matches.map((match) => ({
+      ...match,
+      distance: distances.find((item) => item?.id === match.id)?.distance,
+    }));
+
+    const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
+    const now = new Date().getTime();
+    const oneHourAgo = now - (60 * 60 * 1000);
+    const oneHourFromNow = now + (60 * 60 * 1000);
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+
+    let filtered = baseList;
+    if (showTodayMatches) {
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
+      });
+    } else if (showOngoingMatches) {
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+      });
+    } else {
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo;
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const normalizedSearch = normalizeSearch(searchQuery);
+      filtered = filtered.filter((match) =>
+        normalizeSearch(match.title || '').includes(normalizedSearch)
+      );
+    }
+
+    // Conta per sport
+    filtered.forEach((match) => {
+      const sport = match.sport || 'Altro';
+      counts[sport] = (counts[sport] || 0) + 1;
+    });
+
+    return counts;
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches]);
+
   const matchList = useMemo(() => {
     const baseList = showNearby
       ? nearbyMatches
@@ -278,13 +329,20 @@ export default function Home({ session, isPWA }) {
       });
     }
 
+    // Filtro sport
+    if (selectedSport) {
+      filtered = filtered.filter((match) =>
+        match.sport && match.sport.toLowerCase() === selectedSport.toLowerCase()
+      );
+    }
+
     if (!searchQuery.trim()) return filtered;
 
     const normalizedSearch = normalizeSearch(searchQuery);
     return filtered.filter((match) =>
       normalizeSearch(match.title || '').includes(normalizedSearch)
     );
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedSport]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -307,6 +365,10 @@ export default function Home({ session, isPWA }) {
         locationError={locationError}
         usingManualPosition={usingManualPosition}
         nearbyMatchesCount={showNearby ? nearbyMatches.length : undefined}
+        selectedSport={selectedSport}
+        onSportChange={setSelectedSport}
+        sportsCounts={sportsCounts}
+        matchesFoundCount={matchList.length}
       />
 
       {(loading || geoLoading) ? (

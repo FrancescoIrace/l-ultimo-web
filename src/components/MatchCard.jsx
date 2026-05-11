@@ -43,7 +43,7 @@ export default function MatchCard({ match, user }) {
     } else if (days === 1) {
       return { label: 'Domani', urgent: false };
     } else if (hours >= 12) {
-      return { label: `Oggi (${Math.floor(hours)}h)`, urgent: false };
+      return { label: `Tra ${Math.floor(hours)}h`, urgent: false };
     } else if (hours >= 1) {
       return { label: `Tra ${Math.floor(hours)}h`, urgent: true };
     } else if (minutes > 0) {
@@ -217,7 +217,7 @@ export default function MatchCard({ match, user }) {
 
         <div className={`flex items-center gap-2 ${match.description ? '' : 'opacity-50 italic'}`}>
           <Pencil size={16} />
-          <span className="font-semibold">{match.description ? match.description : "Nessuna nota"}</span>
+          <span className="font-semibold">{match.description ? `${match.description.slice(0, 32)}...` : "Nessuna nota"}</span>
         </div>
       </div>
 

@@ -1,12 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
-import { Loader, Calendar, Bell, Share2, UserPlus, UserMinus, Pencil, Trash2, Building2, MapPin } from 'lucide-react';
+import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus,ChevronRight } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
-import { notifyMatchReminder, notifyMatchJoin } from '../lib/notificationService';
-import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
+import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
+import { notifyMatchReminder } from '../lib/notificationService';
+import { supabase } from '../lib/supabase';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -476,7 +475,7 @@ Scopri di più qui: ${window.location.href}`;
         const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
         const endSeconds = String(endDate.getSeconds()).padStart(2, '0');
         const endTime = `${year}${month}${day}T${endHours}${endMinutes}${endSeconds}`;
-        const dettagli = `INFORMAZIONI DELLA PARTITA:\n 📅 ${match.datetime}\n📝 ${match.description}\n📍 ${match.location}`;
+        const dettagli = `INFORMAZIONI DELLA PARTITA:\n 📅 ${match.datetime}\n📝 ${match.description ? `${match.description.slice(0, 32)}...` : "Nessuna nota"}\n📍 ${match.location}`;
 
         const params = new URLSearchParams({
             action: 'TEMPLATE',
@@ -516,7 +515,7 @@ Scopri di più qui: ${window.location.href}`;
         DTSTART:${formatICalDate(startTime)}
         DTEND:${formatICalDate(endTime)}
         SUMMARY:${match.title}
-        DESCRIPTION:${match.description}
+        DESCRIPTION:${match.description.length > 64 ? `${match.description.slice(0, 64)}...` : match.description}
         LOCATION:${match.location}
         END:VEVENT
         END:VCALENDAR`;
@@ -557,12 +556,20 @@ Scopri di più qui: ${window.location.href}`;
     return (
         <>
             <div className="max-w-md mx-auto p-4">
-                <button
-                    onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}
+                {/* <button
+                    onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/partite')}
                     type="button"
                     className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
                 >
                     TORNA INDIETRO
+                </button> */}
+                <button
+                    onClick={() => navigate("/partite")}
+                    type="button"
+                    className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+                >
+                    <ChevronRight size={14} className="rotate-180" />
+                    Indietro
                 </button>
                 {match.court_id && (
                     <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 ${match.reservation_status === 'confirmed' ? 'bg-green-50 border-green-100' :
@@ -694,7 +701,7 @@ Scopri di più qui: ${window.location.href}`;
                             </div>
                         )}
                     </div>
-                    <p className={`text-slate-600 mb-3 ${!match.description ? 'opacity-50' : ''}`}>📝 {match.description || 'Nessuna descrizione disponibile'}</p>
+                    <p className={`text-slate-600 mb-3 break-words ${!match.description ? 'opacity-50' : ''} `}>📝 {match.description || 'Nessuna descrizione disponibile'}</p>
                 </div>
 
                 {isMatchStarted && !isMatchFinished && (
@@ -820,7 +827,7 @@ Scopri di più qui: ${window.location.href}`;
 
 
                     {/* Azione principale — full width */}
-                    
+
                     {confirmedPlayers.some(p => p.user_id === user.id) ? (
                         <button
                             onClick={handleLeave}

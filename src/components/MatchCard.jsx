@@ -10,7 +10,6 @@ export default function MatchCard({ match, user }) {
   const [isJoined, setIsJoined] = useState(false);
   const isCreator = match.creator_id === user.id;
   const navigate = useNavigate();
-  const isPast = new Date(match.datetime) < new Date();
   const [participants, setParticipants] = useState([]);
   const [waitingPlayers, setWaitingPlayers] = useState([]);
   const [confirmedPlayers, setConfirmedPlayers] = useState([]);
@@ -20,14 +19,19 @@ export default function MatchCard({ match, user }) {
   const isConfirmed = confirmedPlayers.some(p => p.user_id === user.id);
   const isWaiting = waitingPlayers.some(p => p.user_id === user.id);
 
-  // Converti datetime string a oggetto Date
-  const date = new Date(match.datetime);
+  // Supabase restituisce datetime con spazio ("2026-05-11 17:00:00") che i browser
+  // interpretano come UTC. Sostituendo lo spazio con "T" viene letto come orario locale (Italia).
+  const date = new Date(match.datetime.replace(' ', 'T'));
+  const now = new Date();
+  const matchMs = date.getTime();
+  const nowMs = now.getTime();
+  const oneHourMs = 60 * 60 * 1000;
+  const isPast = matchMs < nowMs - oneHourMs;         // conclusa: iniziata da più di 1 ora
+  const isOngoing = matchMs >= nowMs - oneHourMs && matchMs < nowMs; // in corso: iniziata nell'ultima ora
 
   // Calcola il tempo rimanente
   const getTimeUntilMatch = () => {
-    const now = new Date();
-    const matchTime = date;
-    const diff = matchTime - now;
+    const diff = date - now;
     const hours = diff / (1000 * 60 * 60);
     const minutes = Math.floor(diff / (1000 * 60));
     const days = Math.floor(hours / 24);
@@ -43,7 +47,7 @@ export default function MatchCard({ match, user }) {
     } else if (hours >= 1) {
       return { label: `Tra ${Math.floor(hours)}h`, urgent: true };
     } else if (minutes > 0) {
-      return { label: `Tra ${minutes}m`, urgent: true };
+      return { label: `Tra ${minutes}m`, urgent: true, pulse: true };
     }
     return null;
   };
@@ -135,7 +139,18 @@ export default function MatchCard({ match, user }) {
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all ${isPast ? 'opacity-60' : ''}`} onClick={() => navigate(`/match/${match.id}`)}>
+    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all ${isPast ? 'opacity-60' : ''} ${timeInfo?.pulse ? 'animate-pulse' : ''}`} onClick={() => navigate(`/match/${match.id} `)}>      {/* Badge IN CORSO */}
+      {isOngoing && (
+        <div className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-md animate-pulse z-10">
+          🟢 IN CORSO
+        </div>
+      )}
+      {/* Badge PARTITA CONCLUSA */}
+      {isPast && (
+        <div className="absolute top-2 right-2 bg-slate-500 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-md z-10">
+          ⏹ CONCLUSA
+        </div>
+      )}
       {/* Indicatore partita passata */}
       {isPast && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-300 to-slate-200 rounded-t-xl"></div>

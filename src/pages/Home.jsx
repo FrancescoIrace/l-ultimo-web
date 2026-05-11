@@ -34,6 +34,8 @@ export default function Home({ session, isPWA }) {
   const [radiusKm, setRadiusKm] = useState(20);
   const [locationError, setLocationError] = useState('');
   const [showPastMatches, setShowPastMatches] = useState(false);
+  const [showOngoingMatches, setShowOngoingMatches] = useState(false);
+  const [showTodayMatches, setShowTodayMatches] = useState(false);
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -46,6 +48,7 @@ export default function Home({ session, isPWA }) {
       console.error('Errore:', error);
     } else {
       setMatches(data || []);
+      console.log('Partite caricate:', data);
     }
     setLoading(false);
   };
@@ -190,26 +193,6 @@ export default function Home({ session, isPWA }) {
       .filter(Boolean);
   }, [matches, position]);
 
-  const nearbyMatches = useMemo(() => {
-    if (!position) return [];
-    let filtered = distances
-      .filter((match) => match.distance <= radiusKm)
-      .sort((a, b) => a.distance - b.distance);
-    
-    // Filtrare le partite passate se showPastMatches è false
-    if (!showPastMatches) {
-      const now = new Date();
-      filtered = filtered.filter((match) => {
-        const fullMatch = matches.find(m => m.id === match.id);
-        if (!fullMatch) return true;
-        const matchDateTime = new Date(fullMatch.datetime);
-        return matchDateTime >= now;
-      });
-    }
-    
-    return filtered;
-  }, [distances, position, radiusKm, showPastMatches, matches]);
-
   const normalizeSearch = (value) =>
     value
       .toLowerCase()
@@ -218,6 +201,43 @@ export default function Home({ session, isPWA }) {
       .replace(/[^a-z0-9 ]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+
+  const nearbyMatches = useMemo(() => {
+    if (!position) return [];
+    let filtered = distances
+      .filter((match) => match.distance <= radiusKm)
+      .sort((a, b) => a.distance - b.distance);
+    
+    // Supabase restituisce datetime con spazio ("2026-05-11 17:00:00") che i browser
+    // interpretano come UTC. Sostituendo lo spazio con "T" viene interpretato come orario locale (Italia).
+    const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
+    const now = new Date().getTime();
+    const oneHourAgo = now - (60 * 60 * 1000);
+    const oneHourFromNow = now + (60 * 60 * 1000);
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+
+    if (showTodayMatches) {
+      // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
+      });
+    } else if (showOngoingMatches) {
+      // Mostra solo partite in corso: ±1 ora rispetto ad ora
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+      });
+    } else {
+      // Default: partite future + in corso (non ancora concluse)
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo;
+      });
+    }
+    
+    return filtered;
+  }, [distances, position, radiusKm, showOngoingMatches, showTodayMatches, matches]);
 
   const matchList = useMemo(() => {
     const baseList = showNearby
@@ -229,12 +249,31 @@ export default function Home({ session, isPWA }) {
 
     let filtered = baseList;
 
-    // Filtrare le partite passate se showPastMatches è false
-    if (!showPastMatches) {
-      const now = new Date();
-      filtered = baseList.filter((match) => {
-        const matchDateTime = new Date(match.datetime);
-        return matchDateTime >= now;
+    // Supabase restituisce datetime con spazio ("2026-05-11 17:00:00") che i browser
+    // interpretano come UTC. Sostituendo lo spazio con "T" viene interpretato come orario locale (Italia).
+    const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
+    const now = new Date().getTime();
+    const oneHourAgo = now - (60 * 60 * 1000);
+    const oneHourFromNow = now + (60 * 60 * 1000);
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+
+    if (showTodayMatches) {
+      // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
+      });
+    } else if (showOngoingMatches) {
+      // Mostra solo partite in corso: ±1 ora rispetto ad ora
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+      });
+    } else {
+      // Default: partite future + in corso (non ancora concluse)
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo;
       });
     }
 
@@ -244,7 +283,7 @@ export default function Home({ session, isPWA }) {
     return filtered.filter((match) =>
       normalizeSearch(match.title || '').includes(normalizedSearch)
     );
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showPastMatches]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -278,7 +317,9 @@ export default function Home({ session, isPWA }) {
             Tutte
           </button>
         </div>
-        <div className="mt-3 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
+
+{/* Disattiviamo le partite passate per tutti (per il momento) */}
+        {/* <div className="mt-3 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
           <span className="text-sm font-semibold text-slate-700">Partite passate</span>
           <button
             onClick={() => setShowPastMatches(!showPastMatches)}
@@ -288,7 +329,35 @@ export default function Home({ session, isPWA }) {
               className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showPastMatches ? 'translate-x-5' : 'translate-x-0'}`}
             />
           </button>
+        </div> */}
+
+        {/* Toggle partite in corso */}
+        <div className="mt-3 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
+          <span className="text-sm font-semibold text-slate-700">Solo partite in corso</span>
+          <button
+            onClick={() => { setShowOngoingMatches(!showOngoingMatches); setShowTodayMatches(false); }}
+            className={`relative w-12 h-7 rounded-full transition-colors ${showOngoingMatches ? 'bg-blue-600' : 'bg-slate-300'}`}
+          >
+            <div
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showOngoingMatches ? 'translate-x-5' : 'translate-x-0'}`}
+            />
+          </button>
         </div>
+
+        {/* Toggle partite avvenute oggi */}
+        <div className="mt-2 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
+          <span className="text-sm font-semibold text-slate-700">Partite concluse oggi</span>
+          <button
+            onClick={() => { setShowTodayMatches(!showTodayMatches); setShowOngoingMatches(false); }}
+            className={`relative w-12 h-7 rounded-full transition-colors ${showTodayMatches ? 'bg-orange-500' : 'bg-slate-300'}`}
+          >
+            <div
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showTodayMatches ? 'translate-x-5' : 'translate-x-0'}`}
+            />
+          </button>
+        </div>
+
+
         {showNearby && (
           <div className="mt-3 space-y-3">
             <div className="rounded-2xl border border-slate-200 bg-white p-3">

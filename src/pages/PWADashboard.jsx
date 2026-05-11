@@ -1,9 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useContext } from 'react';
+import { AlertContext } from '../components/AlertComponent';
 
-export default function PWADashboard({ user, onLogout }) {
+export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications }) {
   const navigate = useNavigate();
+  const { showAlert } = useContext(AlertContext);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -11,11 +14,45 @@ export default function PWADashboard({ user, onLogout }) {
     navigate('/');
   };
 
+  const handleActivateNotifications = async () => {
+    try {
+      const result = await subscribeToPushNotifications();
+      if (result.success) {
+        showAlert('✅ Notifiche push attivate!', 'success');
+      } else {
+        showAlert('❌ Errore: ' + result.error, 'error');
+      }
+    } catch (error) {
+      showAlert('❌ Errore: ' + error.message, 'error');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
 
       {/* Main Content */}
       <div className="max-w-md mx-auto p-4 space-y-4 pb-20">
+        {/* Notification Activation Box */}
+        {isSupported && !isSubscribed && (
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg border border-blue-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">🔔</div>
+                <div>
+                  <h3 className="font-bold text-sm">Attiva Notifiche Push</h3>
+                  <p className="text-xs opacity-90">Ricevi aggiornamenti sui tuoi match in tempo reale</p>
+                </div>
+              </div>
+              <button
+                onClick={handleActivateNotifications}
+                className="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition-colors active:scale-95"
+              >
+                Attiva
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3 mt-6 relative">
           <button

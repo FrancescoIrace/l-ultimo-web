@@ -1,5 +1,30 @@
 [
   {
+    "date": "11 maggio 2026",
+    "title": "Merge pull request #6 from FrancescoIrace/feature/invio_reminder_automatico",
+    "description": "Modifica del manifest"
+  },
+  {
+    "date": "11 maggio 2026",
+    "title": "Modifica del manifest",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "09 maggio 2026",
+    "title": "Merge pull request #5 from FrancescoIrace/feature/invio_reminder_automatico",
+    "description": "Feature/invio reminder automatico"
+  },
+  {
+    "date": "09 maggio 2026",
+    "title": "Fix label che mostrava solo ora senza minuti.",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "08 maggio 2026",
+    "title": "Add box conferma presenza quando mancano 24h",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "08 maggio 2026",
     "title": "Fix ui gestione",
     "description": "Modifica all'app"
@@ -22,31 +47,6 @@
   {
     "date": "07 maggio 2026",
     "title": "Card scaduta rossa",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "07 maggio 2026",
-    "title": "Fix finale data forse",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "07 maggio 2026",
-    "title": "Fix data dopo merge",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "07 maggio 2026",
-    "title": "Merge feature/business-management into main with affiliated centers disabled as WIP",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "07 maggio 2026",
-    "title": "Disable affiliated centers section as WIP in create/edit match forms",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "07 maggio 2026",
-    "title": "Correzione data",
     "description": "Modifica all'app"
   }
 ]

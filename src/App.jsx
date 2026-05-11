@@ -19,6 +19,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import PublicMatchLanding from './pages/PublicMatchLanding';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
+import PWAInstallBanner from './components/PWAInstallBanner';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { NotificationBell } from './components/NotificationBell';
@@ -136,6 +137,8 @@ function App() {
           username={session.user?.user_metadata?.username || 'Giocatore'}
         />
       )}
+      {/* QUESTO COMPONENTE NON CI SARA' PIU' QUANDO L'APP SI TROVERA' SUL PLAY STORE */}
+      <PWAInstallBanner />
       <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen">
         <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform">
@@ -144,12 +147,6 @@ function App() {
 
           <div className="flex items-center gap-2">
             <NotificationBell userId={session.user.id} />
-
-            {isSupported && !isSubscribed && (
-              <button onClick={subscribeToPushNotifications} className="text-2xl active:scale-95 transition-transform">
-                🔔
-              </button>
-            )}
 
             <button
               onClick={() => navigate('/profile')}
@@ -174,7 +171,13 @@ function App() {
               userRole === 'center' ? (
                 <BusinessDashboard user={session.user} name={session.user.user_metadata.username} />
               ) : (
-                <PWADashboard user={session.user} onLogout={() => setSession(null)} />
+                <PWADashboard 
+                  user={session.user} 
+                  onLogout={() => setSession(null)} 
+                  isSupported={isSupported}
+                  isSubscribed={isSubscribed}
+                  subscribeToPushNotifications={subscribeToPushNotifications}
+                />
               )
             }
           />

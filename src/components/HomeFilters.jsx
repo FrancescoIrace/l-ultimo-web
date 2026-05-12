@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const RADIUS_PRESETS = [5, 10, 20, 50, 100];
 const SPORTS = [
@@ -33,12 +33,17 @@ export default function HomeFilters({
     nearbyMatchesCount,
     selectedSport,
     onSportChange,
+    selectedDay,
+    onDayChange,
     sportsCounts = {},
     matchesFoundCount = 0,
 }) {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchValue, setSearchValue] = useState(searchQuery);
     const searchTimeoutRef = useRef(null);
+    const sportsCarouselRef = useRef(null);
+    const [showLeftArrow, setShowLeftArrow] = useState(false);
+    const [showRightArrow, setShowRightArrow] = useState(true);
 
     // Debounce search (500ms)
     useEffect(() => {
@@ -57,8 +62,63 @@ export default function HomeFilters({
         };
     }, [searchValue, onSearchChange]);
 
+    // Check carousel scroll position
+    useEffect(() => {
+        const checkScroll = () => {
+            if (sportsCarouselRef.current) {
+                const { scrollLeft, scrollWidth, clientWidth } = sportsCarouselRef.current;
+                setShowLeftArrow(scrollLeft > 0);
+                setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+            }
+        };
+
+        const carousel = sportsCarouselRef.current;
+        if (carousel) {
+            carousel.addEventListener('scroll', checkScroll);
+            checkScroll();
+        }
+
+        return () => {
+            if (carousel) {
+                carousel.removeEventListener('scroll', checkScroll);
+            }
+        };
+    }, [isFilterOpen]);
+
+    const scrollCarousel = (direction) => {
+        if (sportsCarouselRef.current) {
+            const scrollAmount = 300;
+            sportsCarouselRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth',
+            });
+        }
+    };
+
     const handleRadiusChange = (newRadius) => {
         onRadiusChange(newRadius);
+    };
+
+    const handleDayChange = (day) => {
+        onDayChange(day);
+    };
+
+    const getTodayDate = () => {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    };
+
+    const getTomorrowDate = () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split('T')[0];
+    };
+
+    const formatDateDisplay = (dateString) => {
+        if (!dateString) return 'Tutti i giorni';
+        const date = new Date(dateString + 'T00:00:00');
+        const options = { weekday: 'short', day: 'numeric', month: 'short' };
+        return date.toLocaleDateString('it-IT', options);
     };
 
     const handleToggleOngoing = () => {
@@ -136,7 +196,7 @@ export default function HomeFilters({
             {isFilterOpen && (
                 <div className="rounded-2xl bg-white border border-slate-200 p-4 mb-3 space-y-4 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Toggle: Only Ongoing Matches */}
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-semibold text-slate-700">Solo partite in corso</p>
                             <p className="text-xs text-slate-500 mt-0.5">±1 ora dall'orario</p>
@@ -151,12 +211,12 @@ export default function HomeFilters({
                                     }`}
                             />
                         </button>
-                    </div>
+                    </div> */}
 
-                    <div className="border-t border-slate-200" />
+                    {/* <div className="border-t border-slate-200" /> */}
 
                     {/* Toggle: Today Concluded Matches */}
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-semibold text-slate-700">Partite concluse oggi</p>
                             <p className="text-xs text-slate-500 mt-0.5">Iniziate da più di 1 ora</p>
@@ -171,40 +231,68 @@ export default function HomeFilters({
                                     }`}
                             />
                         </button>
-                    </div>
+                    </div> */}
 
-                    <div className="border-t border-slate-200" />
+                    {/* <div className="border-t border-slate-200" /> */}
 
                     {/* Sport Filter */}
                     <div>
                         <p className="text-sm font-semibold text-slate-700 mb-2">Tipo di sport</p>
-                        <div className="grid grid-cols-4 gap-2">
-                            {/* Bottone "Tutti gli sport" */}
-                            <button
-                                onClick={() => onSportChange('')}
-                                className={`py-2 px-1 rounded-lg text-xs font-bold text-center transition-all ${!selectedSport
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
-                                    }`}
-                                title="Mostra tutti gli sport"
-                            >
-                                🌐 Tutti
-                            </button>
-                            {SPORTS.map((sport) => (
+                        <div className="relative">
+                            {/* Left Arrow */}
+                            {showLeftArrow && (
                                 <button
-                                    key={sport.id}
-                                    onClick={() => onSportChange(sport.id)}
-                                    className={`py-2 px-1 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 ${selectedSport === sport.id
+                                    onClick={() => scrollCarousel('left')}
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-slate-200 rounded-full p-1.5 shadow-md hover:bg-slate-50 transition-all"
+                                    title="Scorri a sinistra"
+                                >
+                                    <ChevronLeft size={18} className="text-slate-600" />
+                                </button>
+                            )}
+
+                            {/* Sports Carousel */}
+                            <div
+                                ref={sportsCarouselRef}
+                                className="flex gap-2 overflow-x-auto scroll-smooth pb-2 px-8"
+                                style={{ scrollBehavior: 'smooth' }}
+                            >
+                                {/* Bottone "Tutti gli sport" */}
+                                <button
+                                    onClick={() => onSportChange('')}
+                                    className={`flex-shrink-0 py-2 px-3 rounded-lg text-xs font-bold text-center transition-all whitespace-nowrap ${!selectedSport
                                         ? 'bg-blue-600 text-white shadow-md'
                                         : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
                                         }`}
-                                    title={sport.label}
+                                    title="Mostra tutti gli sport"
                                 >
-                                    <span>{sport.icon}</span>
-                                    <span className="text-[9px] leading-tight">{sport.id}</span>
+                                    🌐 Tutti
                                 </button>
-                            ))}
+                                {SPORTS.map((sport) => (
+                                    <button
+                                        key={sport.id}
+                                        onClick={() => onSportChange(sport.id)}
+                                        className={`flex-shrink-0 py-2 px-3 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 whitespace-nowrap ${selectedSport === sport.id
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                                            }`}
+                                        title={sport.label}
+                                    >
+                                        <span>{sport.icon}</span>
+                                        <span className="text-[9px] leading-tight">{sport.id}</span>
+                                    </button>
+                                ))}
+                            </div>
 
+                            {/* Right Arrow */}
+                            {showRightArrow && (
+                                <button
+                                    onClick={() => scrollCarousel('right')}
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-slate-200 rounded-full p-1.5 shadow-md hover:bg-slate-50 transition-all"
+                                    title="Scorri a destra"
+                                >
+                                    <ChevronRight size={18} className="text-slate-600" />
+                                </button>
+                            )}
                         </div>
                         {(selectedSport || !showNearby) && (
                             <div className="mt-3 text-xs text-slate-600 bg-blue-50 p-2 rounded-lg">
@@ -217,6 +305,62 @@ export default function HomeFilters({
                                         📋 <strong>Tutte le partite</strong>: {matchesFoundCount} {matchesFoundCount === 1 ? 'partita' : 'partite'} trovate
                                     </>
                                 )}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="border-t border-slate-200" />
+
+                    {/* Day Filter */}
+                    <div>
+                        <p className="text-sm font-semibold text-slate-700 mb-2">Seleziona il giorno</p>
+                        <div className="flex gap-2 mb-3">
+                            <button
+                                onClick={() => handleDayChange('')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                    !selectedDay
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                                }`}
+                                title="Mostra tutti i giorni"
+                            >
+                                📅 Tutti
+                            </button>
+                            <button
+                                onClick={() => handleDayChange(getTodayDate())}
+                                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                    selectedDay === getTodayDate()
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                                }`}
+                                title="Partite oggi"
+                            >
+                                📌 Oggi
+                            </button>
+                            <button
+                                onClick={() => handleDayChange(getTomorrowDate())}
+                                className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+                                    selectedDay === getTomorrowDate()
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                                }`}
+                                title="Partite domani"
+                            >
+                                ➡️ Domani
+                            </button>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-slate-600 block mb-2">O scegli una data:</label>
+                            <input
+                                type="date"
+                                value={selectedDay || ''}
+                                onChange={(e) => handleDayChange(e.target.value)}
+                                className="w-full p-2 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            />
+                        </div>
+                        {selectedDay && (
+                            <div className="mt-3 text-xs text-slate-600 bg-blue-50 p-2 rounded-lg">
+                                📅 <strong>{formatDateDisplay(selectedDay)}</strong>
                             </div>
                         )}
                     </div>

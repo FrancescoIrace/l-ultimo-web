@@ -1,5 +1,15 @@
 [
   {
+    "date": "12 maggio 2026",
+    "title": "Aggiunta filtri per sport + fix vari",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "12 maggio 2026",
+    "title": "Fix Filtri",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "11 maggio 2026",
     "title": "Fix home",
     "description": "Modifica all'app"
@@ -37,16 +47,6 @@
   {
     "date": "09 maggio 2026",
     "title": "Fix label che mostrava solo ora senza minuti.",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "08 maggio 2026",
-    "title": "Add box conferma presenza quando mancano 24h",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "08 maggio 2026",
-    "title": "Fix ui gestione",
     "description": "Modifica all'app"
   }
 ]

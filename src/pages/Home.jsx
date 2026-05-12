@@ -38,6 +38,7 @@ export default function Home({ session, isPWA }) {
   const [showOngoingMatches, setShowOngoingMatches] = useState(false);
   const [showTodayMatches, setShowTodayMatches] = useState(false);
   const [selectedSport, setSelectedSport] = useState(''); // Nuovo: filtro sport
+  const [selectedDay, setSelectedDay] = useState(''); // Nuovo: filtro giorno
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -50,9 +51,9 @@ export default function Home({ session, isPWA }) {
       console.error('Errore:', error);
     } else {
       setMatches(data || []);
-      console.log('Partite caricate:', data);
-      // Debug sport
-      console.log('Sport disponibili:', data?.map(m => m.sport).filter(s => s));
+  
+      // Debug giorni
+      console.log('Giorni disponibili:', data?.map(m => m.datetime.split('T')[0]).filter(d => d));
     }
     setLoading(false);
   };
@@ -282,6 +283,14 @@ export default function Home({ session, isPWA }) {
       );
     }
 
+    // Filtro giorno
+    if (selectedDay) {
+      filtered = filtered.filter((match) => {
+        const matchDate = match.datetime.substring(0, 10); // Estrae YYYY-MM-DD (funziona con qualsiasi formato)
+        return matchDate === selectedDay;
+      });
+    }
+
     // Conta per sport
     filtered.forEach((match) => {
       const sport = match.sport || 'Altro';
@@ -289,7 +298,7 @@ export default function Home({ session, isPWA }) {
     });
 
     return counts;
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedDay]);
 
   const matchList = useMemo(() => {
     const baseList = showNearby
@@ -309,24 +318,35 @@ export default function Home({ session, isPWA }) {
     const oneHourFromNow = now + (60 * 60 * 1000);
     const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
 
-    if (showTodayMatches) {
-      // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
+    // Filtro giorno ha priorità sui filtri temporali
+    if (selectedDay) {
       filtered = filtered.filter((match) => {
-        const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
-      });
-    } else if (showOngoingMatches) {
-      // Mostra solo partite in corso: ±1 ora rispetto ad ora
-      filtered = filtered.filter((match) => {
-        const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+        const matchDate = match.datetime.substring(0, 10); // Estrae YYYY-MM-DD (funziona con qualsiasi formato)
+        console.log('DEBUG - matchDate:', matchDate, 'selectedDay:', selectedDay, 'match:', match);
+        return matchDate === selectedDay;
       });
     } else {
-      // Default: partite future + in corso (non ancora concluse)
-      filtered = filtered.filter((match) => {
-        const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= oneHourAgo;
-      });
+      // Applica filtri temporali solo se NON c'è un giorno selezionato
+      // if (showTodayMatches) {
+      //   // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
+      //   filtered = filtered.filter((match) => {
+      //     const matchTimestamp = parseLocalDatetime(match.datetime);
+      //     return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
+      //   });
+      // } else 
+      if (showOngoingMatches) {
+        // Mostra solo partite in corso: ±1 ora rispetto ad ora
+        filtered = filtered.filter((match) => {
+          const matchTimestamp = parseLocalDatetime(match.datetime);
+          return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+        });
+      } else {
+        // Default: partite future + in corso (non ancora concluse)
+        filtered = filtered.filter((match) => {
+          const matchTimestamp = parseLocalDatetime(match.datetime);
+          return matchTimestamp >= oneHourAgo;
+        });
+      }
     }
 
     // Filtro sport
@@ -342,7 +362,7 @@ export default function Home({ session, isPWA }) {
     return filtered.filter((match) =>
       normalizeSearch(match.title || '').includes(normalizedSearch)
     );
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedSport]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedSport, selectedDay]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -369,6 +389,8 @@ export default function Home({ session, isPWA }) {
         onSportChange={setSelectedSport}
         sportsCounts={sportsCounts}
         matchesFoundCount={matchList.length}
+        selectedDay={selectedDay}
+        onDayChange={setSelectedDay}
       />
 
       {(loading || geoLoading) ? (

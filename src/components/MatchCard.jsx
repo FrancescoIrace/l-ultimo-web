@@ -184,7 +184,7 @@ export default function MatchCard({ match, user }) {
       </div>
 
       <h3 className="text-lg font-bold text-slate-800 mb-2 uppercase tracking-wide cursor-pointer hover:border-blue-300 transition-all">
-        {match.title && match.title.length > 32 ? `${match.title.slice(0, 32)}...` : match.title || `Partita di ${match.sport}`}
+        {match.title && match.title.length >= 32 ? `${match.title.slice(0, 28)}...` : match.title || `Partita di ${match.sport}`}
       </h3>
 
       <div className="space-y-2 text-slate-600 text-sm">

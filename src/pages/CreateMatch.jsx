@@ -135,7 +135,7 @@ export default function CreateMatch() {
                     .single();
 
                 if (matchData) {
-                    
+
                     // Per timestamp (senza timezone), Supabase restituisce "2024-05-07 15:30:00" o "2024-05-07T15:30:00"
                     // Convertiamo in formato input datetime-local: "2024-05-07T15:30"
                     let datetimeForInput = '';
@@ -236,7 +236,7 @@ export default function CreateMatch() {
             const isUpdate = !!id;
 
             const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
-            
+
             const matchPayload = {
                 title: formData.title,
                 sport: formData.sport,
@@ -294,7 +294,7 @@ export default function CreateMatch() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+
         const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
 
         // 1. Aggiorniamo la partita esistente
@@ -362,9 +362,10 @@ export default function CreateMatch() {
 
                     {/* TITOLO */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Titolo (Opzionale)</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
                         <input
                             type="text"
+                            maxLength={32}
                             placeholder="Es: Partitella tra amici"
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.title}
@@ -524,9 +525,10 @@ export default function CreateMatch() {
 
                 {/* TITOLO */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Titolo (Opzionale)</label>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
                     <input
                         type="text"
+                        maxLength={32}
                         placeholder="Es: Partitella tra amici"
                         className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -562,29 +564,29 @@ export default function CreateMatch() {
                     </div>
                 </div>
 
-{/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
-                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
-                        <div className="flex items-center justify-between mb-2">
-                            <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
-                            <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">🚧 Work in Progress</span>
-                        </div>
+                {/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
+                        <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">🚧 Work in Progress</span>
+                    </div>
+                    <select
+                        disabled
+                        className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3 cursor-not-allowed"
+                        onChange={(e) => {
+                            const centerId = e.target.value;
+                            setSelectedCenter(centerId);
+                            handleCenterChange(centerId);
+                        }}
+                    >
+                        <option value="">Seleziona un centro...</option>
+                        {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
+                    </select>
+
+                    {availableCourts.length > 0 && (
                         <select
                             disabled
-                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3 cursor-not-allowed"
-                            onChange={(e) => {
-                                const centerId = e.target.value;
-                                setSelectedCenter(centerId);
-                                handleCenterChange(centerId);
-                            }}
-                        >
-                            <option value="">Seleziona un centro...</option>
-                            {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
-                        </select>
-
-                        {availableCourts.length > 0 && (
-                            <select
-                                disabled
-                                className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none cursor-not-allowed"
+                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none cursor-not-allowed"
                             onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
                         >
                             <option value="">Scegli il campo...</option>

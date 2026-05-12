@@ -1,6 +1,21 @@
 [
   {
     "date": "12 maggio 2026",
+    "title": "Merge pull request #8 from FrancescoIrace/fix/filtri_home",
+    "description": "Fix/filtri home"
+  },
+  {
+    "date": "12 maggio 2026",
+    "title": "Fix vari",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "12 maggio 2026",
+    "title": "Add filtro per giorno",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "12 maggio 2026",
     "title": "Aggiunta filtri per sport + fix vari",
     "description": "Modifica all'app"
   },
@@ -33,20 +48,5 @@
     "date": "11 maggio 2026",
     "title": "Merge pull request #6 from FrancescoIrace/feature/invio_reminder_automatico",
     "description": "Modifica del manifest"
-  },
-  {
-    "date": "11 maggio 2026",
-    "title": "Modifica del manifest",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "09 maggio 2026",
-    "title": "Merge pull request #5 from FrancescoIrace/feature/invio_reminder_automatico",
-    "description": "Feature/invio reminder automatico"
-  },
-  {
-    "date": "09 maggio 2026",
-    "title": "Fix label che mostrava solo ora senza minuti.",
-    "description": "Modifica all'app"
   }
 ]

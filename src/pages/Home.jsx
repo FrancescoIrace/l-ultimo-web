@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Plus } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MatchSkeleton from '../components/MatchSkeleton';
+import HomeFilters from '../components/HomeFilters';
 import PWADashboard from './PWADashboard';
 
 const EARTH_RADIUS_KM = 6371;
@@ -36,6 +37,8 @@ export default function Home({ session, isPWA }) {
   const [showPastMatches, setShowPastMatches] = useState(false);
   const [showOngoingMatches, setShowOngoingMatches] = useState(false);
   const [showTodayMatches, setShowTodayMatches] = useState(false);
+  const [selectedSport, setSelectedSport] = useState(''); // Nuovo: filtro sport
+  const [selectedDay, setSelectedDay] = useState(''); // Nuovo: filtro giorno
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -48,7 +51,9 @@ export default function Home({ session, isPWA }) {
       console.error('Errore:', error);
     } else {
       setMatches(data || []);
-      console.log('Partite caricate:', data);
+  
+      // Debug giorni
+      // console.log('Giorni disponibili:', data?.map(m => m.datetime.split('T')[0]).filter(d => d));
     }
     setLoading(false);
   };
@@ -239,6 +244,62 @@ export default function Home({ session, isPWA }) {
     return filtered;
   }, [distances, position, radiusKm, showOngoingMatches, showTodayMatches, matches]);
 
+  // Calcola il count di partite per ogni sport (senza il filtro sport, ma con gli altri filtri)
+  const sportsCounts = useMemo(() => {
+    const counts = {};
+    const baseList = showNearby ? nearbyMatches : matches.map((match) => ({
+      ...match,
+      distance: distances.find((item) => item?.id === match.id)?.distance,
+    }));
+
+    const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
+    const now = new Date().getTime();
+    const oneHourAgo = now - (60 * 60 * 1000);
+    const oneHourFromNow = now + (60 * 60 * 1000);
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+
+    let filtered = baseList;
+    if (showTodayMatches) {
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
+      });
+    } else if (showOngoingMatches) {
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+      });
+    } else {
+      filtered = filtered.filter((match) => {
+        const matchTimestamp = parseLocalDatetime(match.datetime);
+        return matchTimestamp >= oneHourAgo;
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const normalizedSearch = normalizeSearch(searchQuery);
+      filtered = filtered.filter((match) =>
+        normalizeSearch(match.title || '').includes(normalizedSearch)
+      );
+    }
+
+    // Filtro giorno
+    if (selectedDay) {
+      filtered = filtered.filter((match) => {
+        const matchDate = match.datetime.substring(0, 10); // Estrae YYYY-MM-DD (funziona con qualsiasi formato)
+        return matchDate === selectedDay;
+      });
+    }
+
+    // Conta per sport
+    filtered.forEach((match) => {
+      const sport = match.sport || 'Altro';
+      counts[sport] = (counts[sport] || 0) + 1;
+    });
+
+    return counts;
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedDay]);
+
   const matchList = useMemo(() => {
     const baseList = showNearby
       ? nearbyMatches
@@ -257,24 +318,42 @@ export default function Home({ session, isPWA }) {
     const oneHourFromNow = now + (60 * 60 * 1000);
     const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
 
-    if (showTodayMatches) {
-      // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
+    // Filtro giorno ha priorità sui filtri temporali
+    if (selectedDay) {
       filtered = filtered.filter((match) => {
-        const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
-      });
-    } else if (showOngoingMatches) {
-      // Mostra solo partite in corso: ±1 ora rispetto ad ora
-      filtered = filtered.filter((match) => {
-        const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+        const matchDate = match.datetime.substring(0, 10); // Estrae YYYY-MM-DD (funziona con qualsiasi formato)
+        // console.log('DEBUG - matchDate:', matchDate, 'selectedDay:', selectedDay, 'match:', match);
+        return matchDate === selectedDay;
       });
     } else {
-      // Default: partite future + in corso (non ancora concluse)
-      filtered = filtered.filter((match) => {
-        const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= oneHourAgo;
-      });
+      // Applica filtri temporali solo se NON c'è un giorno selezionato
+      // if (showTodayMatches) {
+      //   // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
+      //   filtered = filtered.filter((match) => {
+      //     const matchTimestamp = parseLocalDatetime(match.datetime);
+      //     return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
+      //   });
+      // } else 
+      if (showOngoingMatches) {
+        // Mostra solo partite in corso: ±1 ora rispetto ad ora
+        filtered = filtered.filter((match) => {
+          const matchTimestamp = parseLocalDatetime(match.datetime);
+          return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+        });
+      } else {
+        // Default: partite future + in corso (non ancora concluse)
+        filtered = filtered.filter((match) => {
+          const matchTimestamp = parseLocalDatetime(match.datetime);
+          return matchTimestamp >= oneHourAgo;
+        });
+      }
+    }
+
+    // Filtro sport
+    if (selectedSport) {
+      filtered = filtered.filter((match) =>
+        match.sport && match.sport.toLowerCase() === selectedSport.toLowerCase()
+      );
     }
 
     if (!searchQuery.trim()) return filtered;
@@ -283,7 +362,7 @@ export default function Home({ session, isPWA }) {
     return filtered.filter((match) =>
       normalizeSearch(match.title || '').includes(normalizedSearch)
     );
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedSport, selectedDay]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -291,98 +370,28 @@ export default function Home({ session, isPWA }) {
 
   return (
     <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
-      <div className="mb-4">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
-          Partite
-        </h2>
-        <div className="grid gap-2 mb-4">
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cerca per titolo partita"
-            className="w-full p-3 rounded-2xl border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => setShowNearby(true)}
-            className={`rounded-2xl py-3 text-sm font-bold transition-all ${showNearby ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
-          >
-            Per distanza
-          </button>
-          <button
-            onClick={() => setShowNearby(false)}
-            className={`rounded-2xl py-3 text-sm font-bold transition-all ${!showNearby ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
-          >
-            Tutte
-          </button>
-        </div>
-
-{/* Disattiviamo le partite passate per tutti (per il momento) */}
-        {/* <div className="mt-3 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
-          <span className="text-sm font-semibold text-slate-700">Partite passate</span>
-          <button
-            onClick={() => setShowPastMatches(!showPastMatches)}
-            className={`relative w-12 h-7 rounded-full transition-colors ${showPastMatches ? 'bg-blue-600' : 'bg-slate-300'}`}
-          >
-            <div
-              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showPastMatches ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-          </button>
-        </div> */}
-
-        {/* Toggle partite in corso */}
-        <div className="mt-3 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
-          <span className="text-sm font-semibold text-slate-700">Solo partite in corso</span>
-          <button
-            onClick={() => { setShowOngoingMatches(!showOngoingMatches); setShowTodayMatches(false); }}
-            className={`relative w-12 h-7 rounded-full transition-colors ${showOngoingMatches ? 'bg-blue-600' : 'bg-slate-300'}`}
-          >
-            <div
-              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showOngoingMatches ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-          </button>
-        </div>
-
-        {/* Toggle partite avvenute oggi */}
-        <div className="mt-2 flex items-center justify-between rounded-2xl bg-white border border-slate-200 p-3">
-          <span className="text-sm font-semibold text-slate-700">Partite concluse oggi</span>
-          <button
-            onClick={() => { setShowTodayMatches(!showTodayMatches); setShowOngoingMatches(false); }}
-            className={`relative w-12 h-7 rounded-full transition-colors ${showTodayMatches ? 'bg-orange-500' : 'bg-slate-300'}`}
-          >
-            <div
-              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showTodayMatches ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-          </button>
-        </div>
-
-
-        {showNearby && (
-          <div className="mt-3 space-y-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-slate-700">Raggio</span>
-                <span className="text-sm text-slate-500">{radiusKm} km</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="100"
-                step="5"
-                value={radiusKm}
-                onChange={(e) => setRadiusKm(Number(e.target.value))}
-                className="mt-3 w-full"
-              />
-            </div>
-            <p className="text-xs text-slate-500">
-              {locationAllowed
-                ? `${usingManualPosition ? 'Usando posizione manuale. ' : ''}Mostro solo le partite entro ${radiusKm} km da te (${nearbyMatches.length} trovate).`
-                : locationError || 'Sto cercando la tua posizione...'}`
-            </p>
-          </div>
-        )}
-      </div>
+      <HomeFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        radiusKm={radiusKm}
+        onRadiusChange={setRadiusKm}
+        showOngoingMatches={showOngoingMatches}
+        onShowOngoingChange={setShowOngoingMatches}
+        showTodayMatches={showTodayMatches}
+        onShowTodayChange={setShowTodayMatches}
+        showNearby={showNearby}
+        onShowNearbyChange={setShowNearby}
+        locationAllowed={locationAllowed}
+        locationError={locationError}
+        usingManualPosition={usingManualPosition}
+        nearbyMatchesCount={showNearby ? nearbyMatches.length : undefined}
+        selectedSport={selectedSport}
+        onSportChange={setSelectedSport}
+        sportsCounts={sportsCounts}
+        matchesFoundCount={matchList.length}
+        selectedDay={selectedDay}
+        onDayChange={setSelectedDay}
+      />
 
       {(loading || geoLoading) ? (
         <div className="grid gap-4">
@@ -406,21 +415,60 @@ export default function Home({ session, isPWA }) {
               />
             ))
           ) : (
-            <>
-              <p className="text-center text-slate-500 mt-10">
-                {showNearby
-                  ? 'Nessuna partita nelle vicinanze. Prova a mostrare tutte le partite.'
-                  : 'Nessuna partita trovata. Creane una tu!'}
-              </p>
+            <div className="space-y-4 mt-8">
+              {/* Empty State Card */}
+              <div className="rounded-3xl bg-gradient-to-br from-blue-50 to-slate-50 border-2 border-blue-100 p-8 text-center space-y-3">
+                <div className="text-5xl">⚽</div>
+                <h3 className="text-lg font-bold text-slate-800">
+                  {showNearby && showOngoingMatches && 'Nessuna partita in corso'}
+                  {showNearby && showTodayMatches && 'Nessuna partita conclusa oggi'}
+                  {showNearby && !showOngoingMatches && !showTodayMatches && 'Nessuna partita nelle vicinanze'}
+                  {!showNearby && searchQuery && 'Nessuna partita corrispondente'}
+                  {!showNearby && !searchQuery && 'Nessuna partita al momento'}
+                </h3>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  {showNearby && !locationAllowed && (
+                    <>
+                      Attiva la geolocalizzazione per scoprire le partite vicine, oppure passa a "Tutte" per vedere tutte le partite.
+                    </>
+                  )}
+                  {showNearby && locationAllowed && !showOngoingMatches && !showTodayMatches && (
+                    <>
+                      Prova ad aumentare il raggio di ricerca fino a {radiusKm < 100 ? radiusKm + 20 : 100} km per trovare più partite.
+                    </>
+                  )}
+                  {showNearby && locationAllowed && (showOngoingMatches || showTodayMatches) && (
+                    <>
+                      Disattiva i filtri o regola il raggio di ricerca per trovare altre partite.
+                    </>
+                  )}
+                  {!showNearby && (
+                    <>
+                      Sembra che non ci siano partite. Sii il primo a organizzarne una!
+                    </>
+                  )}
+                </p>
+              </div>
 
+              {/* CTA Button */}
               <button
                 disabled={loading}
                 onClick={() => navigate('/organizza')}
-                className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
+                className="w-full cursor-pointer bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:shadow-xl hover:from-blue-700 hover:to-blue-800 transition-all active:scale-95 disabled:opacity-50"
               >
-                {loading ? 'Caricamento...' : 'Organizza una partita'}
+                {loading ? 'Caricamento...' : '+ Organizza una partita'}
               </button>
-            </>
+
+              {/* Secondary Suggestion */}
+              {showNearby && (
+                <button
+                  onClick={() => setShowNearby(false)}
+                  className="w-full cursor-pointer bg-white text-slate-600 py-3 rounded-2xl font-semibold border-2 border-slate-200 hover:bg-slate-50 transition-all"
+                >
+                  Visualizza tutte le partite
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

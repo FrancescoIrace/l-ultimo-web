@@ -140,7 +140,7 @@ function App() {
       {/* QUESTO COMPONENTE NON CI SARA' PIU' QUANDO L'APP SI TROVERA' SUL PLAY STORE */}
       <PWAInstallBanner />
       <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen">
-        <header className="bg-white border-b p-1 flex justify-between items-center sticky top-0 z-10">
+        <header className="bg-white border-blue-400 border-b-2 p-1 flex justify-between items-center sticky top-0 z-10">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform">
             <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
           </button>

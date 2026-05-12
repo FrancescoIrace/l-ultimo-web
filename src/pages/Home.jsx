@@ -53,7 +53,7 @@ export default function Home({ session, isPWA }) {
       setMatches(data || []);
   
       // Debug giorni
-      console.log('Giorni disponibili:', data?.map(m => m.datetime.split('T')[0]).filter(d => d));
+      // console.log('Giorni disponibili:', data?.map(m => m.datetime.split('T')[0]).filter(d => d));
     }
     setLoading(false);
   };
@@ -322,7 +322,7 @@ export default function Home({ session, isPWA }) {
     if (selectedDay) {
       filtered = filtered.filter((match) => {
         const matchDate = match.datetime.substring(0, 10); // Estrae YYYY-MM-DD (funziona con qualsiasi formato)
-        console.log('DEBUG - matchDate:', matchDate, 'selectedDay:', selectedDay, 'match:', match);
+        // console.log('DEBUG - matchDate:', matchDate, 'selectedDay:', selectedDay, 'match:', match);
         return matchDate === selectedDay;
       });
     } else {

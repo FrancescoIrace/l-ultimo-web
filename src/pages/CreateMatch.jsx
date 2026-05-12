@@ -93,6 +93,12 @@ export default function CreateMatch() {
         });
     };
 
+    // Rileva se la descrizione contiene link
+    const containsLinks = (text) => {
+        const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/gi;
+        return urlRegex.test(text);
+    };
+
     // Carica l'ID utente e conta le partite attive
     useEffect(() => {
         async function loadUserAndCountMatches() {
@@ -183,6 +189,12 @@ export default function CreateMatch() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        if (containsLinks(formData.description)) {
+            error("La descrizione non può contenere link.");
+            setLoading(false);
+            return;
+        }
 
         try {
             // 1. Recuperiamo l'utente
@@ -294,6 +306,12 @@ export default function CreateMatch() {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        if (containsLinks(formData.description)) {
+            error("La descrizione non può contenere link.");
+            setLoading(false);
+            return;
+        }
 
         const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
 
@@ -444,10 +462,14 @@ export default function CreateMatch() {
                         <textarea
                             placeholder="Descrizione della partita"
                             maxLength={300}
-                            className="w-full h-50 resize-none p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                            className={`w-full h-50 resize-none p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 ${containsLinks(formData.description) ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 focus:ring-blue-500'
+                                }`}
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />
+                        {containsLinks(formData.description) && (
+                            <p className="mt-2 text-xs text-red-600 font-bold">❌ Non sono consentiti link nella descrizione</p>
+                        )}
                     </div>
 
                     <button
@@ -608,10 +630,14 @@ export default function CreateMatch() {
                     <textarea
                         placeholder="Descrizione della partita"
                         maxLength={300}
-                        className="w-full h-50 resize-none p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`w-full h-50 resize-none p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 ${containsLinks(formData.description) ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 focus:ring-blue-500'
+                            }`}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
+                    {containsLinks(formData.description) && (
+                        <p className="mt-2 text-xs text-red-600 font-bold">❌ Non sono consentiti link nella descrizione</p>
+                    )}
                 </div>
 
                 <button

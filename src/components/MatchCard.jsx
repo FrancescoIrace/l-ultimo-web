@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Pencil } from 'lucide-react';
+import { Calendar, MapPin, Users, Pencil, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from './AlertComponent';
+import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
 
 export default function MatchCard({ match, user }) {
@@ -13,6 +14,8 @@ export default function MatchCard({ match, user }) {
   const [participants, setParticipants] = useState([]);
   const [waitingPlayers, setWaitingPlayers] = useState([]);
   const [confirmedPlayers, setConfirmedPlayers] = useState([]);
+  const [weatherData, setWeatherData] = useState(null);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
   // La partita è piena solo se i CONFERMATI raggiungono il limite
   const isFull = confirmedPlayers.length >= match.max_players;
@@ -97,6 +100,29 @@ export default function MatchCard({ match, user }) {
     };
   }, [match.id, user.id]);
 
+  // Fetch dati meteo se la partita è entro i prossimi 7 giorni
+  useEffect(() => {
+    if (!match.location_lat || !match.location_lng || !match.datetime) return;
+
+    const date = new Date(match.datetime.replace(' ', 'T'));
+    
+    // Verifica se la partita è entro 7 giorni
+    if (!isWithinSevenDays(date)) return;
+
+    const fetchWeather = async () => {
+      setIsLoadingWeather(true);
+      try {
+        const weather = await getWeather(match.location_lat, match.location_lng, date);
+        setWeatherData(weather);
+      } catch (err) {
+        console.error('Errore nel fetch dei dati meteo:', err);
+      } finally {
+        setIsLoadingWeather(false);
+      }
+    };
+
+    fetchWeather();
+  }, [match.location_lat, match.location_lng, match.datetime]);
 
   const handleJoin = async () => {
     const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
@@ -188,9 +214,36 @@ export default function MatchCard({ match, user }) {
       </h3>
 
       <div className="space-y-2 text-slate-600 text-sm">
-        <div className="flex items-center gap-2">
-          <Calendar size={16} />
-          <span>{date.toLocaleString('it-IT', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Calendar size={16} />
+            <span>{date.toLocaleString('it-IT', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          {/* Info meteo compatta */}
+          {weatherData && !isLoadingWeather && (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank');
+              }}
+              className="flex items-center gap-1 text-xs bg-blue-50 px-2 py-1 rounded-full whitespace-nowrap group relative cursor-pointer hover:bg-blue-100 hover:shadow-md transition-all active:scale-95"
+            >
+              <span className="text-lg">{weatherData.emoji}</span>
+              <span className="font-semibold">{weatherData.temperature}°C</span>
+              <span className="text-blue-600">💧{weatherData.rainProbability}%</span>
+              <RefreshCw size={12} className="text-blue-400 opacity-60" title="Dati in tempo reale" />
+              {/* Tooltip al hover */}
+              <div className="hidden group-hover:flex absolute bottom-full mb-2 right-0 bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50">
+                {weatherData.description}
+              </div>
+            </div>
+          )}
+          {isLoadingWeather && (
+            <div className="text-xs text-slate-400 flex items-center gap-1">
+              <RefreshCw size={12} className="animate-spin" />
+              <span>Caricamento meteo...</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <MapPin size={16} />

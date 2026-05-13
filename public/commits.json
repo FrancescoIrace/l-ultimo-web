@@ -1,5 +1,30 @@
 [
   {
+    "date": "13 maggio 2026",
+    "title": "fix vari meteo",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "13 maggio 2026",
+    "title": "Add previsioni meteo (testare)",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "12 maggio 2026",
+    "title": "Add validazione descrizione per inserimento link",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "12 maggio 2026",
+    "title": "fix text",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "12 maggio 2026",
+    "title": "Max length title 32 caratteri + fix break words per titolo lungo tutto attaccato",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "12 maggio 2026",
     "title": "Merge pull request #8 from FrancescoIrace/fix/filtri_home",
     "description": "Fix/filtri home"
@@ -23,30 +48,5 @@
     "date": "12 maggio 2026",
     "title": "Fix Filtri",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "11 maggio 2026",
-    "title": "Fix home",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "11 maggio 2026",
-    "title": "Fix inizio e fine match su MatchDetail",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "11 maggio 2026",
-    "title": "Merge pull request #7 from FrancescoIrace/fix/notifiche",
-    "description": "Fix vari per le notifiche Iphone + aggiunta banner"
-  },
-  {
-    "date": "11 maggio 2026",
-    "title": "Fix vari per le notifiche Iphone + aggiunta banner",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "11 maggio 2026",
-    "title": "Merge pull request #6 from FrancescoIrace/feature/invio_reminder_automatico",
-    "description": "Modifica del manifest"
   }
 ]

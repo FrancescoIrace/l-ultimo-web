@@ -1,4 +1,4 @@
-import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus,ChevronRight, RefreshCw } from 'lucide-react';
+import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, ChevronRight, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
@@ -61,11 +61,11 @@ export default function MatchDetail({ user }) {
         // (Attivi fino a 30 minuti dopo l'inizio, come avevi chiesto)
         // const isButtonsActive = oraAttuale <= (oraInizio + TRENTA_MINUTI);
 
-        console.log('⏰ Ora attuale:', new Date(oraAttuale).toLocaleTimeString());
-        console.log('⏰ Ora inizio match:', new Date(oraInizio).toLocaleTimeString());
-        console.log('⏰ Ora fine match:', new Date(oraInizio + UN_ORA).toLocaleTimeString());
-        console.log('⏰ Match iniziato?', isMatchStarted);
-        console.log('⏰ Match finito?', isMatchFinished);
+        // console.log('⏰ Ora attuale:', new Date(oraAttuale).toLocaleTimeString());
+        // console.log('⏰ Ora inizio match:', new Date(oraInizio).toLocaleTimeString());
+        // console.log('⏰ Ora fine match:', new Date(oraInizio + UN_ORA).toLocaleTimeString());
+        // console.log('⏰ Match iniziato?', isMatchStarted);
+        // console.log('⏰ Match finito?', isMatchFinished);
         // console.log('⏰ Ora fine bottoni:', new Date(oraInizio + TRENTA_MINUTI).toLocaleTimeString());
         return { isMatchStarted, isMatchFinished };
     };
@@ -205,7 +205,7 @@ export default function MatchDetail({ user }) {
         if (!match || !match.location_lat || !match.location_lng || !match.datetime) return;
 
         const date = new Date(match.datetime.replace(' ', 'T'));
-        
+
         // Verifica se la partita è entro 7 giorni
         if (!isWithinSevenDays(date)) return;
 
@@ -599,42 +599,8 @@ Scopri di più qui: ${window.location.href}`;
                     Indietro
                 </button>
 
-                {/* Box Meteo */}
-                {weatherData && !isLoadingWeather && (
-                    <div 
-                      onClick={() => window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank')}
-                      className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-md cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all active:scale-95"
-                    >
-                        <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
-                                📍 Meteo in Tempo Reale
-                            </h3>
-                            <RefreshCw size={14} className="text-blue-400 opacity-60" title="Dati in tempo reale da Open-Meteo" />
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-4xl">{weatherData.emoji}</span>
-                            <div className="flex-1">
-                                <div className="flex items-baseline gap-2 mb-1">
-                                    <span className="text-2xl font-black text-slate-800">{weatherData.temperature}°C</span>
-                                    <span className="text-sm text-slate-600 font-medium">{weatherData.description}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-sm text-blue-600 font-semibold">
-                                    <span>💧 Probabilità pioggia:</span>
-                                    <span className={weatherData.rainProbability > 60 ? 'text-red-500 font-black' : ''}>
-                                        {weatherData.rainProbability}%
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {isLoadingWeather && (
-                    <div className="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-2">
-                        <RefreshCw size={16} className="animate-spin text-blue-500" />
-                        <span className="text-sm text-blue-600 font-semibold">Caricamento meteo...</span>
-                    </div>
-                )}
+                {/* TITOLO DELLA PARTITA */}
+                <h2 className="text-3xl font-black uppercase mb-2 break-words">{match.title || match.sport}</h2>
 
                 {match.court_id && (
                     <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 ${match.reservation_status === 'confirmed' ? 'bg-green-50 border-green-100' :
@@ -684,7 +650,46 @@ Scopri di più qui: ${window.location.href}`;
                         </div>
                     </div>
                 )}
-                <h2 className="text-3xl font-black uppercase mb-2 break-words">{match.title || match.sport}</h2>
+
+                {/* Box Meteo */}
+                {weatherData && !isLoadingWeather && (
+                    <div
+                        onClick={() => window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank')}
+                        className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-md cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all active:scale-95"
+                    >
+                        <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
+                                ✨ Previsioni Meteo
+                            </h3>
+                            <RefreshCw size={14} className="text-blue-400 opacity-60" title="Dati in tempo reale da Open-Meteo" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-4xl">{weatherData.emoji}</span>
+                            <div className="flex-1">
+                                <div className="flex items-baseline gap-2 mb-1">
+                                    <span className="text-2xl font-black text-slate-800">{weatherData.temperature}°C</span>
+                                    <span className="text-sm text-slate-600 font-medium">{weatherData.description}</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-sm text-blue-600 font-semibold">
+                                    <span>💧 Probabilità pioggia:</span>
+                                    <span className={weatherData.rainProbability > 60 ? 'text-red-500 font-black' : ''}>
+                                        {weatherData.rainProbability}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {isLoadingWeather && (
+                    <div className="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-2">
+                        <RefreshCw size={16} className="animate-spin text-blue-500" />
+                        <span className="text-sm text-blue-600 font-semibold">Caricamento meteo...</span>
+                    </div>
+                )}
+
+
+
                 <div className="bg-blue-50 p-4 rounded-2xl mb-6">
                     <div className="relative location-menu-btn mb-3">
                         <button

@@ -39,13 +39,13 @@ export default function MatchAttendanceManager({ match, user, onUpdate }) {
     hoursRemaining > 0 &&
     hoursRemaining <= 24;
 
-  console.log('[MatchAttendanceManager] debug:', {
-    participant,
-    hoursRemaining,
-    shouldShow,
-    participants: match.participants,
-    userId: user.id,
-  });
+  // console.log('[MatchAttendanceManager] debug:', {
+  //   participant,
+  //   hoursRemaining,
+  //   shouldShow,
+  //   participants: match.participants,
+  //   userId: user.id,
+  // });
 
   const handleConfirm = async () => {
     setIsLoading(true);

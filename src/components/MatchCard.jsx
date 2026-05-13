@@ -222,10 +222,10 @@ export default function MatchCard({ match, user }) {
           {/* Info meteo compatta */}
           {weatherData && !isLoadingWeather && (
             <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank');
-              }}
+              // onClick={(e) => {
+              //   e.stopPropagation();
+              //   window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank');
+              // }}
               className="flex items-center gap-1 text-xs bg-blue-50 px-2 py-1 rounded-full whitespace-nowrap group relative cursor-pointer hover:bg-blue-100 hover:shadow-md transition-all active:scale-95"
             >
               <span className="text-lg">{weatherData.emoji}</span>

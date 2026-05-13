@@ -138,3 +138,15 @@ export function isWithinSevenDays(matchDateTime) {
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
   return diffDays >= 0 && diffDays <= 7;
 }
+
+/**
+ * Genera un messaggio di avviso in base alla probabilità di pioggia
+ * @param {number} rainProbability - Probabilità di pioggia (0-100)
+ * @returns {string|null} Messaggio di avviso o null se minore di 40%
+ */
+export function getWeatherMessage(rainProbability) {
+  if (rainProbability > 40) {
+    return '⚠️ Porta un ombrello!';
+  }
+  return null;
+}

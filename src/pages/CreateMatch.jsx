@@ -6,6 +6,8 @@ import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
 import { Info } from 'lucide-react';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
+import { getWeather, isWithinSevenDays } from '../lib/weatherService';
+
 
 // Converti da datetime-local string (YYYY-MM-DDTHH:mm) a formato timestamp locale
 // Per colonna timestamp (senza timezone) su Supabase
@@ -22,7 +24,7 @@ export default function CreateMatch() {
     const [activeMatchCount, setActiveMatchCount] = useState(0);
     const [userId, setUserId] = useState(null);
     const [tooltipActive, setTooltipActive] = useState(false);
-    const { success, error, alert } = useAlert();
+    const { success, error, alert, confirmDangerous } = useAlert();
     const [formData, setFormData] = useState({
         sport: 'Calcetto',
         title: '',
@@ -227,6 +229,11 @@ export default function CreateMatch() {
                 location_lng: formData.location_lng,
             };
 
+            // const weather = await getWeather(locationData.location_lat, locationData.location_lng, formData.datetime);
+            // if (weather) {
+            //     console.log("Dati meteo per la partita:", weather);
+            // }
+
             if (!locationData.location_lat || !locationData.location_lng) {
                 const { data: userProfile } = await supabase
                     .from('profiles')
@@ -314,6 +321,15 @@ export default function CreateMatch() {
         }
 
         const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
+
+        // const date = new Date(formData.datetime.replace(' ', 'T'));
+        // const weather = await getWeather(formData.location_lat, formData.location_lng, date);
+        // if (weather && isWithinSevenDays(date) && weather.rainProbability === 0) {
+        //     console.log("Probabilità di pioggia:", weather.rainProbability);
+        //     confirmDangerous(`⚠️ Attenzione! C'è una probabilità di pioggia del ${weather.rainProbability}% alla data e ora selezionata. Vuoi comunque procedere con l'aggiornamento?`, async () => {
+        //         return;
+        //     });
+        // }
 
         // 1. Aggiorniamo la partita esistente
         const { data: updatedMatch, error: matchError } = await supabase

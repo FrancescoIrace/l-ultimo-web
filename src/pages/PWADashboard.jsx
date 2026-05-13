@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
+import { motion } from 'framer-motion';
 import { AlertContext } from '../components/AlertComponent';
 
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications }) {
@@ -87,19 +88,13 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             Trova amici
           </button>
 
-          <div className="relative">
-            <button
-              onClick={() => navigate('/')}
-              disabled
-              className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
-            >
-              <Puzzle size={24} />
-              La tua squadra
-            </button>
-            <span className="absolute top-3 right-0 rotate-20 inline-flex rounded-full bg-rose-500 px-2 py-0.5 text-white text-[8px] font-bold shadow-md">
-              Work In Progress
-            </span>
-          </div>
+          <button
+            onClick={() => navigate('/squadre')}
+            className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
+          >
+            <Puzzle size={24} />
+            La tua squadra
+          </button>
 
           <div className="relative">
             <button
@@ -200,8 +195,6 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             </div>
           </div>
         </div> */}
-
-
       </div>
     </div>
   );

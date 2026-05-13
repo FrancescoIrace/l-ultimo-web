@@ -1,6 +1,16 @@
 [
   {
     "date": "13 maggio 2026",
+    "title": "Merge pull request #9 from FrancescoIrace/feature/weather_details",
+    "description": "Feature/weather details"
+  },
+  {
+    "date": "13 maggio 2026",
+    "title": "Fix colori tipi di tempo",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "13 maggio 2026",
     "title": "fix vari meteo",
     "description": "Modifica all'app"
   },
@@ -37,16 +47,6 @@
   {
     "date": "12 maggio 2026",
     "title": "Add filtro per giorno",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Aggiunta filtri per sport + fix vari",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Fix Filtri",
     "description": "Modifica all'app"
   }
 ]

@@ -27,6 +27,7 @@ import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
 import BusinessDashboard from './pages/business/BusinessDashboard';
 import GestisciCampi from './pages/business/GestisciCampi';
+import TeamsPage from './pages/TeamsPage';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -199,6 +200,7 @@ function App() {
               <Route path="/le-mie-partite" element={<MyMatches session={session} />} />
               <Route path="/organizza" element={<CreateMatch />} />
               <Route path="/modifica/:id" element={<CreateMatch />} />
+              <Route path="/squadre" element={<TeamsPage session={session} />} />
             </>
           )}
 

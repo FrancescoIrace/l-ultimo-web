@@ -30,20 +30,6 @@ export default function MatchDetail({ user }) {
     const [weatherData, setWeatherData] = useState(null);
     const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
-    //Gestiamo il tempo dall'inizio alla fine della partita (quasi sempre 1 ora dopo)
-    // const isMatchStarted = match ? new Date(match.datetime) > new Date() : false;
-    // // Se la partita è iniziata, consideriamo finita dopo 1 ora (per coprire eventuali ritardi o partite più lunghe)
-    // // const isMatchFinished = match ? new Date(match.datetime) < new Date(new Date(match.datetime).getTime() + 60 * 60 * 1000) : false;
-    // // const isMatchFinished = match ? new Date(match.datetime) < new Date() : false;
-
-    // const matchTime = match ? new Date(match.datetime).toTimeString().slice(0, 5) : null;
-    // const now = new Date();
-    // const bufferTime = 60 * 60 * 1000; // 1 ora in millisecondi
-    // const oraCorretta = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
-
-    // const isMatchFinished = match ? new Date() > new Date(new Date(match.datetime).getTime() + bufferTime) : false;
-
-
     const checkMatchStatus = (matchDatetime) => {
         const oraInizio = new Date(matchDatetime).getTime(); // Timestamp inizio match
         const oraAttuale = Date.now(); // Timestamp adesso
@@ -655,7 +641,7 @@ Scopri di più qui: ${window.location.href}`;
                 {weatherData && !isLoadingWeather && (
                     <div
                         onClick={() => window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank')}
-                        className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-md cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all active:scale-95"
+                        className={`mb-6 p-4 rounded-2xl ${weatherData.rainProbability < 30 ? 'bg-blue-50 border-blue-100' : weatherData.rainProbability < 60 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'} bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-md cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all active:scale-95`}
                     >
                         <div className="flex items-start justify-between mb-2">
                             <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">

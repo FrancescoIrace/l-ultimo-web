@@ -226,7 +226,7 @@ export default function MatchCard({ match, user }) {
               //   e.stopPropagation();
               //   window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank');
               // }}
-              className="flex items-center gap-1 text-xs bg-blue-50 px-2 py-1 rounded-full whitespace-nowrap group relative cursor-pointer hover:bg-blue-100 hover:shadow-md transition-all active:scale-95"
+              className={`flex items-center gap-1 text-xs ${weatherData.rainProbability < 30 ? 'bg-blue-50 border-blue-100 border-1' : weatherData.rainProbability < 60 ? 'bg-amber-50 border-amber-100 border-1' : 'bg-red-50 border-red-100 border-1'} px-2 py-1 rounded-full whitespace-nowrap group relative cursor-pointer hover:bg-blue-100 hover:shadow-md transition-all active:scale-95`}
             >
               <span className="text-lg">{weatherData.emoji}</span>
               <span className="font-semibold">{weatherData.temperature}°C</span>

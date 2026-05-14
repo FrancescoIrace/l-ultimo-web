@@ -28,6 +28,7 @@ import { usePWAMode } from './hooks/usePWAMode';
 import BusinessDashboard from './pages/business/BusinessDashboard';
 import GestisciCampi from './pages/business/GestisciCampi';
 import TeamsPage from './pages/TeamsPage';
+import TeamDetail from './pages/TeamDetail';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -172,9 +173,9 @@ function App() {
               userRole === 'center' ? (
                 <BusinessDashboard user={session.user} name={session.user.user_metadata.username} />
               ) : (
-                <PWADashboard 
-                  user={session.user} 
-                  onLogout={() => setSession(null)} 
+                <PWADashboard
+                  user={session.user}
+                  onLogout={() => setSession(null)}
                   isSupported={isSupported}
                   isSubscribed={isSubscribed}
                   subscribeToPushNotifications={subscribeToPushNotifications}
@@ -201,6 +202,8 @@ function App() {
               <Route path="/organizza" element={<CreateMatch />} />
               <Route path="/modifica/:id" element={<CreateMatch />} />
               <Route path="/squadre" element={<TeamsPage session={session} />} />
+              <Route path="/squadre/:id" element={<TeamDetail session={session} />} />
+
             </>
           )}
 

@@ -1,6 +1,11 @@
 [
   {
     "date": "14 maggio 2026",
+    "title": "Fix UI creazione squadra",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
     "title": "Restyling Sezione Squadre",
     "description": "Modifica all'app"
   },
@@ -43,10 +48,5 @@
     "date": "12 maggio 2026",
     "title": "Max length title 32 caratteri + fix break words per titolo lungo tutto attaccato",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Merge pull request #8 from FrancescoIrace/fix/filtri_home",
-    "description": "Fix/filtri home"
   }
 ]

@@ -97,7 +97,6 @@ export default function TeamsPage({ session }) {
             //Count delle squadre create dall'utente (per limitare a 3 per il momento)
             const createdCount = data.filter(team => team.created_by === userId).length;
             setCountCreatedTeams(createdCount);
-            console.log('Squadre create dall\'utente:', createdCount);
             setAllTeams(data || []);
         } catch (err) {
             error('Errore nella ricerca squadre: ' + err.message);
@@ -319,6 +318,7 @@ export default function TeamsPage({ session }) {
                     <motion.div
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
+                        onClick={() => {navigate(`/squadre/${team.id}`)}}
                         className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all active:scale-95"
                     >
                         <div className="flex items-start gap-4">
@@ -416,7 +416,8 @@ export default function TeamsPage({ session }) {
                     <motion.div
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
-                        className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all"
+                        onClick={() => navigate(`/squadre/${team.id}`)}
+                        className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all cursor-pointer"
                     >
                         <div className="flex items-start gap-4">
                             {/* Logo o Avatar */}
@@ -516,7 +517,7 @@ export default function TeamsPage({ session }) {
                         </div>
                     </div>
                     {countCreatedTeams >= 3 && (
-                        <p className="mt-1">❌ Hai raggiunto il limite. Rimuovi una squadra per creare una nuova.</p>
+                        <p className="mt-2 text-xs">❌ Hai raggiunto il limite. Rimuovi una squadra per creare una nuova.</p>
                     )}
                 </div>
                 {/* Nome Squadra */}
@@ -670,7 +671,7 @@ export default function TeamsPage({ session }) {
                         disabled={
                             creatingTeam ||
                             !formData.name.trim() ||
-                            (formData.is_private && !formData.password.trim())
+                            (formData.is_private && !formData.password.trim()) || countCreatedTeams >= 3
                         }
                         className="flex-1 px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 flex items-center justify-center gap-2"
                     >
@@ -692,7 +693,7 @@ export default function TeamsPage({ session }) {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white max-w-md mx-auto p-4">
+        <div className="min-h-screen bg-white max-w-md mx-auto p-4">
             {/* TASTO INDIETRO */}
             <button
                 onClick={() => navigate("/partite")}
@@ -711,20 +712,20 @@ export default function TeamsPage({ session }) {
             {/* Main Content */}
             <div className="max-w-md mx-auto mt-3 pb-20">
                 {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 bg-transparent sticky top-16 z-2">
+                <div className="flex gap-2 mb-6 bg-transparent top-16 z-2">
                     {[
-                        { id: 'myTeams', label: 'I miei Gruppi', icon: '👥' },
-                        { id: 'discover', label: 'Scopri', icon: '🔍' },
-                        { id: 'create', label: 'Crea', icon: '➕' }
+                        { id: 'myTeams', label: 'Le mie squadre', icon: '' },
+                        { id: 'discover', label: 'Trova squadre', icon: '' },
+                        { id: 'create', label: 'Crea', icon: '' }
                     ].map(tab => (
                         <motion.button
                             key={tab.id}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-3 px-4 rounded-full font-bold text-sm transition-all ${activeTab === tab.id
+                            className={`flex-1 py-3 px-1 rounded-2xl font-bold text-sm transition-all ${activeTab === tab.id
                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                : 'bg-slate-200 text-slate-500 hover:bg-slate-200'
                                 }`}
                         >
                             <span className="mr-2">{tab.icon}</span>

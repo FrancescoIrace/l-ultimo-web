@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
@@ -17,6 +17,8 @@ export default function TeamsPage({ session }) {
     const [loading, setLoading] = useState(false);
     const [processingTeam, setProcessingTeam] = useState(null);
     const [copiedCode, setCopiedCode] = useState(null);
+    const [tooltipActive, setTooltipActive] = useState(false);
+    const [countCreatedTeams, setCountCreatedTeams] = useState(0);
 
     // States per create team form
     const [formData, setFormData] = useState({
@@ -92,6 +94,10 @@ export default function TeamsPage({ session }) {
             const { data, error: err } = await supabaseQuery;
 
             if (err) throw err;
+            //Count delle squadre create dall'utente (per limitare a 3 per il momento)
+            const createdCount = data.filter(team => team.created_by === userId).length;
+            setCountCreatedTeams(createdCount);
+            console.log('Squadre create dall\'utente:', createdCount);
             setAllTeams(data || []);
         } catch (err) {
             error('Errore nella ricerca squadre: ' + err.message);
@@ -487,7 +493,32 @@ export default function TeamsPage({ session }) {
             exit={{ opacity: 0 }}
             className="space-y-4"
         >
-            <form onSubmit={handleCreateTeam} className="space-y-4">
+            <form onSubmit={handleCreateTeam} className="space-y-5">
+                {/* Info squadre create dall'utente */}
+                <div className={`border rounded-xl shadow p-3 text-xl text-md font-semibold ${countCreatedTeams >= 3 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gradient-to-r from-blue-200 to-yellow-300 border-blue-300 text-blue-800'}`}>
+                    <div className="flex items-center justify-between">
+                        <p>
+                            Squadre create: <span className="font-black">{countCreatedTeams}</span>/3
+                        </p>
+                        <div className="relative cursor-help">
+                            <button
+                                type="button"
+                                onClick={() => setTooltipActive(!tooltipActive)}
+                                className="p-1 hover:opacity-70 transition-opacity"
+                            >
+                                <Info size={22} className="inline" />
+                            </button>
+                            {tooltipActive && (
+                                <div className="absolute bottom-full right-0 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 animate-fade-in">
+                                    Puoi avere max 3 squadre create contemporaneamente
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    {countCreatedTeams >= 3 && (
+                        <p className="mt-1">❌ Hai raggiunto il limite. Rimuovi una squadra per creare una nuova.</p>
+                    )}
+                </div>
                 {/* Nome Squadra */}
                 <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
@@ -496,14 +527,14 @@ export default function TeamsPage({ session }) {
                     <input
                         type="text"
                         placeholder="Es: Calcetto Domenica"
-                        maxLength={50}
+                        maxLength={30}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         required
                     />
                     <p className="text-xs text-slate-400 mt-1">
-                        {formData.name.length}/50 caratteri
+                        {formData.name.length}/30 caratteri
                     </p>
                 </div>
 
@@ -641,7 +672,7 @@ export default function TeamsPage({ session }) {
                             !formData.name.trim() ||
                             (formData.is_private && !formData.password.trim())
                         }
-                        className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold text-sm hover:shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 flex items-center justify-center gap-2"
                     >
                         {creatingTeam ? (
                             <>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from './AlertComponent';
@@ -163,11 +163,11 @@ export default function TeamsManager({ userId }) {
           <motion.div
             key={team.id}
             whileHover={{ scale: 1.02 }}
-            className="bg-white border-2 border-yellow-200 rounded-2xl p-4 cursor-pointer hover:shadow-lg transition-all active:scale-95"
+            className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all active:scale-95"
           >
             <div className="flex items-start gap-4">
               {/* Logo o Avatar */}
-              <div className="w-16 h-16 bg-yellow-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
                 {team.logo_url ? (
                   <img
                     src={team.logo_url}
@@ -182,16 +182,16 @@ export default function TeamsManager({ userId }) {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-800">{team.name}</h3>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="text-xs text-slate-500 mb-3">
                   {team.description || 'Nessuna descrizione'}
                 </p>
 
-                {/* Codice Invito */}
+                {/* Codice Invito - Badge piccolo e discreto */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleCopyCode(team.invite_code)}
-                  className="flex items-center gap-2 text-xs bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-lg font-bold text-yellow-700 hover:bg-yellow-100 transition-all"
+                  className="flex items-center gap-2 text-xs bg-slate-100 px-3 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-200 transition-all"
                 >
                   {copiedCode === team.invite_code ? (
                     <>
@@ -266,7 +266,7 @@ export default function TeamsManager({ userId }) {
           <motion.div
             key={team.id}
             whileHover={{ scale: 1.02 }}
-            className="bg-white border-2 border-slate-200 rounded-2xl p-4 hover:shadow-lg transition-all"
+            className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all"
           >
             <div className="flex items-start gap-4">
               {/* Logo o Avatar */}
@@ -284,8 +284,16 @@ export default function TeamsManager({ userId }) {
 
               {/* Info e Bottone */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <h3 className="font-bold text-slate-800">{team.name}</h3>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <h3 className="font-bold text-slate-800">{team.name}</h3>
+                    {team.is_private && (
+                      <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0">
+                        <Lock size={12} />
+                        Privata
+                      </span>
+                    )}
+                  </div>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -294,12 +302,12 @@ export default function TeamsManager({ userId }) {
                       processingTeam === team.id ||
                       myTeams.some(t => t.id === team.id)
                     }
-                    className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all active:scale-95 whitespace-nowrap ${
+                    className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all active:scale-95 whitespace-nowrap flex-shrink-0 ${
                       myTeams.some(t => t.id === team.id)
                         ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                         : processingTeam === team.id
                         ? 'bg-blue-300 text-white'
-                        : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg shadow-blue-200'
+                        : 'bg-blue-600 text-white hover:shadow-lg'
                     }`}
                   >
                     {processingTeam === team.id
@@ -314,9 +322,9 @@ export default function TeamsManager({ userId }) {
                   {team.description || 'Nessuna descrizione'}
                 </p>
 
-                {/* Codice Invito e Info */}
+                {/* Codice Invito - Badge discreto */}
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="bg-slate-50 text-slate-600 px-2 py-1 rounded font-mono font-bold border border-slate-200">
+                  <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-lg font-mono font-semibold">
                     {team.invite_code}
                   </span>
                 </div>
@@ -333,54 +341,44 @@ export default function TeamsManager({ userId }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
-      className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-lg"
+      className="bg-white rounded-3xl overflow-hidden shadow-md"
     >
       {/* Header */}
-      <div className="border-b border-slate-200 px-4 py-4 flex items-center justify-between">
+      <div className="px-4 py-4 flex items-center justify-between border-b border-slate-100">
         <h1 className="text-2xl font-black text-slate-800">⚽ Squadre</h1>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex gap-2 px-4 py-4 bg-transparent">
         <motion.button
-          whileHover={{ backgroundColor: 'rgba(229, 231, 235, 0.5)' }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setActiveTab('myTeams')}
-          className={`flex-1 py-4 font-bold transition-all relative text-sm ${
+          className={`flex-1 py-3 px-4 rounded-full font-bold text-sm transition-all ${
             activeTab === 'myTeams'
-              ? 'text-yellow-500 bg-yellow-50'
-              : 'text-slate-600'
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
           }`}
         >
           I miei Gruppi
-          {activeTab === 'myTeams' && (
-            <motion.div
-              layoutId="tabIndicator"
-              className="absolute bottom-0 left-0 right-0 h-1 bg-yellow-500"
-            />
-          )}
         </motion.button>
 
         <motion.button
-          whileHover={{ backgroundColor: 'rgba(229, 231, 235, 0.5)' }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setActiveTab('discover')}
-          className={`flex-1 py-4 font-bold transition-all relative text-sm ${
+          className={`flex-1 py-3 px-4 rounded-full font-bold text-sm transition-all ${
             activeTab === 'discover'
-              ? 'text-blue-500 bg-blue-50'
-              : 'text-slate-600'
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
           }`}
         >
           Scopri
-          {activeTab === 'discover' && (
-            <motion.div
-              layoutId="tabIndicator"
-              className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500"
-            />
-          )}
         </motion.button>
       </div>
 
       {/* Tab Content */}
-      <div className="overflow-y-auto px-4 py-4 max-h-96">
+      <div className="overflow-y-auto px-4 py-4 space-y-4">
         {activeTab === 'myTeams' && renderMyTeamsTab()}
         {activeTab === 'discover' && renderDiscoverTab()}
       </div>

@@ -101,28 +101,28 @@ export default function MatchCard({ match, user }) {
   }, [match.id, user.id]);
 
   // Fetch dati meteo se la partita è entro i prossimi 7 giorni
-  useEffect(() => {
-    if (!match.location_lat || !match.location_lng || !match.datetime) return;
+  // useEffect(() => {
+  //   if (!match.location_lat || !match.location_lng || !match.datetime) return;
 
-    const date = new Date(match.datetime.replace(' ', 'T'));
+  //   const date = new Date(match.datetime.replace(' ', 'T'));
     
-    // Verifica se la partita è entro 7 giorni
-    if (!isWithinSevenDays(date)) return;
+  //   // Verifica se la partita è entro 7 giorni
+  //   if (!isWithinSevenDays(date)) return;
 
-    const fetchWeather = async () => {
-      setIsLoadingWeather(true);
-      try {
-        const weather = await getWeather(match.location_lat, match.location_lng, date);
-        setWeatherData(weather);
-      } catch (err) {
-        console.error('Errore nel fetch dei dati meteo:', err);
-      } finally {
-        setIsLoadingWeather(false);
-      }
-    };
+  //   const fetchWeather = async () => {
+  //     setIsLoadingWeather(true);
+  //     try {
+  //       const weather = await getWeather(match.location_lat, match.location_lng, date);
+  //       setWeatherData(weather);
+  //     } catch (err) {
+  //       console.error('Errore nel fetch dei dati meteo:', err);
+  //     } finally {
+  //       setIsLoadingWeather(false);
+  //     }
+  //   };
 
-    fetchWeather();
-  }, [match.location_lat, match.location_lng, match.datetime]);
+  //   fetchWeather();
+  // }, [match.location_lat, match.location_lng, match.datetime]);
 
   const handleJoin = async () => {
     const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {

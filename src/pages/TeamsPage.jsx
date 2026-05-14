@@ -26,7 +26,9 @@ export default function TeamsPage({ session }) {
         description: '',
         logo_url: '',
         is_private: false,
-        password: ''
+        password: '',
+        sport: [],
+        citta: ''
     });
     const [creatingTeam, setCreatingTeam] = useState(false);
 
@@ -51,7 +53,9 @@ export default function TeamsPage({ session }) {
             description,
             logo_url,
             invite_code,
-            created_by
+            created_by,
+            sport,
+            citta
           )
         `)
                 .eq('user_id', userId);
@@ -81,7 +85,9 @@ export default function TeamsPage({ session }) {
         invite_code,
         created_by,
         is_private,
-        password
+        password,
+        sport,
+        citta
       `);
 
             // Filtro by ricerca - per nome (ilike) o codice invito
@@ -254,6 +260,8 @@ export default function TeamsPage({ session }) {
                     invite_code: inviteCode,
                     is_private: formData.is_private,
                     password: formData.is_private ? formData.password : null,
+                    sport: formData.sport || [],
+                    citta: formData.citta || '',
                     created_by: userId,
                     created_at: new Date().toISOString()
                 })
@@ -282,7 +290,9 @@ export default function TeamsPage({ session }) {
                 description: '',
                 logo_url: '',
                 is_private: false,
-                password: ''
+                password: '',
+                sport: [],
+                citta: ''
             });
 
             // Ricarica team
@@ -318,7 +328,7 @@ export default function TeamsPage({ session }) {
                     <motion.div
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
-                        onClick={() => {navigate(`/squadre/${team.id}`)}}
+                        onClick={() => { navigate(`/squadre/${team.id}`) }}
                         className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all active:scale-95"
                     >
                         <div className="flex items-start gap-4">
@@ -338,9 +348,23 @@ export default function TeamsPage({ session }) {
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-bold text-slate-800">{team.name}</h3>
-                                <p className="text-xs text-slate-500 mb-3">
+                                <p className="text-xs text-slate-500 mb-2">
                                     {team.description || 'Nessuna descrizione'}
                                 </p>
+
+                                {/* Sport e Città */}
+                                <div className="mb-2 flex items-center gap-2 flex-wrap">
+                                    {team.citta && (
+                                        <span className="inline-flex items-center gap-1 text-xs bg-slate-50 text-slate-700 px-2 py-1 rounded-lg">
+                                            📍 {team.citta}
+                                        </span>
+                                    )}
+                                    {team.sport && team.sport.length > 0 && (
+                                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">
+                                            ⚽ {team.sport.slice(0, 2).join(', ')}{team.sport.length > 2 ? '...' : ''}
+                                        </span>
+                                    )}
+                                </div>
 
                                 {/* Codice Invito - Badge piccolo e discreto */}
                                 <motion.button
@@ -389,7 +413,7 @@ export default function TeamsPage({ session }) {
                         placeholder="Cerca per nome o codice..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     {searchQuery && (
                         <button
@@ -472,6 +496,20 @@ export default function TeamsPage({ session }) {
                                     {team.description || 'Nessuna descrizione'}
                                 </p>
 
+                                {/* Sport e Città */}
+                                <div className="mb-2 flex items-center gap-2 flex-wrap">
+                                    {team.citta && (
+                                        <span className="inline-flex items-center gap-1 text-xs bg-slate-50 text-slate-700 px-2 py-1 rounded-lg">
+                                            📍 {team.citta}
+                                        </span>
+                                    )}
+                                    {team.sport && team.sport.length > 0 && (
+                                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">
+                                            ⚽ {team.sport.slice(0, 2).join(', ')}{team.sport.length > 2 ? '...' : ''}
+                                        </span>
+                                    )}
+                                </div>
+
                                 {/* Codice Invito - Badge discreto */}
                                 <div className="flex items-center gap-2 text-xs">
                                     <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-lg font-mono font-semibold">
@@ -531,7 +569,7 @@ export default function TeamsPage({ session }) {
                         maxLength={30}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         required
                     />
                     <p className="text-xs text-slate-400 mt-1">
@@ -550,7 +588,7 @@ export default function TeamsPage({ session }) {
                         rows={3}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                     />
                     <p className="text-xs text-slate-400 mt-1">
                         {formData.description.length}/200 caratteri
@@ -567,10 +605,10 @@ export default function TeamsPage({ session }) {
                         placeholder="https://example.com/logo.jpg"
                         value={formData.logo_url}
                         onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                     {formData.logo_url && (
-                        <div className="mt-3 w-20 h-20 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center">
+                        <div className="mt-3 w-20 h-20 bg-white rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center">
                             <img
                                 src={formData.logo_url}
                                 alt="preview"
@@ -583,10 +621,88 @@ export default function TeamsPage({ session }) {
                     )}
                 </div>
 
+
+
+                {/* Città */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                        Città 📍
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="Es: Napoli"
+                        value={formData.citta}
+                        onChange={(e) => setFormData({ ...formData, citta: e.target.value })}
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                </div>
+
+                {/* Sport - Mini Card Grid */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-3">
+                        Sport (max 5)
+                    </label>
+                    <div className="grid grid-cols-4 gap-1 mb-3">
+                        {[
+                            { name: 'Calcetto', icon: '⚽' },
+                            { name: 'Calcio a 7', icon: '⚽' },
+                            { name: 'Calcio a 11', icon: '⚽' },
+                            { name: 'Basket', icon: '🏀' },
+                            { name: 'Volley', icon: '🏐' },
+                            { name: 'Tennis', icon: '🎾' },
+                            { name: 'Palestra', icon: '💪' }
+                        ].map(({ name: sport, icon }) => {
+                            const isSelected = formData.sport.includes(sport);
+                            const isDisabled = formData.sport.length >= 5 && !isSelected;
+                            return (
+                                <motion.button
+                                    key={sport}
+                                    type="button"
+                                    whileHover={!isDisabled ? { scale: 1.02 } : {}}
+                                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                                    onClick={() => {
+                                        if (isSelected) {
+                                            setFormData({ ...formData, sport: formData.sport.filter(s => s !== sport) });
+                                        } else if (formData.sport.length < 5) {
+                                            setFormData({ ...formData, sport: [...formData.sport, sport] });
+                                        }
+                                    }}
+                                    disabled={isDisabled}
+                                    className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${
+                                        isSelected
+                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg'
+                                            : isDisabled
+                                                ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
+                                                : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
+                                    }`}
+                                >
+                                    <span className="text-lg">{icon}</span>
+                                    <span className="text-xs text-center leading-tight">{sport}</span>
+                                </motion.button>
+                            );
+                        })}
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                        <p className="text-slate-400">
+                            Selezionati: <span className="font-bold text-slate-600">{formData.sport.length}/5</span>
+                        </p>
+                        {formData.sport.length > 0 && (
+                            <div className="flex gap-1 flex-wrap">
+                                {formData.sport.map(sport => (
+                                    <span key={sport} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">
+                                        {sport}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+
                 {/* Privacy Toggle */}
                 <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                        Tipo di Squadra
+                        PRIVACY SQUADRA
                     </label>
                     <div className="flex gap-2">
                         <button
@@ -594,7 +710,7 @@ export default function TeamsPage({ session }) {
                             onClick={() => setFormData({ ...formData, is_private: false, password: '' })}
                             className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${!formData.is_private
                                 ? 'bg-blue-500 text-white shadow-lg'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             🌐 Pubblica
@@ -604,7 +720,7 @@ export default function TeamsPage({ session }) {
                             onClick={() => setFormData({ ...formData, is_private: true })}
                             className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${formData.is_private
                                 ? 'bg-red-500 text-white shadow-lg'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
                             🔒 Privata
@@ -634,7 +750,7 @@ export default function TeamsPage({ session }) {
                             maxLength={6}
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value.toUpperCase() })}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 text-sm font-mono font-bold"
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 text-sm font-mono font-bold"
                         />
                         <div className="flex items-center justify-between">
                             <p className="text-xs text-slate-400">
@@ -648,6 +764,7 @@ export default function TeamsPage({ session }) {
                         </div>
                     </motion.div>
                 )}
+
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
                     <p className="text-xs text-blue-700 font-semibold">
                         💡 Un codice invito univoco verrà generato automaticamente per condividere la tua squadra!
@@ -659,7 +776,7 @@ export default function TeamsPage({ session }) {
                     <button
                         type="button"
                         onClick={() => {
-                            setFormData({ name: '', description: '', logo_url: '', is_private: false, password: '' });
+                            setFormData({ name: '', description: '', logo_url: '', is_private: false, password: '', sport: [], citta: '' });
                             setActiveTab('myTeams');
                         }}
                         className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
@@ -693,7 +810,7 @@ export default function TeamsPage({ session }) {
     );
 
     return (
-        <div className="min-h-screen bg-white max-w-md mx-auto p-4">
+        <div className="min-h-screen bg-slate-50 max-w-md mx-auto p-4">
             {/* TASTO INDIETRO */}
             <button
                 onClick={() => navigate("/partite")}

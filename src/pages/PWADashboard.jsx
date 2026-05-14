@@ -93,7 +93,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
           >
             <Puzzle size={24} />
-            La tua squadra
+            Squadre
           </button>
 
           <div className="relative">
@@ -110,16 +110,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             </span>
           </div>
 
-          {/* Removed centered WIP badge */}
         </div>
-
-        {/* Info Section */}
-        {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mt-8">
-          <h2 className="font-bold text-slate-800 mb-3">🚀 App Installata</h2>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Stai utilizzando L'Ultimo come app nativa. La dashboard PWA ti permette accesso veloce a tutte le funzioni senza aprire il browser!
-          </p>
-        </div> */}
 
         {/* Banner esempio 1 */}
         <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">

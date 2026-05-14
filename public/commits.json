@@ -1,6 +1,16 @@
 [
   {
     "date": "14 maggio 2026",
+    "title": "Fix",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
+    "title": "Add pagina dettagli squadra + inviti",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
     "title": "Fix UI creazione squadra",
     "description": "Modifica all'app"
   },
@@ -37,16 +47,6 @@
   {
     "date": "12 maggio 2026",
     "title": "Add validazione descrizione per inserimento link",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "fix text",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Max length title 32 caratteri + fix break words per titolo lungo tutto attaccato",
     "description": "Modifica all'app"
   }
 ]

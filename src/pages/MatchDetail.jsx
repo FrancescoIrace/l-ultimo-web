@@ -822,9 +822,8 @@ Scopri di più qui: ${window.location.href}`;
 
                             {/* Tag Organizzatore */}
                             {p.user_id === match.creator_id && (
-                                <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-2xl uppercase shadow-sm relative -top-6 -right-4">
-                                    Organizzatore
-                                </span>
+                                <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Organizzatore</span>
+
                             )}
                         </div>
                     ))}

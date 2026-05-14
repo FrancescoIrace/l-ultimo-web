@@ -1,6 +1,11 @@
 [
   {
     "date": "14 maggio 2026",
+    "title": "Fix squadre",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
     "title": "Fix",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "13 maggio 2026",
     "title": "Add previsioni meteo (testare)",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Add validazione descrizione per inserimento link",
     "description": "Modifica all'app"
   }
 ]

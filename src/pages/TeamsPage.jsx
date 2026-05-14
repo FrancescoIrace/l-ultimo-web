@@ -329,16 +329,16 @@ export default function TeamsPage({ session }) {
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => { navigate(`/squadre/${team.id}`) }}
-                        className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all active:scale-95"
+                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
                     >
                         <div className="flex items-start gap-4">
-                            {/* Logo o Avatar */}
-                            <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            {/* Logo o Avatar - Cerchio con Gradiente */}
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-200">
                                 {team.logo_url ? (
                                     <img
                                         src={team.logo_url}
                                         alt={team.name}
-                                        className="w-full h-full object-cover rounded-xl"
+                                        className="w-full h-full object-cover rounded-full"
                                     />
                                 ) : (
                                     <span className="text-2xl">⚽</span>
@@ -347,8 +347,13 @@ export default function TeamsPage({ session }) {
 
                             {/* Info */}
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-slate-800">{team.name}</h3>
-                                <p className="text-xs text-slate-500 mb-2">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="font-bold text-slate-800">{team.name}</h3>
+                                    <span className="inline-flex items-center gap-1 bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0">
+                                        🌐 Pubblica
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-500 mb-2 line-clamp-2">
                                     {team.description || 'Nessuna descrizione'}
                                 </p>
 
@@ -366,21 +371,21 @@ export default function TeamsPage({ session }) {
                                     )}
                                 </div>
 
-                                {/* Codice Invito - Badge piccolo e discreto */}
+                                {/* Codice Invito - Pillola in basso */}
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleCopyCode(team.invite_code)}
-                                    className="flex items-center gap-2 text-xs bg-slate-100 px-3 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-200 transition-all"
+                                    onClick={(e) => {e.stopPropagation(); handleCopyCode(team.invite_code);}}
+                                    className="flex items-center gap-2 text-xs bg-slate-100 px-2.5 py-1.5 rounded-full font-semibold text-slate-600 hover:bg-slate-200 transition-all"
                                 >
                                     {copiedCode === team.invite_code ? (
                                         <>
-                                            <Check size={14} />
+                                            <Check size={12} />
                                             Copiato!
                                         </>
                                     ) : (
                                         <>
-                                            <Copy size={14} />
+                                            <Copy size={12} />
                                             {team.invite_code}
                                         </>
                                     )}
@@ -441,43 +446,51 @@ export default function TeamsPage({ session }) {
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => navigate(`/squadre/${team.id}`)}
-                        className="bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-95"
                     >
                         <div className="flex items-start gap-4">
-                            {/* Logo o Avatar */}
-                            <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            {/* Logo o Avatar - Cerchio con Gradiente */}
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-200">
                                 {team.logo_url ? (
                                     <img
                                         src={team.logo_url}
                                         alt={team.name}
-                                        className="w-full h-full object-cover rounded-xl"
+                                        className="w-full h-full object-cover rounded-full"
                                     />
                                 ) : (
-                                    <span className="text-xl">⚽</span>
+                                    <span className="text-2xl">⚽</span>
                                 )}
                             </div>
 
                             {/* Info e Bottone */}
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2 mb-2">
-                                    <div className="flex items-center gap-2 flex-1">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                    <div className="flex items-center gap-2 flex-1 flex-wrap">
                                         <h3 className="font-bold text-slate-800">{team.name}</h3>
-                                        {team.is_private && (
-                                            <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0">
-                                                <Lock size={12} />
-                                                Privata
-                                            </span>
-                                        )}
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${
+                                            team.is_private 
+                                                ? 'bg-red-50 text-red-600' 
+                                                : 'bg-green-50 text-green-600'
+                                        }`}>
+                                            {team.is_private ? (
+                                                <>
+                                                    <Lock size={12} />
+                                                    Privata
+                                                </>
+                                            ) : (
+                                                <>🌐 Pubblica</>
+                                            )}
+                                        </span>
                                     </div>
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        onClick={() => handleJoinTeam(team)}
+                                        onClick={(e) => {e.stopPropagation(); handleJoinTeam(team);}}
                                         disabled={
                                             processingTeam === team.id ||
                                             myTeams.some(t => t.id === team.id)
                                         }
-                                        className={`px-3 py-2 rounded-lg font-semibold text-xs transition-all active:scale-95 whitespace-nowrap flex-shrink-0 ${myTeams.some(t => t.id === team.id)
+                                        className={`px-3 py-2 rounded-full font-semibold text-xs transition-all active:scale-95 whitespace-nowrap flex-shrink-0 ${myTeams.some(t => t.id === team.id)
                                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                             : processingTeam === team.id
                                                 ? 'bg-blue-300 text-white'
@@ -487,12 +500,13 @@ export default function TeamsPage({ session }) {
                                         {processingTeam === team.id
                                             ? 'Caricamento...'
                                             : myTeams.some(t => t.id === team.id)
-                                                ? 'Iscritto'
+                                                ? '✓ Iscritto'
                                                 : 'Unisciti'}
                                     </motion.button>
                                 </div>
 
-                                <p className="text-xs text-slate-500 mb-2">
+                                {/* Descrizione - max 2 righe */}
+                                <p className="text-xs text-slate-500 mb-2 line-clamp-2">
                                     {team.description || 'Nessuna descrizione'}
                                 </p>
 
@@ -503,19 +517,36 @@ export default function TeamsPage({ session }) {
                                             📍 {team.citta}
                                         </span>
                                     )}
+                                    
+                                </div>
+
+                                <div className="mb-2 flex items-center gap-2 flex-wrap">
                                     {team.sport && team.sport.length > 0 && (
                                         <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">
-                                            ⚽ {team.sport.slice(0, 2).join(', ')}{team.sport.length > 2 ? '...' : ''}
+                                            ⚽ {team.sport.slice(0, 3).join(', ')}{team.sport.length > 3 ? '...' : ''}
                                         </span>
                                     )}
                                 </div>
 
-                                {/* Codice Invito - Badge discreto */}
-                                <div className="flex items-center gap-2 text-xs">
-                                    <span className="bg-slate-100 text-slate-600 px-2.5 py-1.5 rounded-lg font-mono font-semibold">
-                                        {team.invite_code}
-                                    </span>
-                                </div>
+                                {/* Codice Invito - Pillola in basso */}
+                                {/* <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={(e) => {e.stopPropagation(); handleCopyCode(team.invite_code);}}
+                                    className="flex items-center gap-2 text-xs bg-slate-100 px-2.5 py-1.5 rounded-full font-semibold text-slate-600 hover:bg-slate-200 transition-all"
+                                >
+                                    {copiedCode === team.invite_code ? (
+                                        <>
+                                            <Check size={12} />
+                                            Copiato!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy size={12} />
+                                            {team.invite_code}
+                                        </>
+                                    )}
+                                </motion.button> */}
                             </div>
                         </div>
                     </motion.div>
@@ -829,23 +860,22 @@ export default function TeamsPage({ session }) {
             {/* Main Content */}
             <div className="max-w-md mx-auto mt-3 pb-20">
                 {/* Tab Navigation */}
-                <div className="flex gap-2 mb-6 bg-transparent top-16 z-2">
+                <div className="flex gap-3 mb-6 bg-transparent top-16 z-2">
                     {[
-                        { id: 'myTeams', label: 'Le mie squadre', icon: '' },
-                        { id: 'discover', label: 'Trova squadre', icon: '' },
-                        { id: 'create', label: 'Crea', icon: '' }
+                        { id: 'myTeams', label: '👥 Le mie squadre' },
+                        { id: 'discover', label: '🔍 Trova squadre' },
+                        { id: 'create', label: '➕ Crea' }
                     ].map(tab => (
                         <motion.button
                             key={tab.id}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-3 px-1 rounded-2xl font-bold text-sm transition-all ${activeTab === tab.id
+                            className={`flex-1 py-3 px-3 rounded-full font-bold text-xs transition-all ${activeTab === tab.id
                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                : 'bg-slate-200 text-slate-500 hover:bg-slate-200'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-150'
                                 }`}
                         >
-                            <span className="mr-2">{tab.icon}</span>
                             {tab.label}
                         </motion.button>
                     ))}

@@ -235,7 +235,7 @@ export default function TeamDetail({ session }) {
             <div className="min-h-screen bg-white max-w-md mx-auto p-4 flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-600">Caricamento...</p>
+                    <p className="text-slate-600">Caricamento dettagli squadra...</p>
                 </div>
             </div>
         );
@@ -278,7 +278,7 @@ export default function TeamDetail({ session }) {
                 className="bg-white rounded-2xl p-6 shadow-md mb-6"
             >
                 {/* Logo */}
-                <div className="w-24 h-24 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-24 h-24 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4 border-2 border-slate-200">
                     {teamDetails.logo_url ? (
                         <img
                             src={teamDetails.logo_url}

@@ -342,7 +342,7 @@ export default function TeamDetail({ session }) {
     }
 
     return (
-        <div className="min-h-screen bg-white max-w-md mx-auto p-4 pb-20">
+        <div className="min-h-screen bg-slate-100 max-w-md mx-auto p-4 pb-20">
             {/* TASTO INDIETRO */}
             <button
                 onClick={() => navigate("/squadre")}
@@ -441,7 +441,7 @@ export default function TeamDetail({ session }) {
                         className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 border border-slate-200 shadow-lg hover:shadow-xl transition-all active:scale-95"
                     >
                         <Share2 size={16} />
-                        Condividi
+                        {/* Condividi */}
                     </motion.button>
 
                     {/* UNISCITI ALLA SQUADRA */}
@@ -469,7 +469,7 @@ export default function TeamDetail({ session }) {
                                 className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95"
                             >
                                 <UserPlus size={16} />
-                                Invita
+                                {/* Invita */}
                             </motion.button>
 
                             {teamDetails.created_by === userId && (
@@ -481,7 +481,7 @@ export default function TeamDetail({ session }) {
                                         className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95"
                                     >
                                         <Edit size={16} />
-                                        Modifica
+                                        {/* Modifica */}
                                     </motion.button>
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
@@ -491,7 +491,7 @@ export default function TeamDetail({ session }) {
                                         className="bg-red-700 hover:bg-red-800 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         <Trash2 size={16} />
-                                        Elimina
+                                        {/* Elimina */}
                                     </motion.button>
                                 </>
                             )}

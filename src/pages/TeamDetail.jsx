@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit,Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
@@ -313,14 +313,15 @@ export default function TeamDetail({ session }) {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-white max-w-md mx-auto p-4 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-slate-600">Caricamento dettagli squadra...</p>
-                </div>
-            </div>
-        );
+        // return (
+        //     <div className="min-h-screen bg-white max-w-md mx-auto p-4 flex items-center justify-center">
+        //         <div className="text-center">
+        //             <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+        //             <p className="text-slate-600">Caricamento dettagli squadra...</p>
+        //         </div>
+        //     </div>
+        // );
+        return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
     }
 
     if (!teamDetails) {
@@ -345,7 +346,7 @@ export default function TeamDetail({ session }) {
         <div className="min-h-screen bg-slate-100 max-w-md mx-auto p-4 pb-20">
             {/* TASTO INDIETRO */}
             <button
-                onClick={() => navigate("/squadre")}
+                onClick={() => navigate(-1)}
                 type="button"
                 className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
             >
@@ -393,22 +394,21 @@ export default function TeamDetail({ session }) {
                                 {sport}
                             </span>
                         ))
-                    ): (
+                    ) : (
                         <span className="text-sm text-slate-500">Nessuno sport associato</span>
                     )}
 
                     <div className=' rounded-xl p-3 mt-4 text-center text-slate-500'>
-                    <p className="font-semibold mb-2 text-md">Descrizione:</p>
-                    <p className="text-xs">
-                        {teamDetails.description || 'Nessuna descrizione'}
-                    </p>
-                    {teamDetails.citta && (
-                        <p className="text-xs mt-3 pt-3 border-t border-slate-200">
-                            📍 <span className="font-semibold text-slate-700">{teamDetails.citta}</span>
+                        <p className="font-semibold mb-2 text-md">Descrizione:</p>
+                        <p className="text-xs">
+                            {teamDetails.description || 'Nessuna descrizione'}
                         </p>
-                    )}
+                        {teamDetails.citta && (
+                            <p className="text-xs mt-3 pt-3 border-t border-slate-200">
+                                📍 <span className="font-semibold text-slate-700">{teamDetails.citta}</span>
+                            </p>
+                        )}
                     </div>
-
                 </div>
 
                 {/* Stats */}
@@ -427,9 +427,8 @@ export default function TeamDetail({ session }) {
                 </div>
 
                 {/* Azioni */}
-                <div className={`grid gap-2 ${
-                    !isUserMember 
-                        ? 'grid-cols-2' 
+                <div className={`grid gap-2 ${!isUserMember
+                        ? 'grid-cols-2'
                         : teamDetails.created_by === userId
                             ? 'grid-cols-4'
                             : 'grid-cols-3'
@@ -603,13 +602,12 @@ export default function TeamDetail({ session }) {
                                                 }
                                             }}
                                             disabled={isDisabled}
-                                            className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${
-                                                isSelected
+                                            className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${isSelected
                                                     ? 'bg-blue-600 text-white border-blue-600 shadow-lg'
                                                     : isDisabled
                                                         ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
                                                         : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
-                                            }`}
+                                                }`}
                                         >
                                             <span className="text-lg">{icon}</span>
                                             <span className="text-xs text-center leading-tight">{sport}</span>

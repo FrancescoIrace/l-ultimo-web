@@ -565,7 +565,7 @@ export default function TeamsPage({ session }) {
         >
             <form onSubmit={handleCreateTeam} className="space-y-5">
                 {/* Info squadre create dall'utente */}
-                <div className={`border rounded-xl shadow p-3 text-xl text-md font-semibold ${countCreatedTeams >= 3 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gradient-to-r from-blue-200 to-yellow-300 border-blue-300 text-blue-800'}`}>
+                <div className={`border rounded-xl shadow p-3 text-xl text-md ${countCreatedTeams >= 3 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gradient-to-r from-blue-200 to-yellow-300 border-blue-300 text-blue-800'}`}>
                     <div className="flex items-center justify-between">
                         <p>
                             Squadre create: <span className="font-black">{countCreatedTeams}</span>/3
@@ -844,7 +844,7 @@ export default function TeamsPage({ session }) {
         <div className="min-h-screen bg-slate-50 max-w-md mx-auto p-4">
             {/* TASTO INDIETRO */}
             <button
-                onClick={() => navigate("/partite")}
+                onClick={() => navigate("/")}
                 type="button"
                 className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
             >

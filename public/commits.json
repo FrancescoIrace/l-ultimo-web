@@ -1,5 +1,15 @@
 [
   {
+    "date": "16 maggio 2026",
+    "title": "Add squadre al profilo pubblico",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "16 maggio 2026",
+    "title": "Add squadre sul profilo",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "14 maggio 2026",
     "title": "Fix vari",
     "description": "Modifica all'app"
@@ -37,16 +47,6 @@
   {
     "date": "13 maggio 2026",
     "title": "Add teams logica",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "13 maggio 2026",
-    "title": "Merge pull request #9 from FrancescoIrace/feature/weather_details",
-    "description": "Feature/weather details"
-  },
-  {
-    "date": "13 maggio 2026",
-    "title": "Fix colori tipi di tempo",
     "description": "Modifica all'app"
   }
 ]

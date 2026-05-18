@@ -271,42 +271,41 @@ export default function PublicProfile() {
                 </div>
             </div> */}
 
-            {/* Squadre */}
-            <div className="p-4 bg-slate-50 rounded-2xl shadow-sm mb-8">
-                <p className="mb-4 text-sm font-bold text-slate-600">Squadre ({squads.length})</p>
 
-                <div className='grid grid-cols-2 gap-4'>
-                    {squads.length > 0 ? (
-                        squads.map((squad) => (
-                            <div key={squad.team.id} className="bg-white h-auto p-2 border border-slate-200 shadow-md rounded-2xl items-center text-center cursor-pointer hover:bg-slate-50 transition" onClick={() => navigate(`/squadre/${squad.team.id}`)}>
-                                <div className="w-10 h-10 mx-auto mb-2">
-                                    {squad.team.logo_url ? (
-                                        <img
-                                            src={squad.team.logo_url}
-                                            alt={squad.team.name}
-                                            className="w-full h-full object-cover rounded-xl"
-                                        />
-                                    ) : (
-                                        <div className="w-10 h-10 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-600 text-[18px] font-bold uppercase">
-                                            {squad.team.name.charAt(0)}
-                                        </div>
-                                    )}
-                                </div>
-                                <div>
-                                    <span className="font-bold uppercase text-slate-800 text-[12px]">{squad.team.name.length > 12 ? squad.team.name.slice(0, 12) + '...' : squad.team.name}</span>
-                                </div>
+            {/* ── SQUADS (SOLO SE HA SQUADS) ── */}
+            {squads.length > 0 && (
+                <div className="mx-0 mb-4 p-4 bg-slate-50 rounded-3xl shadow-sm overflow-hidden">
+                    <div className="mb-5 flex items-center">
+                        <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Squadre</p>
+                        <p className='ml-auto text-[14px] font-black uppercase font-black text-blue-600 tracking-widest mb-3'>({squads.length})</p>
+                    </div>
+                    {squads.map((squad) => (
+                        <div
+                            key={squad.team_id}
+                            onClick={() => navigate(`/squadre/${squad.team_id}`)}
+                            className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
+                        >
+                            <div className="w-10 flex justify-center">
+                                {squad.team.logo_url ? (
+                                    <img
+                                        src={squad.team.logo_url}
+                                        alt={squad.team.name}
+                                        className="w-full h-full object-cover rounded-xl"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-600 text-[18px] font-bold uppercase">
+                                        {squad.team.name.charAt(0)}
+                                    </div>
+                                )}
                             </div>
-                        ))
-
-
-                    ) : (
-                        <div className="col-span-2 bg-slate-50 p-4 rounded-2xl text-center">
-                            {/* <p className="text-[10px] font-black text-slate-400 uppercase">Squadre</p> */}
-                            <p className="font-bold text-slate-700">Nessuna squadra</p>
+                            <div>
+                                <span className="font-bold text-slate-800 text-[16px]">{squad.team.name}</span>
+                            </div>
                         </div>
-                    )}
+                    ))}
                 </div>
-            </div>
+            )}
+
 
             {/* Lista Commenti */}
             <div className="space-y-4 p-4">

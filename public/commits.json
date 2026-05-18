@@ -1,5 +1,10 @@
 [
   {
+    "date": "18 maggio 2026",
+    "title": "Fix visualizzazione squadre nel profilo pubblico",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "16 maggio 2026",
     "title": "Add squadre al profilo pubblico",
     "description": "Modifica all'app"
@@ -42,11 +47,6 @@
   {
     "date": "14 maggio 2026",
     "title": "Restyling Sezione Squadre",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "13 maggio 2026",
-    "title": "Add teams logica",
     "description": "Modifica all'app"
   }
 ]

@@ -18,6 +18,7 @@ export default function PublicProfile() {
     const [friendActionLoading, setFriendActionLoading] = useState(false);
     const [friendCount, setFriendCount] = useState(0);
     const [squads, setSquads] = useState([]);
+    const [expandedSquads, setExpandedSquads] = useState(false);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -279,7 +280,7 @@ export default function PublicProfile() {
                         <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Squadre</p>
                         <p className='ml-auto text-[14px] font-black uppercase font-black text-blue-600 tracking-widest mb-3'>({squads.length})</p>
                     </div>
-                    {squads.map((squad) => (
+                    {(expandedSquads ? squads : squads.slice(0, 3)).map((squad) => (
                         <div
                             key={squad.team_id}
                             onClick={() => navigate(`/squadre/${squad.team_id}`)}
@@ -303,6 +304,14 @@ export default function PublicProfile() {
                             </div>
                         </div>
                     ))}
+                    {squads.length > 3 && (
+                        <button
+                            onClick={() => setExpandedSquads(!expandedSquads)}
+                            className="w-full mt-3 py-2 text-sm font-bold uppercase text-blue-600 hover:bg-blue-50 rounded-2xl transition"
+                        >
+                            {expandedSquads ? 'Mostra meno' : 'Mostra altro'}
+                        </button>
+                    )}
                 </div>
             )}
 

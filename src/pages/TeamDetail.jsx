@@ -27,7 +27,9 @@ export default function TeamDetail({ session }) {
         description: '',
         logo_url: '',
         sport: [],
-        citta: ''
+        citta: '',
+        primary_color: '#3b82f6',
+        secondary_color: '#1e40af'
     });
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const { success, error, confirm } = useAlert();
@@ -169,7 +171,9 @@ export default function TeamDetail({ session }) {
                     description: editFormData.description,
                     logo_url: editFormData.logo_url,
                     sport: editFormData.sport,
-                    citta: editFormData.citta
+                    citta: editFormData.citta,
+                    primary_color: editFormData.primary_color,
+                    secondary_color: editFormData.secondary_color
                 })
                 .eq('id', teamId);
 
@@ -190,7 +194,9 @@ export default function TeamDetail({ session }) {
             description: teamDetails.description || '',
             logo_url: teamDetails.logo_url || '',
             sport: teamDetails.sport || [],
-            citta: teamDetails.citta || ''
+            citta: teamDetails.citta || '',
+            primary_color: teamDetails.primary_color || '#3b82f6',
+            secondary_color: teamDetails.secondary_color || '#1e40af'
         });
         setIsEditMode(true);
     };
@@ -571,6 +577,49 @@ export default function TeamDetail({ session }) {
                                 onChange={(e) => setEditFormData({ ...editFormData, citta: e.target.value })}
                                 className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             />
+                        </div>
+
+                        {/* Colori Squadra */}
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-3">
+                                🎨 Colori Squadra
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="flex flex-col items-start gap-2">
+                                    <div className="flex items-center gap-2 w-full">
+                                        <label className="block text-xs font-bold text-slate-600">Colore Primario</label>
+                                        <input
+                                            type="color"
+                                            value={editFormData.primary_color}
+                                            onChange={(e) => setEditFormData({ ...editFormData, primary_color: e.target.value })}
+                                            className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
+                                        />
+                                    </div>
+                                    <span className="text-xs text-slate-400 font-mono">{editFormData.primary_color}</span>
+                                </div>
+                                <div className="flex flex-col items-start gap-2">
+                                    <div className="flex items-center gap-2 w-full">
+                                        <label className="block text-xs font-bold text-slate-600">Colore Secondario</label>
+                                        <input
+                                            type="color"
+                                            value={editFormData.secondary_color}
+                                            onChange={(e) => setEditFormData({ ...editFormData, secondary_color: e.target.value })}
+                                            className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
+                                        />
+                                    </div>
+                                    <span className="text-xs text-slate-400 font-mono">{editFormData.secondary_color}</span>
+                                </div>
+                            </div>
+                            <div className="mt-3 flex gap-2 h-12">
+                                <div
+                                    className="flex-1 rounded-lg border-2 border-slate-200"
+                                    style={{ backgroundColor: editFormData.primary_color }}
+                                />
+                                <div
+                                    className="flex-1 rounded-lg border-2 border-slate-200"
+                                    style={{ backgroundColor: editFormData.secondary_color }}
+                                />
+                            </div>
                         </div>
 
                         {/* Sport - Mini Card Grid */}

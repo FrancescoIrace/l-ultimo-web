@@ -28,7 +28,9 @@ export default function TeamsPage({ session }) {
         is_private: false,
         password: '',
         sport: [],
-        citta: ''
+        citta: '',
+        primary_color: '#3b82f6',
+        secondary_color: '#1e40af'
     });
     const [creatingTeam, setCreatingTeam] = useState(false);
 
@@ -55,7 +57,9 @@ export default function TeamsPage({ session }) {
             invite_code,
             created_by,
             sport,
-            citta
+            citta,
+            primary_color,
+            secondary_color
           )
         `)
                 .eq('user_id', userId);
@@ -87,7 +91,9 @@ export default function TeamsPage({ session }) {
         is_private,
         password,
         sport,
-        citta
+        citta,
+        primary_color,
+        secondary_color
       `);
 
             // Filtro by ricerca - per nome (ilike) o codice invito
@@ -262,6 +268,8 @@ export default function TeamsPage({ session }) {
                     password: formData.is_private ? formData.password : null,
                     sport: formData.sport || [],
                     citta: formData.citta || '',
+                    primary_color: formData.primary_color || '#3b82f6',
+                    secondary_color: formData.secondary_color || '#1e40af',
                     created_by: userId,
                     created_at: new Date().toISOString()
                 })
@@ -292,7 +300,9 @@ export default function TeamsPage({ session }) {
                 is_private: false,
                 password: '',
                 sport: [],
-                citta: ''
+                citta: '',
+                primary_color: '#3b82f6',
+                secondary_color: '#1e40af'
             });
 
             // Ricarica team
@@ -729,6 +739,49 @@ export default function TeamsPage({ session }) {
                     </div>
                 </div>
 
+
+                {/* Colori Squadra */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-3">
+                        🎨 Colori Squadra
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col items-start gap-2">
+                            <div className="flex items-center gap-2 w-full">
+                                <label className="block text-xs font-bold text-slate-600">Colore Primario</label>
+                                <input
+                                    type="color"
+                                    value={formData.primary_color}
+                                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                                    className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
+                                />
+                            </div>
+                            <span className="text-xs text-slate-400 font-mono">{formData.primary_color}</span>
+                        </div>
+                        <div className="flex flex-col items-start gap-2">
+                            <div className="flex items-center gap-2 w-full">
+                                <label className="block text-xs font-bold text-slate-600">Colore Secondario</label>
+                                <input
+                                    type="color"
+                                    value={formData.secondary_color}
+                                    onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                                    className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
+                                />
+                            </div>
+                            <span className="text-xs text-slate-400 font-mono">{formData.secondary_color}</span>
+                        </div>
+                    </div>
+                    <div className="mt-3 flex gap-2 h-12">
+                        <div
+                            className="flex-1 rounded-lg border-2 border-slate-200"
+                            style={{ backgroundColor: formData.primary_color }}
+                        />
+                        <div
+                            className="flex-1 rounded-lg border-2 border-slate-200"
+                            style={{ backgroundColor: formData.secondary_color }}
+                        />
+                    </div>
+                </div>
 
                 {/* Privacy Toggle */}
                 <div>

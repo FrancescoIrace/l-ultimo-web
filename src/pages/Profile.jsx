@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
-import { Loader, Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck } from 'lucide-react';
+import { Loader, Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck, Users } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
 
@@ -20,6 +20,7 @@ export default function Profile({ session }) {
     const [tooltipActive, setTooltipActive] = useState(false);
     const [friendCount, setFriendCount] = useState(0);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [squads, setSquads] = useState([]);
 
     // Stato per il form di modifica
     const [editData, setEditData] = useState({
@@ -32,7 +33,7 @@ export default function Profile({ session }) {
         location_lat: null,
         location_lng: null,
         updated_at: '',
-        avatar_url: '',
+        avatar_url: null,
         favorite_sport: '',
         role: '',
         business_address: '',
@@ -123,6 +124,22 @@ export default function Profile({ session }) {
             .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`)
             .eq('status', 'accepted');
         setFriendCount(friendsCount ?? 0);
+
+        // 6. Recupera le squadre di cui fa parte
+        const { data: squadsData } = await supabase
+            .from('team_members')
+            .select(`
+                 team_id,
+                 team:teams (
+                 id,
+                 name,
+                 logo_url,
+                 created_by
+                )              
+              `)
+            .eq('user_id', session.user.id);
+
+        setSquads(squadsData || []);
 
         setLoading(false);
     }
@@ -546,7 +563,7 @@ export default function Profile({ session }) {
                         {/* ── INFO CARD ── */}
                         <div className="mx-4 mb-4 bg-white rounded-3xl shadow-sm overflow-hidden">
                             <div className="px-4 pt-4 pb-2">
-                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Dati Account</p>
+                                <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Dati Account</p>
                             </div>
                             {[
                                 { icon: <Mail size={15} className="text-blue-500" />, label: 'Email', value: session.user.email },
@@ -590,6 +607,45 @@ export default function Profile({ session }) {
                                 </div>
                             </div>
                         </div>
+
+                        {/* ── SQUADS (SOLO SE HA SQUADS) ── */}
+                        {squads.length > 0 && (
+                            <div className="mx-4 mb-4 p-4 bg-white rounded-3xl shadow-sm overflow-hidden">
+                                <div className="mb-5 flex items-center">
+                                    <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Le mie squadre</p>
+                                    <p className='ml-auto text-[14px] font-black uppercase font-black text-blue-600 tracking-widest mb-3'>({squads.length})</p>
+                                </div>
+                                {squads.map((squad) => (
+                                    <div
+                                        key={squad.team_id}
+                                        onClick={() => navigate(`/squadre/${squad.team_id}`)}
+                                            className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
+                                        >
+                                        <div className="w-10 flex justify-center">
+                                            {squad.team.logo_url ? (
+                                                <img
+                                                    src={squad.team.logo_url}
+                                                    alt={squad.team.name}
+                                                    className="w-full h-full object-cover rounded-xl"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-600 text-[18px] font-bold uppercase">
+                                                    {squad.team.name.charAt(0)}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-slate-800 text-[16px]">{squad.team.name}</span>
+                                        </div>
+                                        {squad.team.created_by === session.user.id && (
+                                            <div className="ml-auto">
+                                                <span className="text-[10px] font-bold uppercase text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">Creatore</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* ── NAVIGAZIONE PARTITE ── */}
                         <div className="mx-4 mb-4">
@@ -663,123 +719,123 @@ export default function Profile({ session }) {
                     <>
                         {/* --- FORM DI MODIFICA --- */}
                         <div className="bg-white px-6 pt-6 pb-8">
-                        <h2 className="text-2xl font-black mb-6 uppercase">Modifica Dati</h2>
-                        <form onSubmit={handleUpdateProfile} className="space-y-4">
-                            {/* Foto */}
-                            <div className="flex flex-col items-center mb-6">
-                                <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
-                                    {editData.avatar_url ? (
-                                        <img
-                                            src={`${editData.avatar_url}?t=${Date.now()}`}
-                                            className="w-full h-full object-cover"
-                                            alt="Anteprima avatar"
+                            <h2 className="text-2xl font-black mb-6 uppercase">Modifica Dati</h2>
+                            <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                {/* Foto */}
+                                <div className="flex flex-col items-center mb-6">
+                                    <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
+                                        {editData.avatar_url ? (
+                                            <img
+                                                src={`${editData.avatar_url}?t=${Date.now()}`}
+                                                className="w-full h-full object-cover"
+                                                alt="Anteprima avatar"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
+                                                {editData.username?.charAt(0).toUpperCase() || '?'}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <label className="cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-100">
+                                        CAMBIA FOTO
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={uploadAvatar}
+                                            disabled={loading}
+                                            className="hidden"
                                         />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
-                                            {editData.username?.charAt(0).toUpperCase() || '?'}
-                                        </div>
-                                    )}
+                                    </label>
                                 </div>
-                                <label className="cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-yellow-100">
-                                    CAMBIA FOTO
+
+                                {/* Username */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
                                     <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={uploadAvatar}
-                                        disabled={loading}
-                                        className="hidden"
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.username ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, username: e.target.value })}
                                     />
-                                </label>
-                            </div>
+                                </div>
 
-                            {/* Username */}
-                            <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
-                                <input
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                    value={editData.username ?? ''}
-                                    onChange={(e) => setEditData({ ...editData, username: e.target.value })}
-                                />
-                            </div>
+                                {/* Full Name */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                                    <input
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.full_name ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+                                    />
+                                </div>
 
-                            {/* Full Name */}
-                            <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
-                                <input
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                    value={editData.full_name ?? ''}
-                                    onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
-                                />
-                            </div>
+                                {/* Posizione di base */}
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                                    <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
+                                    <UserLocationInput
+                                        value={{
+                                            location: editData.location ?? '',
+                                            province: editData.province,
+                                            zip_code: editData.zip_code,
+                                        }}
+                                        onChange={(value) => setEditData({ ...editData, ...value })}
+                                    />
+                                </div>
 
-                            {/* Posizione di base */}
-                            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                                <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
-                                <UserLocationInput
-                                    value={{
-                                        location: editData.location ?? '',
-                                        province: editData.province,
-                                        zip_code: editData.zip_code,
-                                    }}
-                                    onChange={(value) => setEditData({ ...editData, ...value })}
-                                />
-                            </div>
+                                {/* Genere */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
+                                    <select
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.gender ?? 'Other'}
+                                        onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
+                                    >
+                                        <option value="M">Uomo</option>
+                                        <option value="F">Donna</option>
+                                        <option value="Other">Altro</option>
+                                    </select>
+                                </div>
 
-                            {/* Genere */}
-                            <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
-                                <select
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                    value={editData.gender ?? 'Other'}
-                                    onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
-                                >
-                                    <option value="M">Uomo</option>
-                                    <option value="F">Donna</option>
-                                    <option value="Other">Altro</option>
-                                </select>
-                            </div>
+                                {/* Sport preferito */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
+                                    <select
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.favorite_sport ?? 'Calcetto'}
+                                        onChange={(e) => handleSportChange(e)}
+                                    >
+                                        <option>Calcetto</option>
+                                        <option>Calcio a 7</option>
+                                        <option>Calcio a 11</option>
+                                        <option>Padel</option>
+                                        <option>Basket (3vs3)</option>
+                                        <option>Basket (5vs5)</option>
+                                        <option>Tennis singolo</option>
+                                        <option>Tennis doppio</option>
+                                        <option>Volley</option>
+                                    </select>
+                                </div>
 
-                            {/* Sport preferito */}
-                            <div>
-                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
-                                <select
-                                    className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                    value={editData.favorite_sport ?? 'Calcetto'}
-                                    onChange={(e) => handleSportChange(e)}
-                                >
-                                    <option>Calcetto</option>
-                                    <option>Calcio a 7</option>
-                                    <option>Calcio a 11</option>
-                                    <option>Padel</option>
-                                    <option>Basket (3vs3)</option>
-                                    <option>Basket (5vs5)</option>
-                                    <option>Tennis singolo</option>
-                                    <option>Tennis doppio</option>
-                                    <option>Volley</option>
-                                </select>
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditing(false)}
-                                    className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95"
-                                >
-                                    Annulla
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-yellow-400 to-yellow-500 text-white rounded-2xl font-bold shadow-lg shadow-black/10 hover:shadow-xl transition-all active:scale-95"
-                                >
-                                    Salva
-                                </button>
-                            </div>
-                            <p className="text-xs text-slate-300 text-center pt-1">
-                                Ultima modifica: {profile.updated_at
-                                    ? `${new Date(profile.updated_at).toLocaleDateString('it-IT')} alle ${new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5)}`
-                                    : 'N/A'}
-                            </p>
-                        </form>
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditing(false)}
+                                        className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95"
+                                    >
+                                        Annulla
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-yellow-400 to-yellow-500 text-white rounded-2xl font-bold shadow-lg shadow-black/10 hover:shadow-xl transition-all active:scale-95"
+                                    >
+                                        Salva
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-300 text-center pt-1">
+                                    Ultima modifica: {profile.updated_at
+                                        ? `${new Date(profile.updated_at).toLocaleDateString('it-IT')} alle ${new Date(profile.updated_at).toLocaleTimeString('it-IT').slice(0, 5)}`
+                                        : 'N/A'}
+                                </p>
+                            </form>
                         </div>
                     </>
                 )

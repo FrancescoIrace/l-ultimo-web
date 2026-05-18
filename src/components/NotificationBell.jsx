@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, Calendar, AlertTriangle } from 'lucide-react';
+import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, Calendar, AlertTriangle,Handshake } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getNotificationStyles(type) {
@@ -56,6 +56,11 @@ function getNotificationStyles(type) {
       dot: 'bg-red-400',
       hover: 'hover:bg-red-100',
     },
+    team_invite: {
+      bg: 'bg-purple-50',
+      dot: 'bg-purple-500',
+      hover: 'hover:bg-purple-100',
+    }
   };
   return styles[type] || styles.match_update;
 }
@@ -178,6 +183,8 @@ export function NotificationBell({ userId }) {
                             return <UserCheck size={18} className="text-green-600" />;
                           case 'friend_rejected':
                             return <UserX size={18} className="text-red-500" />;
+                          case 'team_invite':
+                            return <Handshake size={18} className="text-purple-600" />;
                           default:
                             return <Bell size={18} className="text-blue-600" />;
                         }

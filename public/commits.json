@@ -1,52 +1,52 @@
 [
   {
-    "date": "13 maggio 2026",
-    "title": "fix vari meteo",
+    "date": "18 maggio 2026",
+    "title": "Fix visualizzazione squadre nel profilo pubblico",
     "description": "Modifica all'app"
   },
   {
-    "date": "13 maggio 2026",
-    "title": "Add previsioni meteo (testare)",
+    "date": "16 maggio 2026",
+    "title": "Add squadre al profilo pubblico",
     "description": "Modifica all'app"
   },
   {
-    "date": "12 maggio 2026",
-    "title": "Add validazione descrizione per inserimento link",
+    "date": "16 maggio 2026",
+    "title": "Add squadre sul profilo",
     "description": "Modifica all'app"
   },
   {
-    "date": "12 maggio 2026",
-    "title": "fix text",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Max length title 32 caratteri + fix break words per titolo lungo tutto attaccato",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "12 maggio 2026",
-    "title": "Merge pull request #8 from FrancescoIrace/fix/filtri_home",
-    "description": "Fix/filtri home"
-  },
-  {
-    "date": "12 maggio 2026",
+    "date": "14 maggio 2026",
     "title": "Fix vari",
     "description": "Modifica all'app"
   },
   {
-    "date": "12 maggio 2026",
-    "title": "Add filtro per giorno",
+    "date": "14 maggio 2026",
+    "title": "Fix vari",
     "description": "Modifica all'app"
   },
   {
-    "date": "12 maggio 2026",
-    "title": "Aggiunta filtri per sport + fix vari",
+    "date": "14 maggio 2026",
+    "title": "Fix squadre",
     "description": "Modifica all'app"
   },
   {
-    "date": "12 maggio 2026",
-    "title": "Fix Filtri",
+    "date": "14 maggio 2026",
+    "title": "Fix",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
+    "title": "Add pagina dettagli squadra + inviti",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
+    "title": "Fix UI creazione squadra",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
+    "title": "Restyling Sezione Squadre",
     "description": "Modifica all'app"
   }
 ]

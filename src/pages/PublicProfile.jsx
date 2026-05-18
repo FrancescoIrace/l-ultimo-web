@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationService';
-import { UserPlus, UserCheck, Clock, UserX } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, UserX, ChevronRight, Loader } from 'lucide-react';
 
 export default function PublicProfile() {
     const { id } = useParams(); // Prende l'ID dall'URL
@@ -17,6 +17,8 @@ export default function PublicProfile() {
     const [friendshipId, setFriendshipId] = useState(null);
     const [friendActionLoading, setFriendActionLoading] = useState(false);
     const [friendCount, setFriendCount] = useState(0);
+    const [squads, setSquads] = useState([]);
+    const [expandedSquads, setExpandedSquads] = useState(false);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -34,6 +36,26 @@ export default function PublicProfile() {
                 setProfile(data);
             }
             setLoading(false);
+        }
+
+        async function getSquads() {
+            const { data: squadsData } = await supabase
+                .from('team_members')
+                .select(`
+                 team_id,
+                 team:teams (
+                 id,
+                 name,
+                 logo_url,
+                 created_by
+                )              
+              `)
+                .eq('user_id', id);
+
+            if (squadsData) {
+                setSquads(squadsData);
+                console.log("Squads del profilo:", squadsData);
+            }
         }
 
         async function getProfileStats() {
@@ -73,6 +95,7 @@ export default function PublicProfile() {
         if (id) {
             getPublicProfile();
             getProfileStats();
+            getSquads();
             fetchReviews();
 
             // Conta gli amici del profilo visitato
@@ -110,7 +133,7 @@ export default function PublicProfile() {
         if (id) loadCurrentUserAndFriendship();
     }, [id]);
 
-    if (loading) return <div className="p-10 text-center font-black">CARICAMENTO...</div>;
+    if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
 
     const handleSendRequest = async () => {
         if (!currentUser) return;
@@ -161,9 +184,10 @@ export default function PublicProfile() {
             <button
                 onClick={() => navigate(-1)}
                 type="button"
-                className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
             >
-                TORNA INDIETRO
+                <ChevronRight size={14} className="rotate-180" />
+                Indietro
             </button>
 
             <div className="flex flex-col items-center mb-6">
@@ -199,11 +223,11 @@ export default function PublicProfile() {
 
                 {/* Friendship button (non mostrato se stai guardando il tuo profilo) */}
                 {currentUser && currentUser.id !== id && (
-                    <div className="mt-4 w-full">
+                    <div className="mt-4 w-full p-4">
                         {friendActionLoading ? (
                             <div className="w-8 h-8 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin mx-auto" />
                         ) : friendshipStatus === 'accepted' ? (
-                            <span className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-green-600 bg-green-50 px-4 py-2.5 rounded-2xl border border-green-100">
+                            <span className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-green-600 bg-green-50 px-4 py-2.5 rounded-2xl border border-green-200 shadow-sm">
                                 <UserCheck size={15} />
                                 Siete amici
                             </span>
@@ -237,7 +261,7 @@ export default function PublicProfile() {
             </div>
 
             {/* Info aggiuntive */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            {/* <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase">Sport Preferito</p>
                     <p className="font-bold text-slate-700">{profile?.favorite_sport ?? 'Non definito'}</p>
@@ -246,10 +270,54 @@ export default function PublicProfile() {
                     <p className="text-[10px] font-black text-slate-400 uppercase">Affidabilità</p>
                     <p className="font-bold text-green-600">100%</p>
                 </div>
-            </div>
+            </div> */}
+
+
+            {/* ── SQUADS (SOLO SE HA SQUADS) ── */}
+            {squads.length > 0 && (
+                <div className="mx-0 mb-4 p-4 bg-slate-50 rounded-3xl shadow-sm overflow-hidden">
+                    <div className="mb-5 flex items-center">
+                        <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Squadre</p>
+                        <p className='ml-auto text-[14px] font-black uppercase font-black text-blue-600 tracking-widest mb-3'>({squads.length})</p>
+                    </div>
+                    {(expandedSquads ? squads : squads.slice(0, 3)).map((squad) => (
+                        <div
+                            key={squad.team_id}
+                            onClick={() => navigate(`/squadre/${squad.team_id}`)}
+                            className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
+                        >
+                            <div className="w-10 flex justify-center">
+                                {squad.team.logo_url ? (
+                                    <img
+                                        src={squad.team.logo_url}
+                                        alt={squad.team.name}
+                                        className="w-full h-full object-cover rounded-xl"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-600 text-[18px] font-bold uppercase">
+                                        {squad.team.name.charAt(0)}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <span className="font-bold text-slate-800 text-[16px]">{squad.team.name}</span>
+                            </div>
+                        </div>
+                    ))}
+                    {squads.length > 3 && (
+                        <button
+                            onClick={() => setExpandedSquads(!expandedSquads)}
+                            className="w-full mt-3 py-2 text-sm font-bold uppercase text-blue-600 hover:bg-blue-50 rounded-2xl transition"
+                        >
+                            {expandedSquads ? 'Mostra meno' : 'Mostra altro'}
+                        </button>
+                    )}
+                </div>
+            )}
+
 
             {/* Lista Commenti */}
-            <div className="space-y-4">
+            <div className="space-y-4 p-4">
                 {reviews.map((rev, index) => (
                     <div key={index} className="border-b border-slate-100 pb-4">
                         <div className="flex items-center gap-2 mb-1">

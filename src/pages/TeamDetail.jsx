@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit,Loader } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit, Loader } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
@@ -364,7 +364,8 @@ export default function TeamDetail({ session }) {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl p-6 shadow-md mb-6 border border-slate-200"
+                style={{ backgroundColor: teamDetails.primary_color || '#3b82f6', borderColor: teamDetails.secondary_color || '#1e40af', color: teamDetails.secondary_color || '#ffffff' }}
+                className="rounded-2xl p-6 shadow-md mb-6 border-2"
             >
                 {/* Logo */}
                 <div className="w-24 h-24 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4 border-2 border-slate-200">
@@ -405,461 +406,467 @@ export default function TeamDetail({ session }) {
                     )}
 
                     <div className=' rounded-xl p-3 mt-4 text-center text-slate-500'>
-                        <p className="font-semibold mb-2 text-md">Descrizione:</p>
-                        <p className="text-xs">
-                            {teamDetails.description || 'Nessuna descrizione'}
+                        <p className="font-semibold mb-2 text-md" style={{ color: teamDetails.secondary_color || '#1e40af' }}>Descrizione:</p>
+                    <p className="text-xs"  style={{ color: teamDetails.secondary_color || '#1e40af' }}>
+                        {teamDetails.description || 'Nessuna descrizione'}
+                    </p>
+                    {teamDetails.citta && (
+                        <p className="text-xs mt-3 pt-3 border-t border-slate-200">
+                            📍 <span className="font-semibold text-slate-700">{teamDetails.citta}</span>
                         </p>
-                        {teamDetails.citta && (
-                            <p className="text-xs mt-3 pt-3 border-t border-slate-200">
-                                📍 <span className="font-semibold text-slate-700">{teamDetails.citta}</span>
-                            </p>
-                        )}
-                    </div>
+                    )}
                 </div>
+        </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-blue-50 rounded-xl p-3 text-center">
-                        <div className="text-2xl font-black text-blue-600">{teamMembers.length}</div>
-                        <div className="text-xs text-blue-600 font-semibold">Membri</div>
-                    </div>
-                    <div
-                        onClick={handleCopyCode}
-                        className="bg-slate-100 hover:bg-slate-200 rounded-xl p-3 text-center cursor-pointer transition-colors"
-                    >
-                        <div className="text-lg font-mono font-bold text-slate-700">{teamDetails.invite_code}</div>
-                        <div className="text-xs text-slate-500 font-semibold">{copiedCode ? 'Copiato!' : 'Codice Invito'}</div>
-                    </div>
-                </div>
+                {/* Stats */ }
+    <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-blue-50 rounded-xl p-3 text-center">
+            <div className="text-2xl font-black text-blue-600">{teamMembers.length}</div>
+            <div className="text-xs text-blue-600 font-semibold">Membri</div>
+        </div>
+        <div
+            onClick={handleCopyCode}
+            className="bg-slate-100 hover:bg-slate-200 rounded-xl p-3 text-center cursor-pointer transition-colors"
+        >
+            <div className="text-lg font-mono font-bold text-slate-700">{teamDetails.invite_code}</div>
+            <div className="text-xs text-slate-500 font-semibold">{copiedCode ? 'Copiato!' : 'Codice Invito'}</div>
+        </div>
+    </div>
 
-                {/* Azioni */}
-                <div className={`grid gap-2 ${!isUserMember
-                        ? 'grid-cols-2'
-                        : teamDetails.created_by === userId
-                            ? 'grid-cols-4'
-                            : 'grid-cols-3'
-                    }`}>
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleShare}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 border border-slate-200 shadow-lg hover:shadow-xl transition-all active:scale-95"
-                    >
-                        <Share2 size={16} />
-                        {/* Condividi */}
-                    </motion.button>
+    {/* Azioni */ }
+    <div className={`grid gap-2 ${!isUserMember
+        ? 'grid-cols-2'
+        : teamDetails.created_by === userId
+            ? 'grid-cols-4'
+            : 'grid-cols-3'
+        }`}>
+        <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleShare}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 border border-slate-200 shadow-lg hover:shadow-xl transition-all active:scale-95"
+        >
+            <Share2 size={16} />
+            {/* Condividi */}
+        </motion.button>
 
-                    {/* UNISCITI ALLA SQUADRA */}
-                    {!isUserMember && (
+        {/* UNISCITI ALLA SQUADRA */}
+        {!isUserMember && (
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleJoinTeam}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+            >
+                Unisciti alla Squadra
+            </motion.button>
+        )}
+
+
+        {isUserMember && (
+            <>
+
+
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowInviteModal(true)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95"
+                >
+                    <UserPlus size={16} />
+                    {/* Invita */}
+                </motion.button>
+
+                {teamDetails.created_by === userId && (
+                    <>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={handleJoinTeam}
-                            disabled={loading}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                            onClick={handleOpenEdit}
+                            className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95"
                         >
-                            Unisciti alla Squadra
+                            <Edit size={16} />
+                            {/* Modifica */}
                         </motion.button>
-                    )}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleDeleteTeam}
+                            disabled={loading}
+                            className="bg-red-700 hover:bg-red-800 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <Trash2 size={16} />
+                            {/* Elimina */}
+                        </motion.button>
+                    </>
+                )}
+                {teamDetails.created_by !== userId && (
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleLeaveTeam}
+                        disabled={loading}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        <UserMinus size={16} />
+                        Esci
+                    </motion.button>
+                )}
+            </>
+        )}
+    </div>
+            </motion.div >
 
+        {/* SEZIONE MODIFICA SQUADRA */ }
+    {
+        isEditMode && (
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-white rounded-2xl p-6 shadow-md mb-6 border-2 border-amber-200"
+            >
+                <h2 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
+                    <Edit size={20} className="text-amber-500" />
+                    Modifica Squadra
+                </h2>
 
-                    {isUserMember && (
-                        <>
+                <form onSubmit={handleSaveTeamEdit} className="space-y-4">
+                    {/* Nome */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nome Squadra *</label>
+                        <input
+                            type="text"
+                            required
+                            value={editFormData.name}
+                            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="Es: FC Napoli"
+                        />
+                    </div>
 
+                    {/* Descrizione */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Descrizione</label>
+                        <textarea
+                            value={editFormData.description}
+                            onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none h-24"
+                            placeholder="Descrivi la tua squadra..."
+                        />
+                    </div>
 
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setShowInviteModal(true)}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95"
-                            >
-                                <UserPlus size={16} />
-                                {/* Invita */}
-                            </motion.button>
+                    {/* URL Logo */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">URL Logo</label>
+                        <input
+                            type="url"
+                            value={editFormData.logo_url}
+                            onChange={(e) => setEditFormData({ ...editFormData, logo_url: e.target.value })}
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="https://..."
+                        />
+                    </div>
 
-                            {teamDetails.created_by === userId && (
+                    {/* Città */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Città</label>
+                        <input
+                            type="text"
+                            placeholder="Es: Napoli"
+                            value={editFormData.citta}
+                            onChange={(e) => setEditFormData({ ...editFormData, citta: e.target.value })}
+                            className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                    </div>
+
+                    {/* Colori Squadra */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-3">
+                            🎨 Colori Squadra
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="flex flex-col items-start gap-2">
+                                <div className="flex items-center gap-2 w-full">
+                                    <label className="block text-xs font-bold text-slate-600">Colore Primario</label>
+                                    <input
+                                        type="color"
+                                        value={editFormData.primary_color}
+                                        onChange={(e) => setEditFormData({ ...editFormData, primary_color: e.target.value })}
+                                        className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
+                                    />
+                                </div>
+                                <span className="text-xs text-slate-400 font-mono">{editFormData.primary_color}</span>
+                            </div>
+                            <div className="flex flex-col items-start gap-2">
+                                <div className="flex items-center gap-2 w-full">
+                                    <label className="block text-xs font-bold text-slate-600">Colore Secondario</label>
+                                    <input
+                                        type="color"
+                                        value={editFormData.secondary_color}
+                                        onChange={(e) => setEditFormData({ ...editFormData, secondary_color: e.target.value })}
+                                        className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
+                                    />
+                                </div>
+                                <span className="text-xs text-slate-400 font-mono">{editFormData.secondary_color}</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 flex gap-2 h-12">
+                            <div
+                                className="flex-1 rounded-lg border-2 border-slate-200"
+                                style={{ backgroundColor: editFormData.primary_color }}
+                            />
+                            <div
+                                className="flex-1 rounded-lg border-2 border-slate-200"
+                                style={{ backgroundColor: editFormData.secondary_color }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sport - Mini Card Grid */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Sport (max 5)</label>
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                            {[
+                                { name: 'Calcetto', icon: '⚽' },
+                                { name: 'Calcio a 7', icon: '⚽' },
+                                { name: 'Calcio a 11', icon: '⚽' },
+                                { name: 'Basket', icon: '🏀' },
+                                { name: 'Volley', icon: '🏐' },
+                                { name: 'Tennis', icon: '🎾' },
+                                { name: 'Palestra', icon: '💪' }
+                            ].map(({ name: sport, icon }) => {
+                                const isSelected = editFormData.sport.includes(sport);
+                                const isDisabled = editFormData.sport.length >= 5 && !isSelected;
+                                return (
+                                    <motion.button
+                                        key={sport}
+                                        type="button"
+                                        whileHover={!isDisabled ? { scale: 1.02 } : {}}
+                                        whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setEditFormData({ ...editFormData, sport: editFormData.sport.filter(s => s !== sport) });
+                                            } else if (editFormData.sport.length < 5) {
+                                                setEditFormData({ ...editFormData, sport: [...editFormData.sport, sport] });
+                                            }
+                                        }}
+                                        disabled={isDisabled}
+                                        className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${isSelected
+                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg'
+                                            : isDisabled
+                                                ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
+                                                : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
+                                            }`}
+                                    >
+                                        <span className="text-lg">{icon}</span>
+                                        <span className="text-xs text-center leading-tight">{sport}</span>
+                                    </motion.button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-xs text-slate-400">
+                            Selezionati: <span className="font-bold text-slate-600">{editFormData.sport.length}/5</span>
+                        </p>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-3 pt-4">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
+                        >
+                            Annulla
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="submit"
+                            disabled={isSavingEdit}
+                            className="flex-1 px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {isSavingEdit ? (
                                 <>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={handleOpenEdit}
-                                        className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95"
-                                    >
-                                        <Edit size={16} />
-                                        {/* Modifica */}
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={handleDeleteTeam}
-                                        disabled={loading}
-                                        className="bg-red-700 hover:bg-red-800 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
-                                    >
-                                        <Trash2 size={16} />
-                                        {/* Elimina */}
-                                    </motion.button>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Salvataggio...
+                                </>
+                            ) : (
+                                <>
+                                    <Check size={18} />
+                                    Salva Modifiche
                                 </>
                             )}
-                            {teamDetails.created_by !== userId && (
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleLeaveTeam}
-                                    disabled={loading}
-                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg transition-all active:scale-95 disabled:opacity-50"
-                                >
-                                    <UserMinus size={16} />
-                                    Esci
-                                </motion.button>
-                            )}
-                        </>
-                    )}
-                </div>
-            </motion.div>
-
-            {/* SEZIONE MODIFICA SQUADRA */}
-            {isEditMode && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="bg-white rounded-2xl p-6 shadow-md mb-6 border-2 border-amber-200"
-                >
-                    <h2 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
-                        <Edit size={20} className="text-amber-500" />
-                        Modifica Squadra
-                    </h2>
-
-                    <form onSubmit={handleSaveTeamEdit} className="space-y-4">
-                        {/* Nome */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Nome Squadra *</label>
-                            <input
-                                type="text"
-                                required
-                                value={editFormData.name}
-                                onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                placeholder="Es: FC Napoli"
-                            />
-                        </div>
-
-                        {/* Descrizione */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Descrizione</label>
-                            <textarea
-                                value={editFormData.description}
-                                onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none h-24"
-                                placeholder="Descrivi la tua squadra..."
-                            />
-                        </div>
-
-                        {/* URL Logo */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">URL Logo</label>
-                            <input
-                                type="url"
-                                value={editFormData.logo_url}
-                                onChange={(e) => setEditFormData({ ...editFormData, logo_url: e.target.value })}
-                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                placeholder="https://..."
-                            />
-                        </div>
-
-                        {/* Città */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Città</label>
-                            <input
-                                type="text"
-                                placeholder="Es: Napoli"
-                                value={editFormData.citta}
-                                onChange={(e) => setEditFormData({ ...editFormData, citta: e.target.value })}
-                                className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                            />
-                        </div>
-
-                        {/* Colori Squadra */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-3">
-                                🎨 Colori Squadra
-                            </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="flex flex-col items-start gap-2">
-                                    <div className="flex items-center gap-2 w-full">
-                                        <label className="block text-xs font-bold text-slate-600">Colore Primario</label>
-                                        <input
-                                            type="color"
-                                            value={editFormData.primary_color}
-                                            onChange={(e) => setEditFormData({ ...editFormData, primary_color: e.target.value })}
-                                            className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
-                                        />
-                                    </div>
-                                    <span className="text-xs text-slate-400 font-mono">{editFormData.primary_color}</span>
-                                </div>
-                                <div className="flex flex-col items-start gap-2">
-                                    <div className="flex items-center gap-2 w-full">
-                                        <label className="block text-xs font-bold text-slate-600">Colore Secondario</label>
-                                        <input
-                                            type="color"
-                                            value={editFormData.secondary_color}
-                                            onChange={(e) => setEditFormData({ ...editFormData, secondary_color: e.target.value })}
-                                            className="w-12 h-10 border-2 border-slate-200 rounded-lg cursor-pointer"
-                                        />
-                                    </div>
-                                    <span className="text-xs text-slate-400 font-mono">{editFormData.secondary_color}</span>
-                                </div>
-                            </div>
-                            <div className="mt-3 flex gap-2 h-12">
-                                <div
-                                    className="flex-1 rounded-lg border-2 border-slate-200"
-                                    style={{ backgroundColor: editFormData.primary_color }}
-                                />
-                                <div
-                                    className="flex-1 rounded-lg border-2 border-slate-200"
-                                    style={{ backgroundColor: editFormData.secondary_color }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Sport - Mini Card Grid */}
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-3">Sport (max 5)</label>
-                            <div className="grid grid-cols-2 gap-2 mb-3">
-                                {[
-                                    { name: 'Calcetto', icon: '⚽' },
-                                    { name: 'Calcio a 7', icon: '⚽' },
-                                    { name: 'Calcio a 11', icon: '⚽' },
-                                    { name: 'Basket', icon: '🏀' },
-                                    { name: 'Volley', icon: '🏐' },
-                                    { name: 'Tennis', icon: '🎾' },
-                                    { name: 'Palestra', icon: '💪' }
-                                ].map(({ name: sport, icon }) => {
-                                    const isSelected = editFormData.sport.includes(sport);
-                                    const isDisabled = editFormData.sport.length >= 5 && !isSelected;
-                                    return (
-                                        <motion.button
-                                            key={sport}
-                                            type="button"
-                                            whileHover={!isDisabled ? { scale: 1.02 } : {}}
-                                            whileTap={!isDisabled ? { scale: 0.98 } : {}}
-                                            onClick={() => {
-                                                if (isSelected) {
-                                                    setEditFormData({ ...editFormData, sport: editFormData.sport.filter(s => s !== sport) });
-                                                } else if (editFormData.sport.length < 5) {
-                                                    setEditFormData({ ...editFormData, sport: [...editFormData.sport, sport] });
-                                                }
-                                            }}
-                                            disabled={isDisabled}
-                                            className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${isSelected
-                                                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg'
-                                                    : isDisabled
-                                                        ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
-                                                        : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
-                                                }`}
-                                        >
-                                            <span className="text-lg">{icon}</span>
-                                            <span className="text-xs text-center leading-tight">{sport}</span>
-                                        </motion.button>
-                                    );
-                                })}
-                            </div>
-                            <p className="text-xs text-slate-400">
-                                Selezionati: <span className="font-bold text-slate-600">{editFormData.sport.length}/5</span>
-                            </p>
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="flex gap-3 pt-4">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="button"
-                                onClick={handleCancelEdit}
-                                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
-                            >
-                                Annulla
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="submit"
-                                disabled={isSavingEdit}
-                                className="flex-1 px-4 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {isSavingEdit ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        Salvataggio...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check size={18} />
-                                        Salva Modifiche
-                                    </>
-                                )}
-                            </motion.button>
-                        </div>
-                    </form>
-                </motion.div>
-            )}
-
-
-
-            {isUserMember && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
-                    <p className="text-blue-700 font-semibold text-sm">✓ Sei membro di questa squadra</p>
-                </div>
-            )}
-
-            {/* MEMBRI */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-2xl p-6 shadow-md"
-            >
-                <div className="flex items-center gap-2 mb-4">
-                    <Users size={20} className="text-slate-700" />
-                    <h2 className="text-lg font-black text-slate-800">Membri ({teamMembers.length})</h2>
-                </div>
-
-                {teamMembers.length === 0 ? (
-                    <p className="text-slate-500 text-sm text-center py-4">Nessun membro ancora</p>
-                ) : (
-                    <div className="space-y-2">
-                        {teamMembers.map((member) => (
-                            <div
-                                key={member.user_id}
-                                className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
-                            >
-                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    {member.profiles?.avatar_url ? (
-                                        <img
-                                            src={member.profiles.avatar_url}
-                                            alt={member.profiles.username}
-                                            className="w-full h-full rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <span className="text-sm font-bold text-blue-600">
-                                            {member.profiles?.username?.[0]?.toUpperCase() || '?'}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-slate-800">
-                                        {member.profiles?.username || 'Utente sconosciuto'}
-                                    </p>
-                                </div>
-                                {member.user_id === teamDetails.created_by && (
-                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Creatore</span>
-                                )}
-                            </div>
-                        ))}
+                        </motion.button>
                     </div>
-                )}
+                </form>
             </motion.div>
+        )
+    }
 
-            {/* MODALE INVITA AMICI */}
-            {showInviteModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-end z-50">
-                    <motion.div
-                        initial={{ y: 300, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 300, opacity: 0 }}
-                        className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto"
+
+
+    {
+        isUserMember && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
+                <p className="text-blue-700 font-semibold text-sm">✓ Sei membro di questa squadra</p>
+            </div>
+        )
+    }
+
+    {/* MEMBRI */ }
+    <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-2xl p-6 shadow-md"
+    >
+        <div className="flex items-center gap-2 mb-4">
+            <Users size={20} className="text-slate-700" />
+            <h2 className="text-lg font-black text-slate-800">Membri ({teamMembers.length})</h2>
+        </div>
+
+        {teamMembers.length === 0 ? (
+            <p className="text-slate-500 text-sm text-center py-4">Nessun membro ancora</p>
+        ) : (
+            <div className="space-y-2">
+                {teamMembers.map((member) => (
+                    <div
+                        key={member.user_id}
+                        className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
                     >
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-800">Invita Amici</h2>
-                            <p className="text-sm text-slate-500 mt-2">
-                                Seleziona gli amici da invitare a "{teamDetails.name}"
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            {member.profiles?.avatar_url ? (
+                                <img
+                                    src={member.profiles.avatar_url}
+                                    alt={member.profiles.username}
+                                    className="w-full h-full rounded-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-sm font-bold text-blue-600">
+                                    {member.profiles?.username?.[0]?.toUpperCase() || '?'}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-800">
+                                {member.profiles?.username || 'Utente sconosciuto'}
                             </p>
                         </div>
-
-                        {friends.length === 0 ? (
-                            <div className="text-center py-8">
-                                <p className="text-slate-500">Non hai amici da invitare</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-2 max-h-96 overflow-y-auto">
-                                {friends.map((friend) => (
-                                    <label
-                                        key={friend.id}
-                                        className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedFriends.has(friend.id)}
-                                            onChange={(e) => {
-                                                const newSelected = new Set(selectedFriends);
-                                                if (e.target.checked) {
-                                                    newSelected.add(friend.id);
-                                                } else {
-                                                    newSelected.delete(friend.id);
-                                                }
-                                                setSelectedFriends(newSelected);
-                                            }}
-                                            className="w-4 h-4 accent-blue-600"
-                                        />
-                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                            {friend.avatar_url ? (
-                                                <img
-                                                    src={friend.avatar_url}
-                                                    alt={friend.username}
-                                                    className="w-full h-full rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-sm font-bold text-blue-600">
-                                                    {friend.username?.[0]?.toUpperCase() || '?'}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm font-semibold text-slate-800 flex-1">
-                                            {friend.username}
-                                        </p>
-                                    </label>
-                                ))}
-                            </div>
+                        {member.user_id === teamDetails.created_by && (
+                            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Creatore</span>
                         )}
+                    </div>
+                ))}
+            </div>
+        )}
+    </motion.div>
 
-                        {/* Buttons */}
-                        <div className="flex gap-3 pt-4">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="button"
-                                onClick={() => {
-                                    setShowInviteModal(false);
-                                    setSelectedFriends(new Set());
-                                }}
-                                className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
-                            >
-                                Annulla
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="button"
-                                onClick={handleInviteFriends}
-                                disabled={isSendingInvites || selectedFriends.size === 0}
-                                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {isSendingInvites ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        Invio...
-                                    </>
-                                ) : (
-                                    <>
-                                        <UserPlus size={18} />
-                                        Invita ({selectedFriends.size})
-                                    </>
-                                )}
-                            </motion.button>
+    {/* MODALE INVITA AMICI */ }
+    {
+        showInviteModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+                <motion.div
+                    initial={{ y: 300, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 300, opacity: 0 }}
+                    className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto"
+                >
+                    <div>
+                        <h2 className="text-2xl font-black text-slate-800">Invita Amici</h2>
+                        <p className="text-sm text-slate-500 mt-2">
+                            Seleziona gli amici da invitare a "{teamDetails.name}"
+                        </p>
+                    </div>
+
+                    {friends.length === 0 ? (
+                        <div className="text-center py-8">
+                            <p className="text-slate-500">Non hai amici da invitare</p>
                         </div>
-                    </motion.div>
-                </div>
-            )}
-        </div>
+                    ) : (
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {friends.map((friend) => (
+                                <label
+                                    key={friend.id}
+                                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedFriends.has(friend.id)}
+                                        onChange={(e) => {
+                                            const newSelected = new Set(selectedFriends);
+                                            if (e.target.checked) {
+                                                newSelected.add(friend.id);
+                                            } else {
+                                                newSelected.delete(friend.id);
+                                            }
+                                            setSelectedFriends(newSelected);
+                                        }}
+                                        className="w-4 h-4 accent-blue-600"
+                                    />
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        {friend.avatar_url ? (
+                                            <img
+                                                src={friend.avatar_url}
+                                                alt={friend.username}
+                                                className="w-full h-full rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-sm font-bold text-blue-600">
+                                                {friend.username?.[0]?.toUpperCase() || '?'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-sm font-semibold text-slate-800 flex-1">
+                                        {friend.username}
+                                    </p>
+                                </label>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Buttons */}
+                    <div className="flex gap-3 pt-4">
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="button"
+                            onClick={() => {
+                                setShowInviteModal(false);
+                                setSelectedFriends(new Set());
+                            }}
+                            className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
+                        >
+                            Annulla
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="button"
+                            onClick={handleInviteFriends}
+                            disabled={isSendingInvites || selectedFriends.size === 0}
+                            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {isSendingInvites ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Invio...
+                                </>
+                            ) : (
+                                <>
+                                    <UserPlus size={18} />
+                                    Invita ({selectedFriends.size})
+                                </>
+                            )}
+                        </motion.button>
+                    </div>
+                </motion.div>
+            </div>
+        )
+    }
+        </div >
     );
 }

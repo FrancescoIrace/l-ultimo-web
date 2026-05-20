@@ -1,6 +1,16 @@
 [
   {
     "date": "18 maggio 2026",
+    "title": "Merge pull request #10 from FrancescoIrace/feature/squadre",
+    "description": "Feature/squadre v1"
+  },
+  {
+    "date": "18 maggio 2026",
+    "title": "Fix visuals",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "18 maggio 2026",
     "title": "Fix visualizzazione squadre nel profilo pubblico",
     "description": "Modifica all'app"
   },
@@ -31,22 +41,12 @@
   },
   {
     "date": "14 maggio 2026",
+    "title": "COMMENTATO METEO CARD",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "14 maggio 2026",
     "title": "Fix",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "Add pagina dettagli squadra + inviti",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "Fix UI creazione squadra",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "Restyling Sezione Squadre",
     "description": "Modifica all'app"
   }
 ]

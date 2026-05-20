@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { AlertContext } from '../components/AlertComponent';
+import { InstagramEmbed } from './PagesUtils/utils';
 
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications }) {
   const navigate = useNavigate();
@@ -149,6 +150,11 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             Apri in Maps
           </button>
         </div>
+
+        {/* NEWS */}
+        {/* <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
+          <InstagramEmbed />
+        </div> */}
 
         {/* Stats */}
         {/* <div className="grid grid-cols-3 gap-3">

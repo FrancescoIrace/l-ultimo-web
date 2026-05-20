@@ -385,7 +385,7 @@ export default function TeamsPage({ session }) {
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={(e) => {e.stopPropagation(); handleCopyCode(team.invite_code);}}
+                                    onClick={(e) => { e.stopPropagation(); handleCopyCode(team.invite_code); }}
                                     className="flex items-center gap-2 text-xs bg-slate-100 px-2.5 py-1.5 rounded-full font-semibold text-slate-600 hover:bg-slate-200 transition-all"
                                 >
                                     {copiedCode === team.invite_code ? (
@@ -477,11 +477,10 @@ export default function TeamsPage({ session }) {
                                 <div className="flex items-center justify-between gap-2 mb-1">
                                     <div className="flex items-center gap-2 flex-1 flex-wrap">
                                         <h3 className="font-bold text-slate-800">{team.name}</h3>
-                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${
-                                            team.is_private 
-                                                ? 'bg-red-50 text-red-600' 
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${team.is_private
+                                                ? 'bg-red-50 text-red-600'
                                                 : 'bg-green-50 text-green-600'
-                                        }`}>
+                                            }`}>
                                             {team.is_private ? (
                                                 <>
                                                     <Lock size={12} />
@@ -495,7 +494,7 @@ export default function TeamsPage({ session }) {
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => {e.stopPropagation(); handleJoinTeam(team);}}
+                                        onClick={(e) => { e.stopPropagation(); handleJoinTeam(team); }}
                                         disabled={
                                             processingTeam === team.id ||
                                             myTeams.some(t => t.id === team.id)
@@ -527,7 +526,7 @@ export default function TeamsPage({ session }) {
                                             📍 {team.citta}
                                         </span>
                                     )}
-                                    
+
                                 </div>
 
                                 <div className="mb-2 flex items-center gap-2 flex-wrap">
@@ -709,13 +708,12 @@ export default function TeamsPage({ session }) {
                                         }
                                     }}
                                     disabled={isDisabled}
-                                    className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${
-                                        isSelected
+                                    className={`p-3 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center justify-center gap-2 ${isSelected
                                             ? 'bg-blue-600 text-white border-blue-600 shadow-lg'
                                             : isDisabled
                                                 ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed opacity-50'
                                                 : 'bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:bg-blue-50'
-                                    }`}
+                                        }`}
                                 >
                                     <span className="text-lg">{icon}</span>
                                     <span className="text-xs text-center leading-tight">{sport}</span>
@@ -911,9 +909,9 @@ export default function TeamsPage({ session }) {
             </p>
 
             {/* Main Content */}
-            <div className="max-w-md mx-auto mt-3 pb-20">
+            <div className="mt-3">
                 {/* Tab Navigation */}
-                <div className="flex gap-3 mb-6 bg-transparent top-16 z-2">
+                <div className="sticky top-0 z-20 bg-slate-50 py-3 mb-6 flex gap-3">
                     {[
                         { id: 'myTeams', label: '👥 Le mie squadre' },
                         { id: 'discover', label: '🔍 Trova squadre' },
@@ -935,7 +933,7 @@ export default function TeamsPage({ session }) {
                 </div>
 
                 {/* Tab Content */}
-                <div className="space-y-4">
+                <div className="max-h-[calc(100vh-360px)] overflow-y-auto pr-2 space-y-4 pb-20">
                     {activeTab === 'myTeams' && renderMyTeamsTab()}
                     {activeTab === 'discover' && renderDiscoverTab()}
                     {activeTab === 'create' && renderCreateTeamTab()}

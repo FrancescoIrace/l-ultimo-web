@@ -1,142 +1,91 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import L from 'leaflet';
+﻿import { useState, useEffect, useRef } from 'react';
 import { MapPin, X, Search } from 'lucide-react';
-
-// Icona personalizzata
-const createSVGIcon = () => {
-  return L.icon({
-    iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40"><path d="M16 0C10.5 0 6 4.5 6 10c0 8 10 22 10 22s10-14 10-22c0-5.5-4.5-10-10-10z" fill="%232563eb"/><circle cx="16" cy="10" r="4" fill="white"/></svg>',
-    iconSize: [32, 40],
-    iconAnchor: [16, 40],
-  });
-};
-
-function MapClickHandler({ onLocationSelect }) {
-  useMapEvents({
-    click(e) {
-      const { lat, lng } = e.latlng;
-      onLocationSelect({ lat, lng });
-    },
-  });
-  return null;
-}
-
-function MapFlyTo({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) map.flyTo(center, 16);
-  }, [center, map]);
-  return null;
-}
-
-// Sostituisci o aggiorna questo componente dentro LocationPicker.jsx
-function MapResizeFix({ selectedPos }) {
-  const map = useMap();
-
-  useEffect(() => {
-    // Eseguiamo il ricalcolo più volte a brevi intervalli per "inseguire" 
-    // eventuali animazioni CSS del contenitore
-    const timer = setInterval(() => {
-      map.invalidateSize();
-    }, 100);
-
-    // Fermiamo il timer dopo 1 secondo (tempo sufficiente per il caricamento)
-    const timeout = setTimeout(() => {
-      clearInterval(timer);
-      map.invalidateSize();
-    }, 1000);
-
-    return () => {
-      clearInterval(timer);
-      clearTimeout(timeout);
-    };
-  }, [map, selectedPos]); // Si riattiva se cambia la posizione o la mappa
-
-  return null;
-}
 
 export default function LocationPicker({ value, onChange }) {
   const [searchQuery, setSearchQuery] = useState('');
-  // Inizializziamo gli stati dai valori passati (props)
   const [selectedPos, setSelectedPos] = useState(
     value?.location_lat && value?.location_lng ? [value.location_lat, value.location_lng] : null
   );
   const [locationName, setLocationName] = useState(value?.location || '');
+  const inputRef = useRef(null);
+  const autocompleteRef = useRef(null);
 
-  // Sincronizzazione se il valore cambia dall'esterno (es. selezione centro)
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_API_KEY || "";
+
   useEffect(() => {
     if (value?.location_lat && value?.location_lng) {
       setSelectedPos([value.location_lat, value.location_lng]);
       setLocationName(value.location || '');
+      // setSearchQuery(value.location || '');
     }
   }, [value]);
 
-  const handleSearch = async () => {
-    if (!searchQuery) return;
+  useEffect(() => {
+    if (!apiKey) {
+      console.error("Manca la chiave API di Google Maps (VITE_GOOGLE_MAPS_API_KEY) nel file .env");
+      return;
+    }
 
-    const query = searchQuery.toLowerCase();
-
-    // 1. Cerca prima nei centri sportivi del JSON locale
-    try {
-      const jsonRes = await fetch('/sportsCenters.json');
-      const jsonData = await jsonRes.json();
-      const match = jsonData.centers?.find(c =>
-        c.name.toLowerCase().includes(query) ||
-        c.address.toLowerCase().includes(query)
-      );
-      if (match) {
-        updateLocation(match.lat, match.lng, `${match.name}, ${match.address}`);
+    const loadGoogleMapsScript = () => {
+      if (window.google?.maps?.places) {
+        initAutocomplete();
         return;
       }
-    } catch (err) {
-      console.warn('JSON locale non disponibile:', err);
-    }
-
-    // 2. Fallback: Nominatim limitato alla Campania
-    // viewbox: minLon,minLat,maxLon,maxLat della regione Campania
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&addressdetails=1&countrycodes=it&viewbox=13.7,39.9,16.0,41.5&bounded=1&limit=1`
-      );
-      const data = await response.json();
-
-      if (data.length > 0) {
-        const res = data[0];
-        const street = res.address.road || '';
-        const houseNumber = res.address.house_number || '';
-        const city = res.address.city || res.address.town || '';
-        const displayName = `${street} ${houseNumber}${houseNumber ? ',' : ''} ${city}`.trim() || res.display_name;
-
-        updateLocation(parseFloat(res.lat), parseFloat(res.lon), displayName);
+      
+      const existingScript = document.getElementById('google-maps-script');
+      if (existingScript) {
+        existingScript.addEventListener('load', initAutocomplete);
+        return;
       }
-    } catch (err) {
-      console.error("Errore ricerca:", err);
-    }
-  };
 
-  const handleLocationSelect = async ({ lat, lng }) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
-      );
-      const data = await response.json();
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
 
-      const street = data.address.road || '';
-      const houseNumber = data.address.house_number || '';
-      const city = data.address.city || data.address.town || '';
-      const displayName = `${street} ${houseNumber}${houseNumber ? ',' : ''} ${city}`.trim() || data.display_name;
+      script.addEventListener('load', initAutocomplete);
+    };
 
-      updateLocation(lat, lng, displayName);
-    } catch (err) {
-      updateLocation(lat, lng, `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-    }
-  };
+    const initAutocomplete = () => {
+      if (!inputRef.current) return;
+      
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+        types: ['establishment', 'geocode'],
+        componentRestrictions: { country: 'it' },
+      });
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+        
+        if (place.geometry && place.geometry.location) {
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          const name = place.formatted_address || place.name;
+          
+          updateLocation(lat, lng, name);
+          setSearchQuery(name);
+        }
+      });
+    };
+
+    loadGoogleMapsScript();
+
+    return () => {
+      if (autocompleteRef.current && window.google) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, [apiKey]);
 
   const updateLocation = (lat, lng, name) => {
     setSelectedPos([lat, lng]);
     setLocationName(name);
-    onChange({
+    onChangeRef.current({
       location: name,
       location_lat: lat,
       location_lng: lng
@@ -147,7 +96,8 @@ export default function LocationPicker({ value, onChange }) {
     setSelectedPos(null);
     setLocationName('');
     setSearchQuery('');
-    onChange({ location: '', location_lat: null, location_lng: null });
+    onChangeRef.current({ location: '', location_lat: null, location_lng: null });
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   return (
@@ -157,50 +107,41 @@ export default function LocationPicker({ value, onChange }) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 text-slate-400" size={18} />
           <input
+            ref={inputRef}
             type="text"
-            placeholder="Cerca via e civico..."
+            placeholder="Cerca via, civico o un centro sportivo..."
             className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearch())}
+            // Evita l'invio del form di CreateMatch alla pressione di Enter
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+              }
+            }}
           />
         </div>
-        <button
-          type="button"
-          onClick={handleSearch}
-          className="bg-blue-600 text-white px-5 rounded-xl font-bold active:scale-95 transition-all"
-        >
-          CERCA
-        </button>
       </div>
 
-      {/* Contenitore Mappa - Rimosso padding e aggiunto overflow-hidden */}
+      {/* Contenitore Mappa - Google Maps Embed API (Statica/Embed) */}
       <div className="h-64 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative bg-[#f1f5f9]">
-        <MapContainer
-          center={selectedPos || [40.817, 14.333]}
-          zoom={selectedPos ? 16 : 13}
-          style={{ height: '100%', width: '100%' }}
-          whenReady={(mapInstance) => {
-            // Forza il ricalcolo appena la mappa è "pronta" nel DOM
-            setTimeout(() => mapInstance.target.invalidateSize(), 100);
-          }}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            keepBuffer={12} // Aumentiamo il buffer per caricare più tasselli attorno alla vista
-          />
-
-          <MapResizeFix selectedPos={selectedPos} />
-
-          <MapClickHandler onLocationSelect={handleLocationSelect} />
-
-          {selectedPos && (
-            <>
-              <Marker position={selectedPos} icon={createSVGIcon()} />
-              <MapFlyTo center={selectedPos} />
-            </>
-          )}
-        </MapContainer>
+        {selectedPos ? (
+          <iframe
+            title="Mappa Luogo"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${selectedPos[0]},${selectedPos[1]}`}
+          ></iframe>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+            <MapPin size={48} className="mb-2 opacity-30" />
+            <p className="text-sm font-semibold">Cerca un luogo o centro per visualizzarlo sulla mappa</p>
+          </div>
+        )}
       </div>
 
       {/* Result Box */}
@@ -213,7 +154,7 @@ export default function LocationPicker({ value, onChange }) {
             <p className="font-bold text-slate-800 leading-tight">{locationName}</p>
             <p className="text-[10px] text-blue-500 font-black uppercase mt-1 tracking-tighter">Posizione impostata correttamente</p>
           </div>
-          <button onClick={handleClear} className="text-slate-400 hover:text-red-500 transition-colors">
+          <button type="button" onClick={handleClear} className="text-slate-400 hover:text-red-500 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -221,3 +162,4 @@ export default function LocationPicker({ value, onChange }) {
     </div>
   );
 }
+

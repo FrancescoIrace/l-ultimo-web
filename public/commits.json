@@ -1,5 +1,10 @@
 [
   {
+    "date": "20 maggio 2026",
+    "title": "Fix vari squadre",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "18 maggio 2026",
     "title": "Merge pull request #10 from FrancescoIrace/feature/squadre",
     "description": "Feature/squadre v1"
@@ -42,11 +47,6 @@
   {
     "date": "14 maggio 2026",
     "title": "COMMENTATO METEO CARD",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "Fix",
     "description": "Modifica all'app"
   }
 ]

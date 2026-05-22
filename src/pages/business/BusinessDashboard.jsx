@@ -225,34 +225,40 @@ export default function BusinessDashboard({ user, name }) {
 
 
     return (
-        <div className="grid grid-cols-1 gap-4 p-4">
+        <div className="p-4 md:p-8 max-w-[1400px] mx-auto bg-slate-50/50 min-h-screen">
 
-            {/* PANNELLO DATI CENTRO */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-                        <MapPin size={20} />
+            {/* PANNELLO DATI CENTRO (HEADER) */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-3 bg-red-100 text-red-600 rounded-xl shadow-inner">
+                            <MapPin size={24} />
+                        </div>
+                        <h2 className="text-slate-800 text-2xl">Centro Sportivo <i className='font-black'>{name || ''}</i></h2>
                     </div>
-                    <h2 className="text-slate-800">Centro Sportivo <i className='font-bold'>{name || ''}</i></h2>
+                    <p className="text-sm text-slate-500 max-w-lg">Benvenuto 👏<br className="md:hidden" /> nella tua dashboard direzionale. Qui puoi gestire il centro, controllare le richieste di prenotazione, le tue risorse e gli orari di apertura.</p>
                 </div>
-                {/* Piccolo testo di benvenuto per il centro */}
-                <p className="text-sm text-slate-500">Benvenuto 👏<br /> qui potrai gestire il tuo centro sportivo. 💪</p>
-                <p className="text-sm text-slate-500">Potrai gestire le prenotazioni, le partite e i campi. 🤓</p>
-                <p className="text-sm text-slate-500">Anche i tuoi orari di apertura e chiusura. ⏱️</p>
+                {/* Eventuale indicatore veloce o bottone */}
             </div>
 
-            <div className="py-6">
-                <div className="px-4 mb-4 flex items-center justify-between">
-                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
-                        Richieste <span className="text-blue-600">Pendenti</span>
-                    </h2>
-                    <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">
-                        {requests.length} da gestire
-                    </span>
-                </div>
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
+                
+                {/* COLONNA SINISTRA PRINCIPALE SOTTO HEADER */}
+                <div className="lg:col-span-8 flex flex-col gap-6">
 
-                {/* CAROUSEL CONTAINER */}
-                <div className="flex gap-4 overflow-x-auto px-4 pb-8 scrollbar-hide snap-x snap-mandatory">
+                    {/* SEZIONE RICHIESTE */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
+                                Richieste <span className="text-blue-600">Pendenti</span>
+                            </h2>
+                            <span className="bg-blue-100 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase shadow-sm">
+                                {requests.length} da gestire
+                            </span>
+                        </div>
+
+                        {/* CAROUSEL CONTAINER */}
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory px-1">
                     {requests.length === 0 ? (
                         <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center">
                             <p className="text-slate-400 font-bold text-sm">Nessuna richiesta attiva</p>
@@ -333,12 +339,12 @@ export default function BusinessDashboard({ user, name }) {
             </div>
 
             {/* PANNELLO CALENDARIO - Il più importante */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
                         <Calendar size={20} />
                     </div>
-                    <h3 className="font-bold text-slate-800">Calendario Prenotazioni</h3>
+                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Calendario <span className='text-blue-600'>Prenotazioni</span></h3>
                 </div>
                 {/* Qui andrà un mini-calendario o la lista del giorno */}
                 {appointments.length === 0 ? (
@@ -384,17 +390,22 @@ export default function BusinessDashboard({ user, name }) {
                     </>
                 )}
             </div>
+            
+            </div> {/*  CHIUSURA COLONNA SINISTRA */}
+
+            {/* COLONNA DESTRA */}
+            <div className="lg:col-span-4 flex flex-col gap-6">
 
             {/* PANNELLO CAMPI */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex-1">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-green-100 text-green-600 rounded-xl shadow-inner">
                         <LayoutDashboard size={20} />
                     </div>
-                    <h3 className="font-bold text-slate-800">I tuoi Campi</h3>
-                    <button onClick={() => navigate('/gestisci-campi')} className="ml-auto text-sm text-slate-400 hover:text-slate-600 flex items-center gap-2">
-                        <span>Gestisci Campi</span>
-                        <Pencil size={16} />
+                    <h3 className="font-bold text-slate-800 uppercase tracking-tighter">I tuoi Campi</h3>
+                    <button onClick={() => navigate('/gestisci-campi')} className="ml-auto text-sm text-slate-400 hover:text-green-600 flex items-center gap-2 transition-colors">
+                        <span className="hidden sm:inline">Gestisci</span>
+                        <Pencil size={18} />
                     </button>
                 </div>
                 <div className="grid grid-cols-1 gap-4">
@@ -463,15 +474,15 @@ export default function BusinessDashboard({ user, name }) {
             </div>
 
             {/* PANNELLO ORARI */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex-1">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-orange-100 text-orange-600 rounded-xl shadow-inner">
                         <Clock size={20} />
                     </div>
-                    <h3 className="font-bold text-slate-800">Orari del centro</h3>
-                    <button onClick={() => setIsOrariOpen(true)} className="ml-auto text-sm text-slate-400 hover:text-slate-600 flex items-center gap-2">
-                        <span>Modifica Orari</span>
-                        <Edit2 size={16} />
+                    <h3 className="font-bold text-slate-800 uppercase tracking-tighter">Orari d'apertura</h3>
+                    <button onClick={() => setIsOrariOpen(true)} className="ml-auto text-sm text-slate-400 hover:text-orange-600 flex items-center gap-2 transition-colors">
+                        <span className="hidden sm:inline">Modifica</span>
+                        <Edit2 size={18} />
                     </button>
                     <ModalOrari
                         isOpen={isOrariOpen}
@@ -490,9 +501,10 @@ export default function BusinessDashboard({ user, name }) {
                         </div>
                     ))}
                 </div>
-
-
             </div>
+
+            </div> {/* CHIUDE COLONNA DESTRA */}
+            </div> {/* CHIUDE GRID WRAPPER */}
         </div>
     );
 }

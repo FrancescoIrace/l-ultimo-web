@@ -141,10 +141,15 @@ function App() {
       )}
       {/* QUESTO COMPONENTE NON CI SARA' PIU' QUANDO L'APP SI TROVERA' SUL PLAY STORE */}
       <PWAInstallBanner />
-      <div className="w-full max-w-md mx-auto bg-slate-50 min-h-screen">
+      <div className={`w-full mx-auto bg-slate-50 min-h-screen ${userRole === 'center' ? '' : 'max-w-md'}`}>
         <header className="bg-white border-blue-400 border-b-2 p-1 flex justify-between items-center sticky top-0 z-10">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform">
-            <h1 className="text-3xl font-black text-blue-600 tracking-tighter">L'ULTIMO</h1>
+            <h1 className="text-4xl font-black text-blue-600 tracking-tighter flex items-center">
+                L'ULTIMO
+                {userRole === 'center' && (
+                  <span className="text-sm ml-2 bg-blue-600 text-white px-2.5 py-0.5 rounded-lg align-middle inline-block font-bold tracking-normal">BUSINESS</span>
+                )}
+            </h1>
           </button>
 
           <div className="flex items-center gap-2">

@@ -7,8 +7,10 @@ import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../c
 import { Loader, Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck, Users } from 'lucide-react';
 import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
+import { useAlert } from '../components/AlertComponent';
 
 export default function Profile({ session }) {
+    const { success, error: showAlertError } = useAlert();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
@@ -176,12 +178,12 @@ export default function Profile({ session }) {
             .eq('id', session.user.id);
 
         if (error) {
-            alert("Errore nell'aggiornamento: " + error.message);
+            showAlertError("Errore nell'aggiornamento: " + error.message);
         } else {
-            alert("Profilo aggiornato con successo!");
+            success("Profilo aggiornato con successo!");
             // setIsEditing(false);
             // fetchAllData(); // Ricarica i dati aggiornati
-            setProfile(editData);
+            setProfile({ ...profile, ...editData });
             setIsEditing(false);
         }
         setLoading(false);
@@ -232,11 +234,12 @@ export default function Profile({ session }) {
 
             // 3. Aggiorna lo stato per l'anteprima
             // setEditData({ ...editData, avatar_url: finalUrl });
+            
+            success("Immagine caricata con successo!");
 
         } catch (error) {
-            alert("Errore caricamento immagine: " + error.message);
+            showAlertError("Errore caricamento immagine: " + error.message);
         } finally {
-            alert("Immagine caricata con successo!");
             setLoading(false);
         }
     };
@@ -258,11 +261,13 @@ export default function Profile({ session }) {
                 lat: locationData.location_lat,
                 lng: locationData.location_lng
             })
-            .eq('id', user.id);
+            .eq('id', session.user.id);
 
         if (!error) {
             success("Indirizzo salvato!");
             setIsEditingAddress(false);
+        } else {
+            showAlertError("Errore salvataggio indirizzo: " + error.message);
         }
     };
 

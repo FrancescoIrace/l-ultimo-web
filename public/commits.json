@@ -1,6 +1,16 @@
 [
   {
     "date": "20 maggio 2026",
+    "title": "Merge pull request #11 from FrancescoIrace/change/googlemaps_api",
+    "description": "Change nomiantium in GoogleMaps API"
+  },
+  {
+    "date": "20 maggio 2026",
+    "title": "Change nomiantium in GoogleMaps API",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "20 maggio 2026",
     "title": "Fix vari squadre",
     "description": "Modifica all'app"
   },
@@ -37,16 +47,6 @@
   {
     "date": "14 maggio 2026",
     "title": "Fix vari",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "Fix squadre",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "COMMENTATO METEO CARD",
     "description": "Modifica all'app"
   }
 ]

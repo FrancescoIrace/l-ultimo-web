@@ -42,20 +42,42 @@ export default function Home({ session, isPWA }) {
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
-    const { data, error } = await supabase
-      .from('matches')
-      .select('*')
-      .order('datetime', { ascending: true });
+    try {
+      // 1. Fetch user's teams first
+      let myTeamIds = [];
+      if (session?.user?.id) {
+        const { data: userTeams } = await supabase
+          .from('team_members')
+          .select('team_id')
+          .eq('user_id', session.user.id);
+        
+        myTeamIds = userTeams?.map(t => t.team_id) || [];
+      }
 
-    if (error) {
-      console.error('Errore:', error);
-    } else {
-      setMatches(data || []);
-  
-      // Debug giorni
-      // console.log('Giorni disponibili:', data?.map(m => m.datetime.split('T')[0]).filter(d => d));
+      // 2. Fetch matches (public OR belonging to user's teams)
+      let query = supabase
+        .from('matches')
+        .select('*')
+        .order('datetime', { ascending: true });
+
+      if (myTeamIds.length > 0) {
+        query = query.or(`team_id.is.null,team_id.in.(${myTeamIds.join(',')})`);
+      } else {
+        query = query.is('team_id', null);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Errore:', error);
+      } else {
+        setMatches(data || []);
+      }
+    } catch (err) {
+      console.error('Errore imprevisto in fetchMatches:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchProfileLocation = async () => {

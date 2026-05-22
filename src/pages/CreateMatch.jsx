@@ -54,8 +54,8 @@ export default function CreateMatch() {
     };
 
     async function fetchCenters() {
-        const { data } = await supabase.from('profiles').select('id, username,business_address,lat,lng').eq('role', 'center');
-        setCenters(data);
+        const { data } = await supabase.from('profiles').select('id, username, full_name, business_address, lat, lng').eq('role', 'center');
+        setCenters(data || []);
         // console.log("Centri affiliati:", data);
     }
 
@@ -176,17 +176,6 @@ export default function CreateMatch() {
             fetchMatchData();
         }
     }, [id]);
-
-    useEffect(() => {
-        const fetchCenters = async () => {
-            const { data } = await supabase
-                .from('profiles')
-                .select('id, username, full_name') // Adatta i campi al tuo schema
-                .eq('role', 'center');
-            setCenters(data || []);
-        };
-        fetchCenters();
-    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -438,25 +427,24 @@ export default function CreateMatch() {
                     <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
                         <div className="flex items-center justify-between mb-2">
                             <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
-                            <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">ðŸš§ Work in Progress</span>
+                            <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded"> Work in Progress</span>
                         </div>
                         <select
-                            disabled
-                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3 cursor-not-allowed"
+                            // disabled
+                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3"
                             onChange={(e) => {
                                 const centerId = e.target.value;
-                                setSelectedCenter(centerId);
                                 handleCenterChange(centerId);
                             }}
                         >
                             <option value="">Seleziona un centro...</option>
-                            {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
+                            {centers.map(c => <option key={c.id} value={c.id}>{c.full_name || c.username}</option>)}
                         </select>
 
                         {availableCourts.length > 0 && (
                             <select
-                                disabled
-                                className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none cursor-not-allowed"
+                                // disabled
+                                className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none"
                                 onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
                             >
                                 <option value="">Scegli il campo...</option>
@@ -606,25 +594,24 @@ export default function CreateMatch() {
                 <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
                     <div className="flex items-center justify-between mb-2">
                         <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
-                        <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">ðŸš§ Work in Progress</span>
+                        <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded"> Work in Progress</span>
                     </div>
                     <select
-                        disabled
-                        className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3 cursor-not-allowed"
+                        // disabled
+                        className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3"
                         onChange={(e) => {
                             const centerId = e.target.value;
-                            setSelectedCenter(centerId);
                             handleCenterChange(centerId);
                         }}
                     >
                         <option value="">Seleziona un centro...</option>
-                        {centers.map(c => <option key={c.id} value={c.id}>{c.username}</option>)}
+                        {centers.map(c => <option key={c.id} value={c.id}>{c.full_name || c.username}</option>)}
                     </select>
 
                     {availableCourts.length > 0 && (
                         <select
-                            disabled
-                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none cursor-not-allowed"
+                            // disabled
+                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none"
                             onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
                         >
                             <option value="">Scegli il campo...</option>

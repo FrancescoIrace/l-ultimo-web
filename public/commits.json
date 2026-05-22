@@ -1,6 +1,11 @@
 [
   {
     "date": "22 maggio 2026",
+    "title": "Fix UI squadre",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 maggio 2026",
     "title": "Fix colori card team",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "16 maggio 2026",
     "title": "Add squadre sul profilo",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "14 maggio 2026",
-    "title": "Fix vari",
     "description": "Modifica all'app"
   }
 ]

@@ -339,67 +339,70 @@ export default function TeamsPage({ session }) {
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => { navigate(`/squadre/${team.id}`) }}
-                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
+                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer relative"
                     >
-                        <div className="flex items-start gap-4">
+                        {/* Codice Invito - Spostato in basso o in alto se necessario, ma con flex */}
+                        <div className="flex items-start gap-4 mt-1">
                             {/* Logo o Avatar - Cerchio con Gradiente */}
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-200">
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-100 shadow-sm overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 relative">
                                 {team.logo_url ? (
                                     <img
                                         src={team.logo_url}
                                         alt={team.name}
-                                        className="w-full h-full object-cover rounded-full"
+                                        className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-2xl">⚽</span>
+                                    <span className="text-2xl text-white font-bold">
+                                        {team.name ? team.name.charAt(0).toUpperCase() : 'T'}
+                                    </span>
                                 )}
                             </div>
 
                             {/* Info */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h3 className="font-bold text-slate-800">{team.name}</h3>
-                                    <span className="inline-flex items-center gap-1 bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0">
-                                        🌐 Pubblica
-                                    </span>
+                            <div className="flex-1 min-w-0 pr-0">
+                                <div className="flex items-start justify-between gap-2 mb-1.5 flex-col md:flex-row">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h3 className="font-bold text-slate-800 text-lg sm:text-base truncate">{team.name}</h3>
+                                        <span className="inline-flex items-center gap-1 bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 border border-green-100">
+                                            🌐 Pubblica
+                                        </span>
+                                    </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={(e) => { e.stopPropagation(); handleCopyCode(team.invite_code); }}
+                                        className="flex-shrink-0 flex items-center gap-1.5 text-[10px] md:text-xs bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-full font-medium text-slate-600 hover:bg-slate-100 transition-all shadow-sm"
+                                    >
+                                        {copiedCode === team.invite_code ? (
+                                            <>
+                                                <Check size={12} className="text-green-600" />
+                                                <span className="text-green-600">Copiato!</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy size={12} />
+                                                {team.invite_code}
+                                            </>
+                                        )}
+                                    </motion.button>
                                 </div>
-                                <p className="text-xs text-slate-500 mb-2 line-clamp-2">
+                                <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed">
                                     {team.description || 'Nessuna descrizione'}
                                 </p>
 
                                 {/* Sport e Città */}
-                                <div className="mb-2 flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     {team.citta && (
-                                        <span className="inline-flex items-center gap-1 text-xs bg-slate-50 text-slate-700 px-2 py-1 rounded-lg">
+                                        <span className="inline-flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium">
                                             📍 {team.citta}
                                         </span>
                                     )}
                                     {team.sport && team.sport.length > 0 && (
-                                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">
+                                        <span className="inline-flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-medium">
                                             ⚽ {team.sport.slice(0, 2).join(', ')}{team.sport.length > 2 ? '...' : ''}
                                         </span>
                                     )}
                                 </div>
-
-                                {/* Codice Invito - Pillola in basso */}
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={(e) => { e.stopPropagation(); handleCopyCode(team.invite_code); }}
-                                    className="flex items-center gap-2 text-xs bg-slate-100 px-2.5 py-1.5 rounded-full font-semibold text-slate-600 hover:bg-slate-200 transition-all"
-                                >
-                                    {copiedCode === team.invite_code ? (
-                                        <>
-                                            <Check size={12} />
-                                            Copiato!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy size={12} />
-                                            {team.invite_code}
-                                        </>
-                                    )}
-                                </motion.button>
                             </div>
                         </div>
                     </motion.div>
@@ -456,34 +459,36 @@ export default function TeamsPage({ session }) {
                         key={team.id}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => navigate(`/squadre/${team.id}`)}
-                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-95"
+                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-95 relative"
                     >
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 mt-1">
                             {/* Logo o Avatar - Cerchio con Gradiente */}
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-200">
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-100 shadow-sm overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
                                 {team.logo_url ? (
                                     <img
                                         src={team.logo_url}
                                         alt={team.name}
-                                        className="w-full h-full object-cover rounded-full"
+                                        className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-2xl">⚽</span>
+                                    <span className="text-2xl text-white font-bold">
+                                        {team.name ? team.name.charAt(0).toUpperCase() : 'T'}
+                                    </span>
                                 )}
                             </div>
 
                             {/* Info e Bottone */}
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2 mb-1">
-                                    <div className="flex items-center gap-2 flex-1 flex-wrap">
-                                        <h3 className="font-bold text-slate-800">{team.name}</h3>
-                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${team.is_private
-                                                ? 'bg-red-50 text-red-600'
-                                                : 'bg-green-50 text-green-600'
+                            <div className="flex-1 min-w-0 pr-0">
+                                <div className="flex items-start justify-between gap-2 mb-1.5 flex-col lg:flex-row lg:items-center">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h3 className="font-bold text-slate-800 text-lg sm:text-base truncate">{team.name}</h3>
+                                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 border ${team.is_private
+                                                ? 'bg-red-50 text-red-600 border-red-100'
+                                                : 'bg-green-50 text-green-600 border-green-100'
                                             }`}>
                                             {team.is_private ? (
                                                 <>
-                                                    <Lock size={12} />
+                                                    <Lock size={10} />
                                                     Privata
                                                 </>
                                             ) : (
@@ -499,11 +504,11 @@ export default function TeamsPage({ session }) {
                                             processingTeam === team.id ||
                                             myTeams.some(t => t.id === team.id)
                                         }
-                                        className={`px-3 py-2 rounded-full font-semibold text-xs transition-all active:scale-95 whitespace-nowrap flex-shrink-0 ${myTeams.some(t => t.id === team.id)
-                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        className={`px-3 py-1.5 rounded-full font-semibold text-[11px] md:text-xs transition-all active:scale-95 whitespace-nowrap flex-shrink-0 mt-2 lg:mt-0 ${myTeams.some(t => t.id === team.id)
+                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                                             : processingTeam === team.id
                                                 ? 'bg-blue-300 text-white'
-                                                : 'bg-blue-600 text-white hover:shadow-lg'
+                                                : 'bg-blue-600 text-white hover:shadow-md'
                                             }`}
                                     >
                                         {processingTeam === team.id
@@ -515,47 +520,23 @@ export default function TeamsPage({ session }) {
                                 </div>
 
                                 {/* Descrizione - max 2 righe */}
-                                <p className="text-xs text-slate-500 mb-2 line-clamp-2">
+                                <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed mt-2 sm:mt-0">
                                     {team.description || 'Nessuna descrizione'}
                                 </p>
 
                                 {/* Sport e Città */}
-                                <div className="mb-2 flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     {team.citta && (
-                                        <span className="inline-flex items-center gap-1 text-xs bg-slate-50 text-slate-700 px-2 py-1 rounded-lg">
+                                        <span className="inline-flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium">
                                             📍 {team.citta}
                                         </span>
                                     )}
-
-                                </div>
-
-                                <div className="mb-2 flex items-center gap-2 flex-wrap">
                                     {team.sport && team.sport.length > 0 && (
-                                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">
+                                        <span className="inline-flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-medium">
                                             ⚽ {team.sport.slice(0, 3).join(', ')}{team.sport.length > 3 ? '...' : ''}
                                         </span>
                                     )}
                                 </div>
-
-                                {/* Codice Invito - Pillola in basso */}
-                                {/* <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={(e) => {e.stopPropagation(); handleCopyCode(team.invite_code);}}
-                                    className="flex items-center gap-2 text-xs bg-slate-100 px-2.5 py-1.5 rounded-full font-semibold text-slate-600 hover:bg-slate-200 transition-all"
-                                >
-                                    {copiedCode === team.invite_code ? (
-                                        <>
-                                            <Check size={12} />
-                                            Copiato!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy size={12} />
-                                            {team.invite_code}
-                                        </>
-                                    )}
-                                </motion.button> */}
                             </div>
                         </div>
                     </motion.div>
@@ -913,9 +894,9 @@ export default function TeamsPage({ session }) {
                 {/* Tab Navigation */}
                 <div className="sticky top-0 z-20 bg-slate-50 py-3 mb-6 flex gap-3">
                     {[
-                        { id: 'myTeams', label: '👥 Le mie squadre' },
-                        { id: 'discover', label: '🔍 Trova squadre' },
-                        { id: 'create', label: '➕ Crea' }
+                        { id: 'myTeams', label: '👥 Le mie Squadre' },
+                        { id: 'discover', label: '🔍 Esplora' },
+                        { id: 'create', label: '➕ Nuovo Team' }
                     ].map(tab => (
                         <motion.button
                             key={tab.id}

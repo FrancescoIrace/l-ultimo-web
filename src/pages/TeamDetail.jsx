@@ -379,7 +379,7 @@ export default function TeamDetail({ session }) {
                 className="rounded-2xl p-6 shadow-md mb-6 border-2"
             >
                 {/* Logo */}
-                <div className="w-24 h-24 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4 border-2 border-slate-200">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 border-2 border-slate-200 overflow-hidden shadow-sm">
                     {teamDetails.logo_url ? (
                         <img
                             src={teamDetails.logo_url}
@@ -387,7 +387,9 @@ export default function TeamDetail({ session }) {
                             className="w-full h-full object-cover rounded-xl"
                         />
                     ) : (
-                        <span className="text-4xl">⚽</span>
+                        <span className="text-4xl text-white font-bold">
+                            {teamDetails.name ? teamDetails.name.charAt(0).toUpperCase() : 'T'}
+                        </span>
                     )}
                 </div>
 

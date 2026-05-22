@@ -273,7 +273,7 @@ export default function CreateMatch() {
                 court_id: formData.court_id || null,
                 creator_id: user.id,
                 team_id: formData.team_id || null,
-                reservation_status: formData.court_id ? (id ? undefined : 'requested') : 'none'
+                reservation_status: formData.court_id ? (id ? undefined : 'draft') : 'none'
                 // Nota: se Ã¨ un update, potresti voler NON sovrascrivere lo stato della prenotazione
             };
 
@@ -497,7 +497,7 @@ export default function CreateMatch() {
                             <select
                                 // disabled
                                 className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none"
-                                onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
+                                onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'draft' })}
                             >
                                 <option value="">Scegli il campo...</option>
                                 {availableCourts.map(court => (
@@ -705,7 +705,7 @@ export default function CreateMatch() {
                         <select
                             // disabled
                             className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none"
-                            onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'requested' })}
+                            onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'draft' })}
                         >
                             <option value="">Scegli il campo...</option>
                             {availableCourts.map(court => (

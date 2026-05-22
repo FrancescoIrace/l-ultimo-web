@@ -451,6 +451,28 @@ Scopri di più qui: ${window.location.href}`;
         // perché lo fa già la funzione SQL join_match_v2!
     };
 
+    const handleSendRequest = async () => {
+        if (!match.court_id) return;
+
+        try {
+            const { error: updateError } = await supabase
+                .from('matches')
+                .update({ 
+                    reservation_status: 'requested',
+                    request_count: (match.request_count || 0) + 1 
+                })
+                .eq('id', match.id);
+
+            if (updateError) throw updateError;
+
+            success("Richiesta inviata al centro sportivo!");
+            getDetails(); // Ricarica i dati per aggiornare UI
+        } catch (err) {
+            console.error("Errore nell'invio della richiesta:", err);
+            error("Ops! Si è verificato un errore durante l'invio.");
+        }
+    };
+
     const submitReview = async (targetId, rating, comment) => {
         const { error: reviewError } = await supabase
             .from('reviews')
@@ -635,6 +657,7 @@ Scopri di più qui: ${window.location.href}`;
                                 {match.reservation_status === 'confirmed' && "Campo Confermato"}
                                 {match.reservation_status === 'rejected' && "Prenotazione Rifiutata"}
                                 {match.reservation_status === 'requested' && "In attesa del centro..."}
+                                {match.reservation_status === 'draft' && "BOZZA - DA INVIARE"}
                             </div>
                         </div>
                     </div>
@@ -791,6 +814,84 @@ Scopri di più qui: ${window.location.href}`;
                         <label>
                             PARTITA IN CORSO !!
                         </label>
+                    </div>
+                )}
+
+                {/* Blocco Gestione Richiesta Campo per Organizzatore */}
+                {match?.creator_id === user.id && match?.court_id && (
+                    <div className={`mb-6 p-4 border rounded-3xl ${match.reservation_status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <h4 className={`text-sm font-black uppercase mb-3 flex items-center gap-2 ${match.reservation_status === 'rejected' ? 'text-red-700' : 'text-slate-700'}`}>
+                            <span>🏢</span> Stato Prenotazione Campo
+                        </h4>
+                        {(() => {
+                            // Soglia minima: metà dei giocatori totali arrotondata per eccesso
+                            const requiredPlayers = Math.ceil(match.max_players / 2);
+                            const requestCount = match.request_count || 0;
+                            const status = match.reservation_status;
+                            
+                            if (status === 'confirmed') {
+                                return (
+                                    <div className="w-full py-3 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold tracking-tight text-center flex items-center justify-center gap-2 shadow-sm">
+                                        ✅ Prenotazione Confermata dal Gestore
+                                    </div>
+                                );
+                            }
+
+                            if (confirmedPlayers.length < requiredPlayers) {
+                                return (
+                                    <button disabled className="w-full py-3 bg-slate-200 text-slate-400 rounded-xl font-bold shadow-sm cursor-not-allowed text-xs sm:text-sm transition-all">
+                                        Raccogli più giocatori per inviare la richiesta ({confirmedPlayers.length}/{requiredPlayers})
+                                    </button>
+                                );
+                            }
+                            
+                            if (status === 'requested') {
+                                return (
+                                    <button disabled className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
+                                        <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                        In attesa del gestore...
+                                    </button>
+                                );
+                            }
+
+                            if (requestCount >= 3 && status === 'rejected') {
+                                return (
+                                    <>
+                                        <div className="mb-3 text-sm text-red-700 bg-white/50 p-3 rounded-xl border border-red-100 shadow-sm leading-tight">
+                                            <p className="font-bold mb-1">❌ Il centro sportivo ha rifiutato la richiesta per il seguente motivo:</p>
+                                            <p className="italic opacity-80">{match.rejection_reason || "Nessun motivo specificato."}</p>
+                                        </div>
+                                        <button disabled className="w-full py-3 bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold shadow-sm cursor-not-allowed transition-all">
+                                            Limite richieste esaurito (Hai superato i 3 tentativi)
+                                        </button>
+                                    </>
+                                );
+                            }
+
+                            if (status === 'draft' || status === 'rejected') {
+                                return (
+                                    <>
+                                        {status === 'rejected' && (
+                                            <div className="mb-3 text-sm text-red-700 bg-white/50 p-3 rounded-xl border border-red-100 shadow-sm leading-tight">
+                                                <p className="font-bold mb-1">❌ Il centro sportivo ha rifiutato la richiesta per il seguente motivo:</p>
+                                                <p className="italic opacity-80">{match.rejection_reason || "Nessun motivo specificato."}</p>
+                                            </div>
+                                        )}
+                                        <button 
+                                            onClick={handleSendRequest}
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-1"
+                                        >
+                                            <span className="flex items-center gap-2">🚀 {status === 'rejected' ? 'Riprova Invia Richiesta' : 'Invia Richiesta al Centro Sportivo'}</span>
+                                            <span className="text-[10px] uppercase tracking-wider font-black opacity-80">
+                                                {3 - requestCount} {3 - requestCount === 1 ? 'tentativo' : 'tentativi'} rimasti
+                                            </span>
+                                        </button>
+                                    </>
+                                );
+                            }
+
+                            return null;
+                        })()}
                     </div>
                 )}
 

@@ -1,6 +1,31 @@
 [
   {
     "date": "22 maggio 2026",
+    "title": "Fix visualizzazione dashboard Business",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 maggio 2026",
+    "title": "Merge branch 'main' of https://github.com/FrancescoIrace/l-ultimo-web",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 maggio 2026",
+    "title": "fix campo affiliato autocomplete indirizzo",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 maggio 2026",
+    "title": "Merge pull request #12 from FrancescoIrace/upgrade/createMatch_onlyForSquads",
+    "description": "Creazione partite solo per squadre"
+  },
+  {
+    "date": "22 maggio 2026",
+    "title": "Creazione partite solo per squadre",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 maggio 2026",
     "title": "Fix UI squadre",
     "description": "Modifica all'app"
   },
@@ -22,31 +47,6 @@
   {
     "date": "20 maggio 2026",
     "title": "Fix vari squadre",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "18 maggio 2026",
-    "title": "Merge pull request #10 from FrancescoIrace/feature/squadre",
-    "description": "Feature/squadre v1"
-  },
-  {
-    "date": "18 maggio 2026",
-    "title": "Fix visuals",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "18 maggio 2026",
-    "title": "Fix visualizzazione squadre nel profilo pubblico",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "16 maggio 2026",
-    "title": "Add squadre al profilo pubblico",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "16 maggio 2026",
-    "title": "Add squadre sul profilo",
     "description": "Modifica all'app"
   }
 ]

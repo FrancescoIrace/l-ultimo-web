@@ -1,6 +1,6 @@
 import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
@@ -16,6 +16,9 @@ export default function BusinessDashboard({ user, name }) {
     const [requests, setRequests] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [processingId, setProcessingId] = useState(null);
+    const [rejectingMatchId, setRejectingMatchId] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState('Campo occupato (Torneo / Scuola Calcio)');
+    const [customReason, setCustomReason] = useState('');
     const { success, error, alert, confirm } = useAlert();
 
     async function fetchHours() {
@@ -131,23 +134,51 @@ export default function BusinessDashboard({ user, name }) {
 
     const handleUpdateStatus = (matchId, newStatus) => {
         const isConfirming = newStatus === 'confirmed';
-        const actionText = isConfirming ? "ACCETTARE" : "RIFIUTARE";
+        
+        if (newStatus === 'rejected') {
+            setRejectingMatchId(matchId);
+            setRejectionReason('Campo occupato (Torneo / Scuola Calcio)');
+            setCustomReason('');
+            return;
+        }
+
+        const actionText = "ACCETTARE";
 
         // Messaggio per l'alert
         const message = `Sei sicuro di voler ${actionText} questa richiesta di prenotazione?`;
 
         // Utilizzo del tuo alert: confirm(messaggio, callback)
         confirm(message, async () => {
-            setProcessingId(matchId); // Inizia caricamento (mostra spinner sul bottone)
+            await executeStatusUpdate(matchId, newStatus, null);
+        });
+    };
 
-            try {
-                // 1. Aggiorna lo stato della partita
-                const { data: updatedMatch, error: matchError } = await supabase
-                    .from('matches')
-                    .update({ reservation_status: newStatus })
-                    .eq('id', matchId)
-                    .select('creator_id, title, sport')
-                    .single();
+    const handleConfirmReject = async () => {
+        if (!rejectingMatchId) return;
+        const finalReason = rejectionReason === 'Altro' ? customReason : rejectionReason;
+        const matchId = rejectingMatchId;
+        setRejectingMatchId(null);
+        await executeStatusUpdate(matchId, 'rejected', finalReason);
+    };
+
+    const executeStatusUpdate = async (matchId, newStatus, reason) => {
+        const isConfirming = newStatus === 'confirmed';
+        setProcessingId(matchId); // Inizia caricamento (mostra spinner sul bottone)
+
+        try {
+            // Preparo l'oggetto per l'update
+            const updatePayload = { reservation_status: newStatus };
+            if (newStatus === 'rejected') {
+                updatePayload.rejection_reason = reason;
+            }
+
+            // 1. Aggiorna lo stato della partita
+            const { data: updatedMatch, error: matchError } = await supabase
+                .from('matches')
+                .update(updatePayload)
+                .eq('id', matchId)
+                .select('creator_id, title, sport')
+                .single();
 
                 if (matchError) throw matchError;
 
@@ -182,7 +213,6 @@ export default function BusinessDashboard({ user, name }) {
             } finally {
                 setProcessingId(null); // Fine caricamento
             }
-        });
     };
 
     useEffect(() => {
@@ -226,6 +256,56 @@ export default function BusinessDashboard({ user, name }) {
 
     return (
         <div className="p-4 md:p-8 max-w-[1400px] mx-auto bg-slate-50/50 min-h-screen">
+            
+            {/* Modal Rifiuto */}
+            {rejectingMatchId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full mx-auto animate-slide-up relative">
+                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4 mx-auto shadow-inner">
+                            <AlertCircle size={24} />
+                        </div>
+                        <h3 className="text-xl font-black text-center text-slate-800 uppercase tracking-tighter mb-4">Motivo del Rifiuto</h3>
+                        <div className="space-y-3 mb-6">
+                            {[
+                                "Campo occupato (Torneo / Scuola Calcio)",
+                                "Orario non disponibile / Chiusura straordinaria",
+                                "Altro"
+                            ].map(reason => (
+                                <label key={reason} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <input 
+                                        type="radio" 
+                                        name="rejectionReason" 
+                                        value={reason} 
+                                        checked={rejectionReason === reason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        className="w-4 h-4 text-red-600 focus:ring-red-500"
+                                    />
+                                    <span className="text-sm font-bold text-slate-700">{reason}</span>
+                                </label>
+                            ))}
+                            {rejectionReason === 'Altro' && (
+                                <textarea
+                                    className="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 mt-2"
+                                    placeholder="Specifica il motivo manuale..."
+                                    value={customReason}
+                                    onChange={(e) => setCustomReason(e.target.value)}
+                                    rows="2"
+                                />
+                            )}
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setRejectingMatchId(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl active:scale-95 transition-transform">Annulla</button>
+                            <button 
+                                onClick={handleConfirmReject} 
+                                disabled={rejectionReason === 'Altro' && !customReason.trim()}
+                                className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-transform disabled:opacity-50"
+                            >
+                                Conferma Rifiuto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* PANNELLO DATI CENTRO (HEADER) */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">

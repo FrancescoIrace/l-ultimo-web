@@ -67,6 +67,9 @@ export default function MatchDetail({ user }) {
             sports_courts (
                 name, sport_type, center_id,
                 profiles (full_name, username)
+            ),
+            teams (
+                id, name, logo_url, primary_color, secondary_color
             )
         `)
             .eq('id', id)
@@ -634,6 +637,29 @@ Scopri di più qui: ${window.location.href}`;
                                 {match.reservation_status === 'requested' && "In attesa del centro..."}
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* Team Info (se presente team_id) */}
+                {match.teams && (
+                    <div className="mb-6 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden flex items-center gap-4 cursor-pointer hover:shadow-md transition-all active:scale-95" onClick={() => navigate(`/squadre/${match.teams.id}`)}>
+                        <div className="absolute top-0 left-0 w-2 h-full" style={{ backgroundColor: match.teams.primary_color || '#4f46e5' }}></div>
+                        <div className={`w-12 h-12 rounded-xl overflow-hidden ${match.teams.primary_color && match.teams.secondary_color ? `bg-gradient-to-br from-[${match.teams.primary_color}] to-[${match.teams.secondary_color}]` : 'bg-gradient-to-br from-blue-500 to-indigo-600'} flex-shrink-0 border border-slate-100 shadow-sm flex justify-center items-center`}>
+                            {match.teams.logo_url ? (
+                                <img src={match.teams.logo_url} alt={match.teams.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="font-bold text-xl text-white">{match.teams.name.charAt(0).toUpperCase()}</span>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-0.5 block flex items-center gap-1">
+                                🛡️ ORGANIZZATO DAL TEAM
+                            </span>
+                            <h3 className="font-bold text-slate-800 text-base truncate pr-2">
+                                {match.teams.name}
+                            </h3>
+                        </div>
+                        <ChevronRight size={18} className="text-slate-400 flex-shrink-0" />
                     </div>
                 )}
 

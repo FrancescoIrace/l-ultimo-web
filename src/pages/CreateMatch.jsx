@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
 import { Info } from 'lucide-react';
@@ -33,11 +34,13 @@ export default function CreateMatch() {
         location_lat: null,
         location_lng: null,
         max_players: 10, // Default per Calcetto
-        description: ''
+        description: '',
+        team_id: null
     });
     const [centers, setCenters] = useState([]);
     const [selectedCenter, setSelectedCenter] = useState(null);
     const [availableCourts, setAvailableCourts] = useState([]);
+    const [myTeams, setMyTeams] = useState([]);
 
     const SPORT_MAX_PLAYERS = {
         'Calcetto': 10,
@@ -118,6 +121,19 @@ export default function CreateMatch() {
 
                 if (!countError && activeMatches) {
                     setActiveMatchCount(activeMatches.length);
+                }
+
+                // Fetch delle squadre dell'utente
+                const { data: teamsData, error: teamsError } = await supabase
+                    .from('team_members')
+                    .select('teams(id, name)')
+                    .eq('user_id', user.id);
+
+                if (!teamsError && teamsData) {
+                    const uniqueTeams = teamsData
+                        .map(item => item.teams)
+                        .filter((v, i, a) => v && a.findIndex(t => t?.id === v?.id) === i);
+                    setMyTeams(uniqueTeams || []);
                 }
             }
         }
@@ -267,6 +283,7 @@ export default function CreateMatch() {
                 description: formData.description,
                 court_id: formData.court_id || null,
                 creator_id: user.id,
+                team_id: formData.team_id || null,
                 reservation_status: formData.court_id ? (id ? undefined : 'requested') : 'none'
                 // Nota: se Ã¨ un update, potresti voler NON sovrascrivere lo stato della prenotazione
             };
@@ -341,6 +358,7 @@ export default function CreateMatch() {
                 location_lng: formData.location_lng,
                 datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
                 description: formData.description,
+                team_id: formData.team_id || null, // Aggiunto team_id per l'update
             })
             .eq('id', id)
             .select()
@@ -392,6 +410,40 @@ export default function CreateMatch() {
                             <option>Volley</option>
                             <option>Personalizza</option>
                         </select>
+                    </div>
+
+                    {/* VISIBILITÀ MATCH */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilità Match</label>
+                        <div className="flex gap-2">
+                            <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
+                                <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} disabled />
+                                🌐 Pubblico
+                            </label>
+                            <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id !== null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
+                                <input type="radio" className="hidden" name="visibility" checked={formData.team_id !== null} onChange={() => setFormData({ ...formData, team_id: myTeams.length > 0 ? myTeams[0].id : '' })} disabled />
+                                🛡️ Squadra
+                            </label>
+                        </div>
+                        
+                        {formData.team_id !== null && (
+                            <div className="mt-3">
+                                <select
+                                    disabled
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
+                                    value={formData.team_id || ''}
+                                    onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
+                                >
+                                    <option value="" disabled>Seleziona una squadra...</option>
+                                    {myTeams.length > 0 ? myTeams.map(team => (
+                                        <option key={team.id} value={team.id}>{team.name}</option>
+                                    )) : (
+                                        /* In case it has a team_id but it's not in myTeams (maybe was fetched from matchData) we could just show the id or fetch it, but usually this is enough */
+                                        <option value={formData.team_id}>Squadra selezionata</option>
+                                    )}
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     {/* TITOLO */}
@@ -559,6 +611,47 @@ export default function CreateMatch() {
                         <option>Volley</option>
                         <option>Personalizza</option>
                     </select>
+                </div>
+
+                {/* VISIBILITÀ MATCH */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilità Match</label>
+                    <div className="flex gap-2">
+                        <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 font-semibold hover:bg-slate-100'}`}>
+                            <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} />
+                            🌐 Pubblico
+                        </label>
+                        <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id !== null ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 font-semibold hover:bg-slate-100'}`}>
+                            <input type="radio" className="hidden" name="visibility" checked={formData.team_id !== null} onChange={() => setFormData({ ...formData, team_id: myTeams.length > 0 ? myTeams[0].id : '' })} />
+                            🛡️ Squadra
+                        </label>
+                    </div>
+                    
+                    {formData.team_id !== null && (
+                        <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-3"
+                        >
+                            {myTeams.length > 0 ? (
+                                <select
+                                    className="w-full p-3 bg-white border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-indigo-900"
+                                    value={formData.team_id || ''}
+                                    onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
+                                >
+                                    <option value="" disabled>Seleziona una squadra...</option>
+                                    {myTeams.map(team => (
+                                        <option key={team.id} value={team.id}>{team.name}</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <div className="p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm">
+                                    <p className="font-semibold">Nessuna squadra trovata.</p>
+                                    <p className="text-xs mt-1">Devi unirti o creare una squadra per organizzare match privati per il team.</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
                 </div>
 
                 {/* TITOLO */}

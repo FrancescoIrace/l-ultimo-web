@@ -1,6 +1,6 @@
 import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
@@ -15,6 +15,8 @@ export default function BusinessDashboard({ user, name }) {
     const [isOrariOpen, setIsOrariOpen] = useState(false);
     const [requests, setRequests] = useState([]);
     const [appointments, setAppointments] = useState([]);
+    const [calendarView, setCalendarView] = useState('list'); // 'list' | 'calendar'
+    const [currentMonth, setCurrentMonth] = useState(new Date());
     const [processingId, setProcessingId] = useState(null);
     const [rejectingMatchId, setRejectingMatchId] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('Campo occupato (Torneo / Scuola Calcio)');
@@ -254,8 +256,83 @@ export default function BusinessDashboard({ user, name }) {
     }, [user.id]);
 
 
+    const renderCalendar = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) - 6 (Sat)
+        const startDay = firstDay === 0 ? 6 : firstDay - 1; // Start with Monday
+
+        const days = [];
+        for (let i = 0; i < startDay; i++) {
+            days.push(<div key={`empty-${i}`} className="min-h-[100px] bg-slate-50/50 rounded-xl border border-dashed border-slate-200"></div>);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const dayAppointments = appointments.filter(app => {
+                const appDate = new Date(app.datetime);
+                return appDate.getFullYear() === year && appDate.getMonth() === month && appDate.getDate() === d;
+            });
+            
+            const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
+
+            days.push(
+                <div key={d} className={`min-h-[100px] p-2 flex flex-col rounded-xl border ${isToday ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 bg-white'} overflow-hidden`}>
+                    <span className={`text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full mb-1 flex-shrink-0 ${isToday ? 'bg-blue-600 text-white' : 'text-slate-600'}`}>{d}</span>
+                    <div className="flex flex-col gap-1 w-full overflow-y-auto scrollbar-hide">
+                        {dayAppointments.map(app => {
+                            const time = new Date(app.datetime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                            return (
+                                <div key={app.id} className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-1 rounded font-bold truncate flex-shrink-0" title={`${time} - ${app.title}`}>
+                                    {time} {app.sports_courts?.name || app.sport}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+
+        const nextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
+        const prevMonth = () => setCurrentMonth(new Date(year, month - 1, 1));
+
+        return (
+            <div className="flex flex-col gap-4 animate-fade-in">
+                <div className="flex items-center justify-between bg-slate-50 p-2 rounded-2xl">
+                    <button onClick={prevMonth} className="p-2 bg-white text-slate-600 rounded-xl hover:bg-slate-100 shadow-sm border border-slate-200 transition-colors"><ChevronLeft size={20} /></button>
+                    <h4 className="font-black text-slate-800 text-lg uppercase tracking-tighter">{monthNames[month]} {year}</h4>
+                    <button onClick={nextMonth} className="p-2 bg-white text-slate-600 rounded-xl hover:bg-slate-100 shadow-sm border border-slate-200 transition-colors"><ChevronRight size={20} /></button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 md:gap-2">
+                    {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map(d => (
+                        <div key={d} className="text-center text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest py-2">{d}</div>
+                    ))}
+                    {days}
+                </div>
+            </div>
+        );
+    };
+
+    const getFilteredAppointmentsForList = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const maxDate = new Date(today);
+        maxDate.setDate(maxDate.getDate() + 7);
+        maxDate.setHours(23, 59, 59, 999);
+
+        return appointments.filter(app => {
+            const appDate = new Date(app.datetime);
+            return appDate >= today && appDate <= maxDate;
+        }).sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+    };
+
+    const listAppointments = getFilteredAppointmentsForList();
+
     return (
-        <div className="p-4 md:p-8 max-w-[1400px] mx-auto bg-slate-50/50 min-h-screen">
+        <div className="p-2 md:p-6 lg:p-4 max-w-[1700px] mx-auto bg-slate-50/50 min-h-screen">
             
             {/* Modal Rifiuto */}
             {rejectingMatchId && (
@@ -420,21 +497,41 @@ export default function BusinessDashboard({ user, name }) {
 
             {/* PANNELLO CALENDARIO - Il più importante */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
-                        <Calendar size={20} />
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
+                            <CalendarIcon size={20} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Calendario <span className='text-blue-600'>Prenotazioni</span></h3>
                     </div>
-                    <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Calendario <span className='text-blue-600'>Prenotazioni</span></h3>
+                    {/* Switch Visibilità */}
+                    <div className="flex p-1 bg-slate-100 rounded-xl max-w-min">
+                        <button 
+                            onClick={() => setCalendarView('list')}
+                            className={`p-2 rounded-lg flex items-center justify-center transition-all ${calendarView === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            title="Visualizzazione a lista"
+                        >
+                            <List size={18} />
+                        </button>
+                        <button 
+                            onClick={() => setCalendarView('calendar')}
+                            className={`p-2 rounded-lg flex items-center justify-center transition-all ${calendarView === 'calendar' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            title="Visualizzazione a calendario"
+                        >
+                            <CalendarIcon size={18} />
+                        </button>
+                    </div>
                 </div>
                 {/* Qui andrà un mini-calendario o la lista del giorno */}
-                {appointments.length === 0 ? (
-                    <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center">
-                        <p className="text-slate-400 font-bold text-sm">Nessuna prenotazione confermata</p>
+                {calendarView === 'list' ? (
+                listAppointments.length === 0 ? (
+                    <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center text-center">
+                        <p className="text-slate-400 font-bold text-sm">Nessuna prenotazione nei prossimi 7 giorni</p>
                     </div>
                 ) : (
                     <>
                         <div className="space-y-4">
-                            {appointments.map(app => {
+                            {listAppointments.map(app => {
                                 const dateObj = new Date(app.datetime);
                                 const giorno = dateObj.getDate();
                                 const mese = dateObj.toLocaleString('it-IT', { month: 'long' });
@@ -468,7 +565,7 @@ export default function BusinessDashboard({ user, name }) {
                             })}
                         </div>
                     </>
-                )}
+                )) : renderCalendar()}
             </div>
             
             </div> {/*  CHIUSURA COLONNA SINISTRA */}

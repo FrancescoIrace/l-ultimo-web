@@ -1,6 +1,11 @@
 [
   {
     "date": "22 maggio 2026",
+    "title": "Add logica di invio richiesta",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "22 maggio 2026",
     "title": "Fix visualizzazione dashboard Business",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "20 maggio 2026",
     "title": "Change nomiantium in GoogleMaps API",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 maggio 2026",
-    "title": "Fix vari squadre",
     "description": "Modifica all'app"
   }
 ]

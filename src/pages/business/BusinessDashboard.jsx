@@ -1,6 +1,6 @@
 import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight, CheckCircle, Download, XCircle } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight, CheckCircle, Download, XCircle, MessageCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
@@ -69,7 +69,7 @@ export default function BusinessDashboard({ user, name }) {
 
             const { data: profiles, error: pError } = await supabase
                 .from('profiles')
-                .select('id, username, full_name')
+                .select('id, username, full_name, cellulare')
                 .in('id', creatorIds);
 
             if (pError) {
@@ -121,7 +121,7 @@ export default function BusinessDashboard({ user, name }) {
 
             const { data: profiles, error: pError } = await supabase
                 .from('profiles')
-                .select('id, username, full_name')
+                .select('id, username, full_name, cellulare')
                 .in('id', creatorIds);
 
             if (pError) {
@@ -528,6 +528,24 @@ export default function BusinessDashboard({ user, name }) {
                                 <span className="font-black text-lg md:text-2xl lg:text-3xl text-slate-800">{selectedAppointment.current_players || 0} / {selectedAppointment.max_players || '-'}</span>
                             </div>
                         </div>
+
+                        {selectedAppointment.profiles?.cellulare && (
+                            <div className="bg-green-50/50 rounded-2xl p-4 md:p-5 border border-green-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                <div className="flex flex-col">
+                                    <span className="text-xs md:text-[13px] font-bold text-green-700 uppercase tracking-widest">Organizzatore Partita</span>
+                                    <span className="text-base md:text-lg font-black text-slate-800">{selectedAppointment.profiles.full_name || selectedAppointment.profiles.username}</span>
+                                    <span className="text-xs md:text-sm font-bold text-slate-500 mt-0.5">{selectedAppointment.profiles.cellulare}</span>
+                                </div>
+                                <a 
+                                    href={`https://wa.me/${String(selectedAppointment.profiles.cellulare).replace(/\D/g, '').startsWith('39') ? String(selectedAppointment.profiles.cellulare).replace(/\D/g, '') : '39' + String(selectedAppointment.profiles.cellulare).replace(/\D/g, '')}?text=Ciao%20${encodeURIComponent(selectedAppointment.profiles.full_name || selectedAppointment.profiles.username)}!%20Ti%20contattiamo%20dal%20centro%20sportivo%20per%20la%20tua%20prenotazione%20di%20${encodeURIComponent(selectedAppointment.sport)}.`} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="w-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
+                                >
+                                    <MessageCircle size={20} className="md:w-6 md:h-6" /> Contatta su WhatsApp
+                                </a>
+                            </div>
+                        )}
 
                         <div className="flex-1 overflow-y-auto mb-4 scrollbar-hide border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative">
                             {appointmentParticipants.length === 0 ? (

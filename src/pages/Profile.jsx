@@ -37,6 +37,7 @@ export default function Profile({ session }) {
         updated_at: '',
         avatar_url: null,
         favorite_sport: '',
+        cellulare: '',
         role: '',
         business_address: '',
         lat: null,
@@ -62,6 +63,7 @@ export default function Profile({ session }) {
             .single();
 
         setProfile(profileData);
+        console.log("Dati profilo caricati:", profileData);
         setEditData(normalizeProfileData(profileData)); // Pre-compila il form con i dati attuali del profilo
 
         //Se l'utente è un centro sportivo, non carichiamo le partite a cui partecipa, ma solo quelle inerenti al suo centro.
@@ -171,6 +173,7 @@ export default function Profile({ session }) {
                 updated_at: new Date(),
                 avatar_url: editData.avatar_url,
                 favorite_sport: editData.favorite_sport,
+                cellulare: editData.cellulare,
                 business_address: editData.business_address,
                 lat: editData.lat,
                 lng: editData.lng
@@ -234,7 +237,7 @@ export default function Profile({ session }) {
 
             // 3. Aggiorna lo stato per l'anteprima
             // setEditData({ ...editData, avatar_url: finalUrl });
-            
+
             success("Immagine caricata con successo!");
 
         } catch (error) {
@@ -624,8 +627,8 @@ export default function Profile({ session }) {
                                     <div
                                         key={squad.team_id}
                                         onClick={() => navigate(`/squadre/${squad.team_id}`)}
-                                            className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
-                                        >
+                                        className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
+                                    >
                                         <div className="w-10 flex justify-center">
                                             {squad.team.logo_url ? (
                                                 <img
@@ -798,6 +801,16 @@ export default function Profile({ session }) {
                                         <option value="F">Donna</option>
                                         <option value="Other">Altro</option>
                                     </select>
+                                </div>
+
+                                {/* Cellulare */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Cellulare</label>
+                                    <input
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.cellulare ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, cellulare: e.target.value })}
+                                    />
                                 </div>
 
                                 {/* Sport preferito */}

@@ -448,7 +448,7 @@ export default function Profile({ session }) {
 
 
                                 {/* Genere */}
-                                <div>
+                                {/* <div>
                                     <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
                                     <select
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
@@ -459,6 +459,17 @@ export default function Profile({ session }) {
                                         <option value="F">Donna</option>
                                         <option value="Other">Altro</option>
                                     </select>
+                                </div> */}
+
+                                {/* Telefono */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Telefono</label>
+                                    <input
+                                        type="text"
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.cellulare ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, cellulare: e.target.value })}
+                                    />
                                 </div>
 
                                 {/* Sport preferito */}

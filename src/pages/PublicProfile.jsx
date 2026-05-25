@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationService';
-import { UserPlus, UserCheck, Clock, UserX, ChevronRight, Loader } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, UserX, ChevronRight, Loader, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation } from 'lucide-react';
 
 export default function PublicProfile() {
     const { id } = useParams(); // Prende l'ID dall'URL
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
+    const [courts, setCourts] = useState([]);
+    const [businessHours, setBusinessHours] = useState([]);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState([]);
     const [avgRating, setAvgRating] = useState(0);
@@ -34,6 +36,13 @@ export default function PublicProfile() {
                 navigate('/'); // O una pagina 404
             } else {
                 setProfile(data);
+                if (data.role === 'center') {
+                    const { data: courtsData } = await supabase.from('sports_courts').select('*').eq('center_id', id);
+                    if (courtsData) setCourts(courtsData);
+                    
+                    const { data: hoursData } = await supabase.from('business_hours').select('*').eq('center_id', id);
+                    if (hoursData) setBusinessHours(hoursData);
+                }
             }
             setLoading(false);
         }
@@ -178,90 +187,277 @@ export default function PublicProfile() {
         setFriendActionLoading(false);
     };
 
-    return (
-        <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
-            {/* Tasto Indietro */}
-            <button
-                onClick={() => navigate(-1)}
-                type="button"
-                className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
-            >
-                <ChevronRight size={14} className="rotate-180" />
-                Indietro
-            </button>
+    if (profile.role === 'center') {
+        const formatPhoneForWA = (phone) => {
+            const num = String(phone).replace(/\D/g, '');
+            return num.startsWith('39') ? num : '39' + num;
+        };
 
-            <div className="flex flex-col items-center mb-6">
-                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-blue-50 shadow-xl overflow-hidden">
-                    {profile?.avatar_url ? (
-                        <img src={profile.avatar_url} className="w-full h-full object-cover" />
-                    ) : (
-                        <span className="font-black text-blue-600">{profile?.username?.charAt(0).toUpperCase()}</span>
+        return (
+            <div className="max-w-md mx-auto bg-slate-50 min-h-screen pb-10">
+                {/* Header background gradient and avatar */}
+                <div className="relative h-48 mb-16">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-indigo-900 overflow-hidden">
+                        {/* Pattern Overlay */}
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+                    </div>
+                    
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="absolute top-4 left-4 flex flex-row items-center gap-1.5 text-xs font-bold uppercase text-white/90 hover:text-white transition bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-sm z-10"
+                    >
+                        <ChevronRight size={14} className="rotate-180" />
+                        Indietro
+                    </button>
+
+                    {/* Avatar Scudo Centrato */}
+                    <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 z-10">
+                        <div className="w-28 h-28 rounded-2xl bg-white p-1.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                            <img
+                                src={profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'Centro')}&background=random&size=150`}
+                                alt="Logo Centro"
+                                className="w-full h-full object-cover rounded-xl bg-slate-100"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-6 text-center">
+                    <h1 className="text-2xl font-black uppercase text-slate-900 tracking-tight">
+                        {profile.full_name || profile.username || 'Centro Sportivo'}
+                    </h1>
+                    <div className="flex items-center justify-center gap-1.5 mt-2.5 text-slate-500 text-sm font-semibold">
+                        <MapPin size={16} className="text-blue-500 flex-shrink-0" />
+                        <span className="line-clamp-2">{profile.business_address || 'Indirizzo non specificato'}</span>
+                    </div>
+                    {totalReviews > 0 && (
+                        <div className="flex items-center justify-center gap-1.5 mt-4">
+                            <span className="font-black text-amber-500 text-xl">{avgRating}</span>
+                            <span className="text-amber-500 shrink-0">★</span>
+                            <span className="text-slate-400 text-xs font-bold uppercase ml-1">({totalReviews} recensioni)</span>
+                        </div>
                     )}
                 </div>
-                <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800">
-                    {profile?.username}
-                </h2>
-                <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mt-1">
-                    {profile?.province}
-                </p>
 
-                {/* Stats row — stile Instagram */}
-                <div className="flex items-center gap-0 mt-5 w-full border border-slate-100 rounded-2xl overflow-hidden bg-slate-50 shadow-sm">
-                    <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
-                        <span className="text-xl font-black text-slate-800">{friendCount}</span>
-                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Amici</span>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
-                        <span className="text-xl font-black text-slate-800">{totalReviews}</span>
-                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
-                    </div>
-                    <div className="flex-1 flex flex-col items-center py-3">
-                        <span className="text-xl font-black text-yellow-500">{avgRating > 0 ? avgRating : '—'}</span>
-                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
-                    </div>
+                {/* Pulsanti Azione Rapida */}
+                <div className="flex justify-center gap-6 mt-8 px-6">
+                    {profile.cellulare && (
+                        <>
+                            <a
+                                href={`https://wa.me/${formatPhoneForWA(profile.cellulare)}?text=${encodeURIComponent("Ciao, ti contatto dall'app ULTIMO per avere informazioni")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2"
+                            >
+                                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-green-600 shadow-sm border border-green-200 group-hover:scale-110 transition-transform">
+                                    <MessageCircle size={26} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">WhatsApp</span>
+                            </a>
+                            <a
+                                href={`tel:${profile.cellulare}`}
+                                className="group flex flex-col items-center gap-2"
+                            >
+                                <div className="w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 shadow-sm border border-sky-200 group-hover:scale-110 transition-transform">
+                                    <Phone size={24} />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Chiama</span>
+                            </a>
+                        </>
+                    )}
+                    {profile.business_address && (
+                        <a
+                            href={`https://maps.google.com/?q=${encodeURIComponent(profile.business_address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex flex-col items-center gap-2"
+                        >
+                            <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-200 group-hover:scale-110 transition-transform">
+                                <Navigation size={24} className="ml-0.5" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mappa</span>
+                        </a>
+                    )}
+                    {profile.website && (
+                        <a
+                            href={profile.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex flex-col items-center gap-2"
+                        >
+                            <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 shadow-sm border border-slate-300 group-hover:scale-110 transition-transform">
+                                <Globe size={24} />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Sito Web</span>
+                        </a>
+                    )}
                 </div>
 
-                {/* Friendship button (non mostrato se stai guardando il tuo profilo) */}
-                {currentUser && currentUser.id !== id && (
-                    <div className="mt-4 w-full p-4">
-                        {friendActionLoading ? (
-                            <div className="w-8 h-8 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin mx-auto" />
-                        ) : friendshipStatus === 'accepted' ? (
-                            <span className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-green-600 bg-green-50 px-4 py-2.5 rounded-2xl border border-green-200 shadow-sm">
-                                <UserCheck size={15} />
-                                Siete amici
-                            </span>
-                        ) : friendshipStatus === 'pending_sent' ? (
-                            <button
-                                onClick={handleCancelRequest}
-                                className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-red-50 hover:text-red-600 transition active:scale-95"
-                            >
-                                <Clock size={15} />
-                                Richiesta inviata — Annulla
-                            </button>
-                        ) : friendshipStatus === 'pending_received' ? (
-                            <button
-                                onClick={handleAcceptRequest}
-                                className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2.5 rounded-2xl border border-blue-200 hover:bg-blue-100 transition active:scale-95"
-                            >
-                                <UserCheck size={15} />
-                                Accetta richiesta
-                            </button>
+                <div className="px-5 mt-10 space-y-6">
+                    {/* Informazioni */}
+                    {profile.bio && (
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                            <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                                <Info size={16} className="text-blue-500" /> Il Centro
+                            </h2>
+                            <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap">
+                                {profile.bio}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Orari */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                        <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-5 flex items-center gap-2">
+                            <Clock size={16} className="text-blue-500" /> Orari di Apertura
+                        </h2>
+                        {businessHours && businessHours.length > 0 ? (
+                            <div className="space-y-2">
+                                {businessHours.sort((a,b) => (a.day_of_week === 0 ? 7 : a.day_of_week) - (b.day_of_week === 0 ? 7 : b.day_of_week)).map(h => (
+                                    <div key={h.id} className="flex justify-between items-center text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <span className="font-bold text-slate-600">
+                                            {['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'][h.day_of_week]}
+                                        </span>
+                                        {h.is_closed ? (
+                                            <span className="text-red-500 font-bold text-xs uppercase bg-red-50 px-2 py-0.5 rounded-md">Chiuso</span>
+                                        ) : (
+                                            <span className="font-semibold text-slate-700">{h.open_time.slice(0,5)} - {h.close_time.slice(0,5)}</span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
-                            <button
-                                onClick={handleSendRequest}
-                                className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-blue-600 px-4 py-2.5 rounded-2xl shadow-sm shadow-blue-200 hover:bg-blue-700 transition active:scale-95"
-                            >
-                                <UserPlus size={15} />
-                                Aggiungi amico
-                            </button>
+                            <div className="text-center py-4 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+                                <p className="text-sm font-bold text-slate-400">Orari non aggiunti</p>
+                            </div>
                         )}
                     </div>
-                )}
-            </div>
 
-            {/* Info aggiuntive */}
-            {/* <div className="grid grid-cols-2 gap-4 mb-8">
+                    {/* Campi */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                        <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-5 flex items-center gap-2">
+                            <Building2 size={16} className="text-blue-500" /> I Nostri Campi
+                        </h2>
+                        {courts && courts.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3">
+                                {courts.map(court => (
+                                    <div key={court.id} className="flex justify-between items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-200 group">
+                                        <div className="flex flex-col">
+                                            <span className="font-extrabold text-slate-800 text-sm group-hover:text-blue-700 transition-colors">{court.name}</span>
+                                            <div className="flex items-center gap-2 mt-1.5">
+                                                <span className="text-[10px] font-bold text-white bg-slate-400 px-2 py-0.5 rounded-full uppercase">
+                                                    {court.sport_type}
+                                                </span>
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                                                    {court.indoor ? 'Indoor' : 'Outdoor'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {court.price_p_p && (
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-sm font-black text-emerald-600">{Number(court.price_p_p).toFixed(2).replace(/\.00$/, '')}€</span>
+                                                <span className="text-[9px] font-bold uppercase text-slate-400">/persona</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-6 bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+                                <p className="text-sm font-bold text-slate-400">Nessun campo aggiunto</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (profile.role === 'player') {
+        return (
+            <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
+                {/* Tasto Indietro */}
+                <button
+                    onClick={() => navigate(-1)}
+                    type="button"
+                    className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+                >
+                    <ChevronRight size={14} className="rotate-180" />
+                    Indietro
+                </button>
+
+                <div className="flex flex-col items-center mb-6">
+                    <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-blue-50 shadow-xl overflow-hidden">
+                        {profile?.avatar_url ? (
+                            <img src={profile.avatar_url} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="font-black text-blue-600">{profile?.username?.charAt(0).toUpperCase()}</span>
+                        )}
+                    </div>
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800">
+                        {profile?.username}
+                    </h2>
+                    <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mt-1">
+                        {profile?.province}
+                    </p>
+
+                    {/* Stats row — stile Instagram */}
+                    <div className="flex items-center gap-0 mt-5 w-full border border-slate-100 rounded-2xl overflow-hidden bg-slate-50 shadow-sm">
+                        <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
+                            <span className="text-xl font-black text-slate-800">{friendCount}</span>
+                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Amici</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
+                            <span className="text-xl font-black text-slate-800">{totalReviews}</span>
+                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center py-3">
+                            <span className="text-xl font-black text-yellow-500">{avgRating > 0 ? avgRating : '—'}</span>
+                            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
+                        </div>
+                    </div>
+
+                    {/* Friendship button (non mostrato se stai guardando il tuo profilo) */}
+                    {currentUser && currentUser.id !== id && (
+                        <div className="mt-4 w-full p-4">
+                            {friendActionLoading ? (
+                                <div className="w-8 h-8 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin mx-auto" />
+                            ) : friendshipStatus === 'accepted' ? (
+                                <span className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-green-600 bg-green-50 px-4 py-2.5 rounded-2xl border border-green-200 shadow-sm">
+                                    <UserCheck size={15} />
+                                    Siete amici
+                                </span>
+                            ) : friendshipStatus === 'pending_sent' ? (
+                                <button
+                                    onClick={handleCancelRequest}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-2xl border border-slate-200 hover:bg-red-50 hover:text-red-600 transition active:scale-95"
+                                >
+                                    <Clock size={15} />
+                                    Richiesta inviata — Annulla
+                                </button>
+                            ) : friendshipStatus === 'pending_received' ? (
+                                <button
+                                    onClick={handleAcceptRequest}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2.5 rounded-2xl border border-blue-200 hover:bg-blue-100 transition active:scale-95"
+                                >
+                                    <UserCheck size={15} />
+                                    Accetta richiesta
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleSendRequest}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-white bg-blue-600 px-4 py-2.5 rounded-2xl shadow-sm shadow-blue-200 hover:bg-blue-700 transition active:scale-95"
+                                >
+                                    <UserPlus size={15} />
+                                    Aggiungi amico
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Info aggiuntive */}
+                {/* <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                     <p className="text-[10px] font-black text-slate-400 uppercase">Sport Preferito</p>
                     <p className="font-bold text-slate-700">{profile?.favorite_sport ?? 'Non definito'}</p>
@@ -273,68 +469,69 @@ export default function PublicProfile() {
             </div> */}
 
 
-            {/* ── SQUADS (SOLO SE HA SQUADS) ── */}
-            {squads.length > 0 && (
-                <div className="mx-0 mb-4 p-4 bg-slate-50 rounded-3xl shadow-sm overflow-hidden">
-                    <div className="mb-5 flex items-center">
-                        <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Squadre</p>
-                        <p className='ml-auto text-[14px] font-black uppercase font-black text-blue-600 tracking-widest mb-3'>({squads.length})</p>
+                {/* ── SQUADS (SOLO SE HA SQUADS) ── */}
+                {squads.length > 0 && (
+                    <div className="mx-0 mb-4 p-4 bg-slate-50 rounded-3xl shadow-sm overflow-hidden">
+                        <div className="mb-5 flex items-center">
+                            <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Squadre</p>
+                            <p className='ml-auto text-[14px] font-black uppercase font-black text-blue-600 tracking-widest mb-3'>({squads.length})</p>
+                        </div>
+                        {(expandedSquads ? squads : squads.slice(0, 3)).map((squad) => (
+                            <div
+                                key={squad.team_id}
+                                onClick={() => navigate(`/squadre/${squad.team_id}`)}
+                                className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
+                            >
+                                <div className="w-10 flex justify-center">
+                                    {squad.team.logo_url ? (
+                                        <img
+                                            src={squad.team.logo_url}
+                                            alt={squad.team.name}
+                                            className="w-full h-full object-cover rounded-xl"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-600 text-[18px] font-bold uppercase">
+                                            {squad.team.name.charAt(0)}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="font-bold text-slate-800 text-[16px]">{squad.team.name}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {squads.length > 3 && (
+                            <button
+                                onClick={() => setExpandedSquads(!expandedSquads)}
+                                className="w-full mt-3 py-2 text-sm font-bold uppercase text-blue-600 hover:bg-blue-50 rounded-2xl transition"
+                            >
+                                {expandedSquads ? 'Mostra meno' : 'Mostra altro'}
+                            </button>
+                        )}
                     </div>
-                    {(expandedSquads ? squads : squads.slice(0, 3)).map((squad) => (
-                        <div
-                            key={squad.team_id}
-                            onClick={() => navigate(`/squadre/${squad.team_id}`)}
-                            className="flex justify-left bg-slate-50 gap-3 px-4 py-3 mb-3 shadow-md border border-slate-300 rounded-3xl items-center cursor-pointer hover:bg-slate-100 transition hover:scale-101"
-                        >
-                            <div className="w-10 flex justify-center">
-                                {squad.team.logo_url ? (
-                                    <img
-                                        src={squad.team.logo_url}
-                                        alt={squad.team.name}
-                                        className="w-full h-full object-cover rounded-xl"
-                                    />
-                                ) : (
-                                    <div className="w-10 h-10 bg-slate-200 rounded-3xl flex items-center justify-center text-slate-600 text-[18px] font-bold uppercase">
-                                        {squad.team.name.charAt(0)}
-                                    </div>
-                                )}
+                )}
+
+
+                {/* Lista Commenti */}
+                <div className="space-y-4 p-4">
+                    {reviews.map((rev, index) => (
+                        <div key={index} className="border-b border-slate-100 pb-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="font-black text-yellow-500">{'★'.repeat(rev.rating)}</span>
+                                <span className="text-[10px] font-black uppercase text-slate-400">
+                                    da
+                                    <span onClick={() => navigate(`/profile/${rev.reviewer.id}`)}
+                                        className="text-blue-600 cursor-pointer hover:underline ml-1">
+                                        {rev.reviewer.username}
+                                    </span>
+                                </span>
                             </div>
-                            <div>
-                                <span className="font-bold text-slate-800 text-[16px]">{squad.team.name}</span>
-                            </div>
+                            <p className="text-sm text-slate-600 italic">"{rev.comment}"</p>
+                            <span className="text-[10px] text-slate-400">{new Date(rev.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                     ))}
-                    {squads.length > 3 && (
-                        <button
-                            onClick={() => setExpandedSquads(!expandedSquads)}
-                            className="w-full mt-3 py-2 text-sm font-bold uppercase text-blue-600 hover:bg-blue-50 rounded-2xl transition"
-                        >
-                            {expandedSquads ? 'Mostra meno' : 'Mostra altro'}
-                        </button>
-                    )}
                 </div>
-            )}
-
-
-            {/* Lista Commenti */}
-            <div className="space-y-4 p-4">
-                {reviews.map((rev, index) => (
-                    <div key={index} className="border-b border-slate-100 pb-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="font-black text-yellow-500">{'★'.repeat(rev.rating)}</span>
-                            <span className="text-[10px] font-black uppercase text-slate-400">
-                                da
-                                <span onClick={() => navigate(`/profile/${rev.reviewer.id}`)}
-                                    className="text-blue-600 cursor-pointer hover:underline ml-1">
-                                    {rev.reviewer.username}
-                                </span>
-                            </span>
-                        </div>
-                        <p className="text-sm text-slate-600 italic">"{rev.comment}"</p>
-                        <span className="text-[10px] text-slate-400">{new Date(rev.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                ))}
             </div>
-        </div>
-    );
+        );
+    }
 }

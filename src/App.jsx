@@ -133,12 +133,12 @@ function App() {
 
   return (
     <AlertProvider>
-      {showWelcome && (
+      {/* {showWelcome && (
         <WelcomeModal
           onClose={() => setShowWelcome(false)}
           username={session.user?.user_metadata?.username || 'Giocatore'}
         />
-      )}
+      )} */}
       {/* QUESTO COMPONENTE NON CI SARA' PIU' QUANDO L'APP SI TROVERA' SUL PLAY STORE */}
       <PWAInstallBanner />
       <div className={`w-full mx-auto bg-slate-50 min-h-screen ${userRole === 'center' ? '' : 'max-w-md'}`}>

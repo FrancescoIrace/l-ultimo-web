@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
           Quando ti registri e utilizzi l'app, raccogliamo:
         </p>
         <ul className="list-disc pl-5 text-slate-600 mt-3 space-y-2">
-          <li><strong>Identificativi:</strong> Email, Username e immagine profilo.</li>
+          <li><strong>Identificativi:</strong> Email, Username,Cellulare e immagine profilo.</li>
           <li><strong>Sicurezza:</strong> Password (criptata e gestita da <Link to="https://supabase.com" target="_blank" className='text-blue-600 underline' rel="noopener noreferrer">Supabase</Link>).</li>
           <li><strong>Caratteristiche:</strong> Genere e preferenze di gioco.</li>
           <li><strong>Posizione:</strong> Coordinate geografiche (Lat/Lng) e località, usate esclusivamente per mostrarti i match vicini.</li>

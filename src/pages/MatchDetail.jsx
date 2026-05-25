@@ -65,7 +65,7 @@ export default function MatchDetail({ user }) {
             .select(`
             *,
             sports_courts (
-                name, sport_type, center_id,
+                name, sport_type, center_id, price_p_p,
                 profiles (full_name, username)
             ),
             teams (
@@ -644,6 +644,13 @@ Scopri di più qui: ${window.location.href}`;
                                 <MapPin size={14} className="text-blue-500" />
                                 <span className="text-sm font-medium">{match.sports_courts?.name} ({match.sports_courts?.sport_type})</span>
                             </div>
+                            
+                            {/* Prezzo per Persona */}
+                            {match.sports_courts?.price_p_p != null && (
+                                <div className="flex items-center gap-2 mt-1 text-slate-600">
+                                    <span className="font-black text-blue-600 text-sm">{match.sports_courts.price_p_p}€ <span className="text-[10px] font-bold text-slate-400 uppercase">/ persona</span></span>
+                                </div>
+                            )}
 
                             {/* Badge di Stato */}
                             <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${match.reservation_status === 'confirmed' ? 'bg-green-200 text-green-800' :

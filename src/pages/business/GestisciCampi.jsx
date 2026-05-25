@@ -8,8 +8,9 @@ import { useAlert } from '../../components/AlertComponent';
 
 export default function GestisciCampi({ centerId }) {
     const [courts, setCourts] = useState([]);
-    const [newCourt, setNewCourt] = useState({ name: '', sport_type: 'Calcio a 5' });
+    const [newCourt, setNewCourt] = useState({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
     const [openAdd, setOpenAdd] = useState(false);
+    const [editingCourtId, setEditingCourtId] = useState(null);
     const { alert, success, error, confirm, confirmDangerous } = useAlert();
     const navigate = useNavigate();
 
@@ -27,15 +28,44 @@ export default function GestisciCampi({ centerId }) {
         setCourts(data || []);
     }
 
-    async function addCourt() {
+    async function saveCourt() {
         if (!newCourt.name) return;
-        const { error } = await supabase
-            .from('sports_courts')
-            .insert([{ ...newCourt, center_id: centerId }]);
 
-        if (!error) {
-            setNewCourt({ name: '', sport_type: 'Calcio a 5' });
-            fetchCourts();
+        const payload = {
+            name: newCourt.name,
+            sport_type: newCourt.sport_type,
+            center_id: centerId,
+            price_p_p: newCourt.price_p_p ? parseFloat(newCourt.price_p_p) : null
+        };
+
+        if (editingCourtId) {
+            const { error: err } = await supabase
+                .from('sports_courts')
+                .update(payload)
+                .eq('id', editingCourtId);
+
+            if (!err) {
+                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                setEditingCourtId(null);
+                setOpenAdd(false);
+                fetchCourts();
+                success('Campo aggiornato!');
+            } else {
+                error('Errore durante l\'aggiornamento campo');
+            }
+        } else {
+            const { error: err } = await supabase
+                .from('sports_courts')
+                .insert([payload]);
+
+            if (!err) {
+                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                setOpenAdd(false);
+                fetchCourts();
+                success('Campo creato!');
+            } else {
+                error('Errore durante la creazione campo');
+            }
         }
     }
 
@@ -71,7 +101,17 @@ export default function GestisciCampi({ centerId }) {
                     <p className="text-xs text-slate-500">{courts.length} strutture configurate</p>
                 </div>
                 <button
-                    onClick={() => setOpenAdd(!openAdd)}
+                    onClick={() => {
+                        if (openAdd) {
+                            setOpenAdd(false);
+                            setEditingCourtId(null);
+                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                        } else {
+                            setOpenAdd(true);
+                            setEditingCourtId(null);
+                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                        }
+                    }}
                     className={`${openAdd ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white p-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all`}
                 >
                     {openAdd ? <Undo2 size={20} /> : <Plus size={20} />}
@@ -85,7 +125,9 @@ export default function GestisciCampi({ centerId }) {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white p-5 rounded-2xl border-2 border-blue-100 shadow-xl"
                 >
-                    <h3 className="font-black text-slate-800 mb-4 uppercase text-sm">Configura Nuovo Campo</h3>
+                    <h3 className="font-black text-slate-800 mb-4 uppercase text-sm">
+                        {editingCourtId ? 'Modifica Campo' : 'Configura Nuovo Campo'}
+                    </h3>
                     <div className="space-y-3">
                         <input
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
@@ -93,21 +135,32 @@ export default function GestisciCampi({ centerId }) {
                             value={newCourt.name}
                             onChange={e => setNewCourt({ ...newCourt, name: e.target.value })}
                         />
-                        <select
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"
-                            value={newCourt.sport_type}
-                            onChange={e => setNewCourt({ ...newCourt, sport_type: e.target.value })}
-                        >
-                            <option value="Calcio a 5">Calcio a 5</option>
-                            <option value="Padel">Padel</option>
-                            <option value="Basket">Basket</option>
-                            <option value="Tennis">Tennis</option>
-                        </select>
+                        <div className="flex gap-3">
+                            <select
+                                className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                                value={newCourt.sport_type}
+                                onChange={e => setNewCourt({ ...newCourt, sport_type: e.target.value })}
+                            >
+                                <option value="Calcio a 5">Calcio a 5</option>
+                                <option value="Padel">Padel</option>
+                                <option value="Basket">Basket</option>
+                                <option value="Tennis">Tennis</option>
+                            </select>
+                            <input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                className="w-1/3 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                placeholder="€ a persona"
+                                value={newCourt.price_p_p}
+                                onChange={e => setNewCourt({ ...newCourt, price_p_p: e.target.value })}
+                            />
+                        </div>
                         <button
-                            onClick={addCourt}
-                            className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl hover:bg-blue-700 transition-colors"
+                            onClick={saveCourt}
+                            className={`w-full text-white font-bold p-3 rounded-xl transition-colors ${editingCourtId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}
                         >
-                            Conferma e Crea
+                            {editingCourtId ? 'Aggiorna Campo' : 'Conferma e Crea'}
                         </button>
                     </div>
                 </motion.div>
@@ -135,7 +188,19 @@ export default function GestisciCampi({ centerId }) {
 
                             {/* Azioni */}
                             <div className="flex gap-1">
-                                <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <button
+                                    onClick={() => {
+                                        setEditingCourtId(court.id);
+                                        setNewCourt({
+                                            name: court.name,
+                                            sport_type: court.sport_type,
+                                            price_p_p: court.price_p_p || ''
+                                        });
+                                        setOpenAdd(true);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                >
                                     <Edit2 size={18} />
                                 </button>
                                 <button

@@ -221,7 +221,7 @@ export default function BusinessDashboard({ user, name }) {
         async function loadCampi() {
             const { data, error } = await supabase
                 .from('sports_courts')
-                .select('id, name, sport_type')
+                .select('id, name, sport_type, price_p_p')
                 .eq('center_id', user.id);
             if (!error) {
                 setCampi(data);
@@ -635,6 +635,11 @@ export default function BusinessDashboard({ user, name }) {
                                         <span className="bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase">
                                             {court.sport_type}
                                         </span>
+                                        {court.price_p_p != null && (
+                                            <span className="bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border border-blue-400">
+                                                {court.price_p_p}€ / p
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 

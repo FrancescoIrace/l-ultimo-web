@@ -217,11 +217,20 @@ export default function CreateMatch() {
 
             // 3. VALIDAZIONE ORARI (CORRETTA PER FUSO ORARIO)
             if (selectedCenter) {
+                const targetCenterId = typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter;
                 // Passiamo formData.datetime cosÃ¬ com'Ã¨ (stringa locale dal picker)
-                const { isValid, message } = await validateBookingTime(supabase, formData.datetime, selectedCenter.id);
+                const { isValid, isClosed, message } = await validateBookingTime(supabase, formData.datetime, targetCenterId);
 
                 if (!isValid) {
-                    error(message);
+                    if (isClosed) {
+                        const targetCenterObj = typeof selectedCenter === 'object' 
+                            ? selectedCenter 
+                            : centers.find(c => c.id === targetCenterId);
+                        const nomeCampo = targetCenterObj ? (targetCenterObj.full_name || targetCenterObj.username) : "Il centro";
+                        error(`impossibile creare partita, ${nomeCampo} chiuso in questo giorno`);
+                    } else {
+                        error(message);
+                    }
                     setLoading(false);
                     return; // Blocca la creazione se l'orario non Ã¨ valido nel fuso locale
                 }

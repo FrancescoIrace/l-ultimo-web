@@ -60,7 +60,7 @@ export const validateBookingTime = async (supabase, dateTimeString, centerId) =>
         .single();
 
     if (!hoursData || hoursData.is_closed) {
-        return { isValid: false, message: "Il centro è chiuso o non ha orari definiti." };
+        return { isValid: false, isClosed: true, message: "Il centro è chiuso o non ha orari definiti." };
     }
 
     const open = hoursData.open_time.slice(0, 5);
@@ -70,11 +70,12 @@ export const validateBookingTime = async (supabase, dateTimeString, centerId) =>
     if (selectedTime < open || selectedTime > close) {
         return {
             isValid: false,
+            isClosed: false,
             message: `Il centro è aperto dalle ${open} alle ${close}.`
         };
     }
 
-    return { isValid: true };
+    return { isValid: true, isClosed: false };
 };
 
 export { GetSportStyle };

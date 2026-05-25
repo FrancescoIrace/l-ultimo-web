@@ -1,5 +1,10 @@
 [
   {
+    "date": "24 maggio 2026",
+    "title": "Add calendario business",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "22 maggio 2026",
     "title": "Add logica di invio richiesta",
     "description": "Modifica all'app"
@@ -43,10 +48,5 @@
     "date": "20 maggio 2026",
     "title": "Merge pull request #11 from FrancescoIrace/change/googlemaps_api",
     "description": "Change nomiantium in GoogleMaps API"
-  },
-  {
-    "date": "20 maggio 2026",
-    "title": "Change nomiantium in GoogleMaps API",
-    "description": "Modifica all'app"
   }
 ]

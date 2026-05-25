@@ -1,6 +1,6 @@
 import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight, CheckCircle, Download, XCircle, MessageCircle } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight, CheckCircle, Download, XCircle, MessageCircle, Bell } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
@@ -24,8 +24,38 @@ export default function BusinessDashboard({ user, name }) {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [appointmentParticipants, setAppointmentParticipants] = useState([]);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    
+    // Nuovi stati per il Day Modal (multi-partite)
+    const [selectedDayAppointments, setSelectedDayAppointments] = useState(null);
+    const [selectedDayDate, setSelectedDayDate] = useState(null);
+
     const [isSavingParticipants, setIsSavingParticipants] = useState(false);
     const { success, error, alert, confirm } = useAlert();
+
+    const handleSendOrganizerNotification = async (appointment) => {
+        if (!appointment?.profiles?.id) return;
+        confirm("Vuoi inviare una notifica all'organizzatore per chiedergli di farsi vivo?", async () => {
+            const { error: notifError } = await supabase
+                .from('notifications')
+                .insert([
+                    {
+                        user_id: appointment.creator_id,
+                        sender_id: user.id, // ID del centro
+                        type: 'system',
+                        title: 'Messaggio dal Centro Sportivo',
+                        content: `Ciao ${appointment.profiles?.full_name || appointment.profiles?.username}, ${name ? `il ${name}` : 'il centro sportivo'} ti vuole contattare.`,
+                        link: `/partite/${appointment.id}`
+                    }
+                ]);
+
+            if (notifError) {
+                console.error(notifError);
+                error("Errore nell'invio della notifica.");
+            } else {
+                success("Notifica inviata all'organizzatore!");
+            }
+        });
+    };
 
     async function fetchHours() {
         const { data } = await supabase.from('business_hours').select('*').eq('center_id', user.id).order('day_of_week');
@@ -441,21 +471,30 @@ export default function BusinessDashboard({ user, name }) {
             const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
 
             days.push(
-                <div key={d} className={`min-h-[100px] p-2 flex flex-col rounded-xl border ${isToday ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 bg-white'} overflow-hidden`}>
-                    <span className={`text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full mb-1 flex-shrink-0 ${isToday ? 'bg-blue-600 text-white' : 'text-slate-600'}`}>{d}</span>
+                <div key={d} className={`min-h-[80px] md:min-h-[100px] p-1 md:p-2 flex flex-col rounded-xl border ${isToday ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 bg-white'} overflow-hidden`}>
+                    <span className={`text-xs md:text-sm font-bold w-5 h-5 md:w-6 md:h-6 flex items-center justify-center rounded-full mb-1 flex-shrink-0 ${isToday ? 'bg-blue-600 text-white' : 'text-slate-600'}`}>{d}</span>
                     <div className="flex flex-col gap-1 w-full overflow-y-auto scrollbar-hide">
-                        {dayAppointments.map(app => {
-                            const time = new Date(app.datetime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                            return (
-                                <div
-                                    key={app.id}
-                                    onClick={() => handleOpenAppointmentModal(app)}
-                                    className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-1 rounded font-bold truncate flex-shrink-0 cursor-pointer hover:bg-blue-200 transition-colors"
-                                    title={`${time} - ${app.title}`}>
-                                    {time} {app.sports_courts?.name || app.sport}
-                                </div>
-                            );
-                        })}
+                        {dayAppointments.length > 2 ? (
+                            <div 
+                                onClick={() => { setSelectedDayDate(dateStr); setSelectedDayAppointments(dayAppointments); }}
+                                className="text-[10px] md:text-[11px] mt-1 bg-indigo-500 text-white px-1 md:px-2 py-1.5 rounded-lg font-black text-center cursor-pointer shadow-sm hover:bg-indigo-600 active:scale-95 transition-all"
+                            >
+                                {dayAppointments.length} Partite
+                            </div>
+                        ) : (
+                            dayAppointments.map(app => {
+                                const time = new Date(app.datetime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                                return (
+                                    <div
+                                        key={app.id}
+                                        onClick={() => handleOpenAppointmentModal(app)}
+                                        className="text-[9px] md:text-[10px] bg-blue-100 text-blue-800 px-0.5 md:px-1.5 py-1 rounded font-bold truncate flex-shrink-0 cursor-pointer hover:bg-blue-200 active:scale-95 transition-all text-center md:text-left"
+                                        title={`${time} - ${app.title}`}>
+                                        {time} <span className="hidden xl:inline ml-1">{app.sports_courts?.name || app.sport}</span>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             );
@@ -501,6 +540,46 @@ export default function BusinessDashboard({ user, name }) {
     return (
         <div className="p-2 md:p-6 lg:p-4 max-w-[1700px] mx-auto bg-slate-50/50 min-h-screen">
 
+            {/* Modal Partite del Giorno (Multi-Partite) */}
+            {selectedDayAppointments && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedDayAppointments(null)}>
+                    <div className="bg-white rounded-3xl p-5 md:p-8 shadow-2xl max-w-sm md:max-w-xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                            <h3 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter">
+                                Partite del {new Date(selectedDayDate).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            </h3>
+                            <button onClick={() => setSelectedDayAppointments(null)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="flex flex-col gap-3 overflow-y-auto scrollbar-hide pr-1">
+                            {selectedDayAppointments.map(app => {
+                                const time = new Date(app.datetime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                                return (
+                                    <div 
+                                        key={app.id} 
+                                        onClick={() => {
+                                            setSelectedDayAppointments(null);
+                                            handleOpenAppointmentModal(app);
+                                        }}
+                                        className="bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-2xl p-4 cursor-pointer active:scale-95 transition-all flex justify-between items-center"
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="text-xl font-black text-blue-900">{time}</span>
+                                            <span className="text-sm font-bold text-blue-600 uppercase tracking-tight">{app.sports_courts?.name || app.sport}</span>
+                                            <span className="text-xs font-semibold text-slate-500 mt-1">{app.title}</span>
+                                        </div>
+                                        <div className="bg-white p-2 rounded-full shadow-sm text-blue-500">
+                                            <ChevronRight size={20} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal Dettaglio Partita Prenotata */}
             {isAppointmentModalOpen && selectedAppointment && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in" onClick={() => setIsAppointmentModalOpen(false)}>
@@ -529,23 +608,35 @@ export default function BusinessDashboard({ user, name }) {
                             </div>
                         </div>
 
-                        {selectedAppointment.profiles?.cellulare && (
-                            <div className="bg-green-50/50 rounded-2xl p-4 md:p-5 border border-green-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                <div className="flex flex-col">
-                                    <span className="text-xs md:text-[13px] font-bold text-green-700 uppercase tracking-widest">Organizzatore Partita</span>
-                                    <span className="text-base md:text-lg font-black text-slate-800">{selectedAppointment.profiles.full_name || selectedAppointment.profiles.username}</span>
-                                    <span className="text-xs md:text-sm font-bold text-slate-500 mt-0.5">{selectedAppointment.profiles.cellulare}</span>
+                        {(() => {
+                            const hasPhone = !!selectedAppointment.profiles?.cellulare;
+                            return (
+                                <div className={`rounded-2xl p-4 md:p-5 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ${hasPhone ? 'bg-green-50/50 border-green-200' : 'bg-slate-50/50 border-slate-200'}`}>
+                                    <div className="flex flex-col">
+                                        <span className={`text-xs md:text-[13px] font-bold uppercase tracking-widest ${hasPhone ? 'text-green-700' : 'text-slate-500'}`}>Organizzatore Partita</span>
+                                        <span className="text-base md:text-lg font-black text-slate-800">{selectedAppointment.profiles?.full_name || selectedAppointment.profiles?.username}</span>
+                                        <span className="text-xs md:text-sm font-bold text-slate-500 mt-0.5">{selectedAppointment.profiles?.cellulare || "Nessun numero fornito"}</span>
+                                    </div>
+                                    {hasPhone ? (
+                                        <a 
+                                            href={`https://wa.me/${String(selectedAppointment.profiles.cellulare).replace(/\D/g, '').startsWith('39') ? String(selectedAppointment.profiles.cellulare).replace(/\D/g, '') : '39' + String(selectedAppointment.profiles.cellulare).replace(/\D/g, '')}?text=Ciao%20${encodeURIComponent(selectedAppointment.profiles.full_name || selectedAppointment.profiles.username)}!%20Ti%20contattiamo%20dal%20centro%20sportivo%20per%20la%20tua%20prenotazione%20di%20${encodeURIComponent(selectedAppointment.sport)}.`} 
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            className="w-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
+                                        >
+                                            <MessageCircle size={20} className="md:w-6 md:h-6" /> Contatta su WhatsApp
+                                        </a>
+                                    ) : (
+                                        <button 
+                                            onClick={() => handleSendOrganizerNotification(selectedAppointment)}
+                                            className="w-full sm:w-auto bg-slate-800 text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm md:text-base hover:bg-slate-700"
+                                        >
+                                            <Bell size={20} className="md:w-6 md:h-6" /> Invia notifica In-App
+                                        </button>
+                                    )}
                                 </div>
-                                <a 
-                                    href={`https://wa.me/${String(selectedAppointment.profiles.cellulare).replace(/\D/g, '').startsWith('39') ? String(selectedAppointment.profiles.cellulare).replace(/\D/g, '') : '39' + String(selectedAppointment.profiles.cellulare).replace(/\D/g, '')}?text=Ciao%20${encodeURIComponent(selectedAppointment.profiles.full_name || selectedAppointment.profiles.username)}!%20Ti%20contattiamo%20dal%20centro%20sportivo%20per%20la%20tua%20prenotazione%20di%20${encodeURIComponent(selectedAppointment.sport)}.`} 
-                                    target="_blank" 
-                                    rel="noreferrer"
-                                    className="w-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
-                                >
-                                    <MessageCircle size={20} className="md:w-6 md:h-6" /> Contatta su WhatsApp
-                                </a>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         <div className="flex-1 overflow-y-auto mb-4 scrollbar-hide border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative">
                             {appointmentParticipants.length === 0 ? (

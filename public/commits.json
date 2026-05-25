@@ -1,5 +1,45 @@
 [
   {
+    "date": "25 maggio 2026",
+    "title": "Add Profilo pubblico del centro",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "fix policy",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "fix notifica se il numero non è presente",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Add tasto contatta su whatsapp",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Add modale controllo partita",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Add prezzo per persona del campo scelto",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Rimosso welcome modal",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Fix Creazione partita quando il campo è chiuso",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "24 maggio 2026",
     "title": "Add calendario business",
     "description": "Modifica all'app"
@@ -8,45 +48,5 @@
     "date": "22 maggio 2026",
     "title": "Add logica di invio richiesta",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Fix visualizzazione dashboard Business",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Merge branch 'main' of https://github.com/FrancescoIrace/l-ultimo-web",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "fix campo affiliato autocomplete indirizzo",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Merge pull request #12 from FrancescoIrace/upgrade/createMatch_onlyForSquads",
-    "description": "Creazione partite solo per squadre"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Creazione partite solo per squadre",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Fix UI squadre",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Fix colori card team",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "20 maggio 2026",
-    "title": "Merge pull request #11 from FrancescoIrace/change/googlemaps_api",
-    "description": "Change nomiantium in GoogleMaps API"
   }
 ]

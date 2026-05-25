@@ -356,25 +356,38 @@ export default function BusinessDashboard({ user, name }) {
         }
     };
 
-    const downloadParticipantsList = () => {
+    const printParticipantsList = () => {
         if (!selectedAppointment || appointmentParticipants.length === 0) return;
 
         const matchTitle = `${selectedAppointment.sport} - ${selectedAppointment.title}`;
         const matchDate = new Date(selectedAppointment.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
         let htmlContent = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Lista Partecipanti</title></head>
+            <!DOCTYPE html>
+            <html lang="it">
+            <head>
+                <meta charset='utf-8'>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Lista Partecipanti</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; color: #000; }
+                    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+                    th, td { border: 1px solid #000; padding: 10px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    @media print {
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
             <body>
                 <h1>Lista Partecipanti Partita</h1>
                 <h3>${matchTitle}</h3>
                 <p><strong>Data e Ora:</strong> ${matchDate}</p>
                 <p><strong>Campo:</strong> ${selectedAppointment.sports_courts?.name || "Non specificato"}</p>
-                <br/>
-                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%; text-align: left;">
+                <table>
                     <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th>Nome Utente</th>
+                        <tr>
+                            <th>Nominativo</th>
                             <th>Ha Pagato?</th>
                         </tr>
                     </thead>
@@ -383,7 +396,6 @@ export default function BusinessDashboard({ user, name }) {
 
         appointmentParticipants.forEach(p => {
             const name = p.profiles?.full_name || p.profiles?.username || "Utente Sconosciuto";
-            const status = p.status === 'confirmed' ? "Confermato" : p.status;
             htmlContent += `
                         <tr>
                             <td>${name}</td>
@@ -395,19 +407,23 @@ export default function BusinessDashboard({ user, name }) {
         htmlContent += `
                     </tbody>
                 </table>
+                <script>
+                    window.onload = () => {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    };
+                </script>
             </body>
             </html>
         `;
 
-        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `partecipanti_partita_${selectedAppointment.id}.doc`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+        } else {
+            alert("Per favore abilita i popup per poter stampare la lista.");
+        }
     }
 
     useEffect(() => {
@@ -686,7 +702,7 @@ export default function BusinessDashboard({ user, name }) {
                                 {isSavingParticipants ? "SALVATAGGIO..." : "SALVA MODIFICHE"}
                             </button>
                             <button
-                                onClick={downloadParticipantsList}
+                                onClick={printParticipantsList}
                                 disabled={appointmentParticipants.length === 0}
                                 className="flex-1 bg-slate-900 border-b-4 border-slate-950 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-slate-200 transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
                             >

@@ -757,9 +757,23 @@ export default function BusinessDashboard({ user, name }) {
                         </div>
                         <h2 className="text-slate-800 text-2xl">Centro Sportivo <i className='font-black'>{name || ''}</i></h2>
                     </div>
-                    <p className="text-sm text-slate-500 max-w-lg">Benvenuto 👏<br className="md:hidden" /> nella tua dashboard direzionale. Qui puoi gestire il centro, controllare le richieste di prenotazione, le tue risorse e gli orari di apertura.</p>
+                    <p className="sm:text-sm text-slate-500 max-w-lg md:text-lg">Benvenuto 👏<br className="md:hidden" /> nella tua dashboard direzionale. Qui puoi gestire il centro, controllare le richieste di prenotazione, le tue risorse e gli orari di apertura.</p>
                 </div>
-                {/* Eventuale indicatore veloce o bottone */}
+                {/* Statistiche Rapide */}
+                <div className="flex flex-wrap md:flex-nowrap gap-3 mt-4 md:mt-0 w-full md:w-auto">
+                    <div className="flex-1 md:flex-none bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                        <span className="text-3xl font-black text-blue-600">{requests.length}</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Richieste<br/>Da Gestire</span>
+                    </div>
+                    <div className="flex-1 md:flex-none bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                        <span className="text-3xl font-black text-slate-800">{listAppointments.length}</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Prenotazioni<br/>Settimana</span>
+                    </div>
+                    <div className="flex-1 md:flex-none bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                        <span className="text-3xl font-black text-green-600">{campi.length}</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Campi<br/>Totali</span>
+                    </div>
+                </div>
             </div>
 
             <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
@@ -999,7 +1013,7 @@ export default function BusinessDashboard({ user, name }) {
                                         </div>
 
                                         {/* Contenuto Informativo */}
-                                        <div className="relative z-10 p-4 flex justify-between items-start h-full text-white">
+                                        <div className="relative z-0 p-4 flex justify-between items-start h-full text-white">
                                             <div>
                                                 <h4 className="text-xl font-black uppercase tracking-tight drop-shadow-md">
                                                     {court.name}

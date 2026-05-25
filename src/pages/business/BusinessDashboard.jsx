@@ -254,7 +254,6 @@ export default function BusinessDashboard({ user, name }) {
     };
 
     const handleOpenAppointmentModal = async (app) => {
-        console.log("[MODAL OPEN] Avvio apertura modale per appuntamento:", app.id);
         setSelectedAppointment(app);
         setIsAppointmentModalOpen(true);
         setAppointmentParticipants([]); // Reset inside modal
@@ -273,13 +272,11 @@ export default function BusinessDashboard({ user, name }) {
         }
 
         if (partData) {
-            console.log("[MODAL OPEN] Dati partecipanti estratti dal DB:", partData);
             // Mappiamo indipendentemente se c'è isPagato o ispagato per sicurezza
             const mappedData = partData.map(p => ({
                 ...p,
                 isPagato: p.isPagato !== undefined ? p.isPagato : (p.ispagato !== undefined ? p.ispagato : false)
             }));
-            console.log("[MODAL OPEN] Dati partecipanti mappati per la UI:", mappedData);
             setAppointmentParticipants(mappedData);
         }
     };
@@ -287,7 +284,6 @@ export default function BusinessDashboard({ user, name }) {
     const toggleHasPaid = (participantId, currentStatus) => {
         const newStatus = !currentStatus;
 
-        console.log(`[TOGGLE CLICK] Partecipante ${participantId} - Stato isPagato cambiato da ${currentStatus} a ${newStatus}`);
 
         // Solo ottimistico. Il salvataggio reale avverrà premendo "Salva Modifiche"
         setAppointmentParticipants(prev => prev.map(p =>
@@ -297,7 +293,6 @@ export default function BusinessDashboard({ user, name }) {
 
     const saveParticipantsList = async () => {
         if (!selectedAppointment || appointmentParticipants.length === 0) return;
-        console.log("[SAVE CLICK] Avviato salvataggio degli stati di pagamento. Dati da salvare:", appointmentParticipants);
         setIsSavingParticipants(true);
         try {
             // Eseguiamo gli update uno alla volta loggando per capire esattamamente l'errore del DB
@@ -313,8 +308,6 @@ export default function BusinessDashboard({ user, name }) {
                     .select();
 
                 if (errFirst) {
-                    console.warn(`[SAVE CLICK] Errore aggiornamento record ID ${part.id} (colonna 'isPagato'):`, errFirst);
-                    console.log(`[SAVE CLICK] Tento fallback ID ${part.id} con colonna 'ispagato'...`);
 
                     // Fallback to lowercase
                     let { data: updatedRowsFallback, error: errSecond } = await supabase
@@ -324,22 +317,15 @@ export default function BusinessDashboard({ user, name }) {
                         .select();
 
                     if (errSecond) {
-                        console.error(`[SAVE CLICK] Fallito anche ID ${part.id} in fallback. Errore critico:`, errSecond);
                         hasErrors = true;
                         lastErrorMsg = errSecond.message;
                     } else if (!updatedRowsFallback || updatedRowsFallback.length === 0) {
-                        console.error(`[SAVE CLICK] SILENT FAIL: Supabase non ha rilasciato errori di sintassi ma non ha aggiornato il record ID ${part.id}. Questo è al 99% causato dalle RLS Policy che impediscono l'update o impediscono la visualizzazione del record durante l'update.`);
                         hasErrors = true;
                         lastErrorMsg = "Salvataggio bloccato dalle policy del database (RLS silent fail).";
-                    } else {
-                        console.log(`[SAVE CLICK] OK fallback per l'id ${part.id}! Record post-update:`, updatedRowsFallback);
                     }
                 } else if (!updatedRows || updatedRows.length === 0) {
-                    console.error(`[SAVE CLICK] SILENT FAIL: Nessun errore dal DB ma 0 righe aggiornate per l'ID ${part.id}. Questo è al 99% colpa delle RLS Policy (Row Level Security) che impediscono all'utente attuale (centro sportivo) di apportare modifiche alla tabella participants, agendo in modo silente.`);
                     hasErrors = true;
                     lastErrorMsg = "Permessi insufficienti (RLS): Modifica bloccata senza errori dal DB.";
-                } else {
-                    console.log(`[SAVE CLICK] OK salvataggio principale per l'id ${part.id}! Record ritornato: DB:`, updatedRows);
                 }
             }
 
@@ -349,7 +335,6 @@ export default function BusinessDashboard({ user, name }) {
                 success("Stati di pagamento aggiornati con successo.");
             }
         } catch (err) {
-            console.error("[SAVE CLICK] Errore catch generale:", err);
             error("Impossibile salvare alcune modifiche.");
         } finally {
             setIsSavingParticipants(false);

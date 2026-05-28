@@ -25,12 +25,14 @@ import ResetPassword from './pages/ResetPassword';
 import { NotificationBell } from './components/NotificationBell';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
+import { useDarkMode } from './hooks/useDarkMode';
 import BusinessDashboard from './pages/business/BusinessDashboard';
 import GestisciCampi from './pages/business/GestisciCampi';
 import TeamsPage from './pages/TeamsPage';
 import TeamDetail from './pages/TeamDetail';
 
 function App() {
+  useDarkMode(); // Inizializza il tema su mount root
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);

@@ -1,6 +1,21 @@
 [
   {
     "date": "25 maggio 2026",
+    "title": "Add statistiche",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Rem console.log",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
+    "title": "Fix stampa",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "25 maggio 2026",
     "title": "Add Profilo pubblico del centro",
     "description": "Modifica all'app"
   },
@@ -32,21 +47,6 @@
   {
     "date": "25 maggio 2026",
     "title": "Rimosso welcome modal",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "Fix Creazione partita quando il campo è chiuso",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "24 maggio 2026",
-    "title": "Add calendario business",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "22 maggio 2026",
-    "title": "Add logica di invio richiesta",
     "description": "Modifica all'app"
   }
 ]

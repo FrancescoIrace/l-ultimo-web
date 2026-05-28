@@ -8,7 +8,7 @@ import { useAlert } from '../../components/AlertComponent';
 
 export default function GestisciCampi({ centerId }) {
     const [courts, setCourts] = useState([]);
-    const [newCourt, setNewCourt] = useState({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+    const [newCourt, setNewCourt] = useState({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
     const [openAdd, setOpenAdd] = useState(false);
     const [editingCourtId, setEditingCourtId] = useState(null);
     const { alert, success, error, confirm, confirmDangerous } = useAlert();
@@ -35,7 +35,8 @@ export default function GestisciCampi({ centerId }) {
             name: newCourt.name,
             sport_type: newCourt.sport_type,
             center_id: centerId,
-            price_p_p: newCourt.price_p_p ? parseFloat(newCourt.price_p_p) : null
+            price_p_p: newCourt.price_p_p ? parseFloat(newCourt.price_p_p) : null,
+            isOutdoor: newCourt.isOutdoor
         };
 
         if (editingCourtId) {
@@ -45,7 +46,7 @@ export default function GestisciCampi({ centerId }) {
                 .eq('id', editingCourtId);
 
             if (!err) {
-                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
                 setEditingCourtId(null);
                 setOpenAdd(false);
                 fetchCourts();
@@ -59,7 +60,7 @@ export default function GestisciCampi({ centerId }) {
                 .insert([payload]);
 
             if (!err) {
-                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
                 setOpenAdd(false);
                 fetchCourts();
                 success('Campo creato!');
@@ -105,11 +106,11 @@ export default function GestisciCampi({ centerId }) {
                         if (openAdd) {
                             setOpenAdd(false);
                             setEditingCourtId(null);
-                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
                         } else {
                             setOpenAdd(true);
                             setEditingCourtId(null);
-                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '' });
+                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
                         }
                     }}
                     className={`${openAdd ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white p-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all`}
@@ -156,6 +157,28 @@ export default function GestisciCampi({ centerId }) {
                                 onChange={e => setNewCourt({ ...newCourt, price_p_p: e.target.value })}
                             />
                         </div>
+                        <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <label className="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700 w-1/2">
+                                <input 
+                                    type="radio" 
+                                    name="isOutdoor" 
+                                    checked={newCourt.isOutdoor === true} 
+                                    onChange={() => setNewCourt({ ...newCourt, isOutdoor: true })} 
+                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500" 
+                                />
+                                ⛅ All'aperto
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700 w-1/2">
+                                <input 
+                                    type="radio" 
+                                    name="isOutdoor" 
+                                    checked={newCourt.isOutdoor === false} 
+                                    onChange={() => setNewCourt({ ...newCourt, isOutdoor: false })} 
+                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500" 
+                                />
+                                🏟️ Coperto
+                            </label>
+                        </div>
                         <button
                             onClick={saveCourt}
                             className={`w-full text-white font-bold p-3 rounded-xl transition-colors ${editingCourtId ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'}`}
@@ -183,7 +206,12 @@ export default function GestisciCampi({ centerId }) {
                             {/* Info */}
                             <div className="flex-1">
                                 <h4 className="font-bold text-slate-800 leading-tight">{court.name}</h4>
-                                <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{court.sport_type}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">{court.sport_type}</p>
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${(court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true) ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-700'}`}>
+                                        {(court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true) ? "All'aperto" : "Coperto"}
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Azioni */}
@@ -194,7 +222,8 @@ export default function GestisciCampi({ centerId }) {
                                         setNewCourt({
                                             name: court.name,
                                             sport_type: court.sport_type,
-                                            price_p_p: court.price_p_p || ''
+                                            price_p_p: court.price_p_p || '',
+                                            isOutdoor: (court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true)
                                         });
                                         setOpenAdd(true);
                                         window.scrollTo({ top: 0, behavior: 'smooth' });

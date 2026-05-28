@@ -80,7 +80,9 @@ export default function BusinessDashboard({ user, name }) {
             creator_id,
             sports_courts!inner (
                 name,
-                center_id
+                center_id,
+                price_p_p,
+                isOutdoor
             )
         `)
             .eq('sports_courts.center_id', user.id)
@@ -132,7 +134,9 @@ export default function BusinessDashboard({ user, name }) {
             creator_id,
             sports_courts!inner (
                 name,
-                center_id
+                center_id,
+                price_p_p,
+                isOutdoor
             )
         `)
             .eq('sports_courts.center_id', user.id)
@@ -220,30 +224,55 @@ export default function BusinessDashboard({ user, name }) {
 
             if (matchError) throw matchError;
 
-            // 2. Crea la notifica per il creatore
-            const notificationContent = isConfirming
-                ? `La tua richiesta per la partita di ${updatedMatch.sport} è stata ACCETTATA!`
-                : `Spiacenti, la richiesta per la partita "${updatedMatch.title}" è stata rifiutata dal centro sportivo.`;
+            // 2. Crea la notifica per TUTTI i partecipanti iscritti e per il creatore
+            const { data: participants } = await supabase
+                .from('participants')
+                .select('user_id')
+                .eq('match_id', matchId)
+                .eq('status', 'confirmed');
+
+            const usersToNotify = new Set([updatedMatch.creator_id]);
+            if (participants && participants.length > 0) {
+                participants.forEach(p => usersToNotify.add(p.user_id));
+            }
+
+            const notificationsToInsert = Array.from(usersToNotify).map(userId => {
+                const notificationContent = isConfirming
+                    ? `La tua richiesta per la partita di ${updatedMatch.sport} è stata ACCETTATA!`
+                    : `Spiacenti, la partita "${updatedMatch.title}" è stata annullata/rifiutata dal centro sportivo.\nMotivo: ${reason}`;
+
+                return {
+                    user_id: userId,
+                    sender_id: user.id, // ID del centro
+                    type: 'match_update',
+                    title: isConfirming ? 'Prenotazione Confermata! ✅' : 'Prenotazione Annullata ❌',
+                    content: notificationContent,
+                    link: `/match/${matchId}`,
+                    is_read: false
+                };
+            });
 
             const { error: notifError } = await supabase
                 .from('notifications')
-                .insert([
-                    {
-                        user_id: updatedMatch.creator_id,
-                        sender_id: user.id, // ID del centro
-                        type: 'match_update',
-                        title: isConfirming ? 'Prenotazione Confermata! ✅' : 'Prenotazione Rifiutata ❌',
-                        content: notificationContent,
-                        link: `/match/${matchId}`,
-                        is_read: false
-                    }
-                ]);
+                .insert(notificationsToInsert);
 
             if (notifError) throw notifError;
 
             // 3. Feedback UI e aggiornamento lista locale
             setRequests(prev => prev.filter(r => r.id !== matchId));
-            success(isConfirming ? "Confermata e notifica inviata!" : "Richiesta rifiutata.");
+            if (!isConfirming) {
+                setAppointments(prev => prev.filter(a => a.id !== matchId));
+                // Aggiorna anche il modal del giorno multi-partita se aperto
+                if (selectedDayAppointments) {
+                    setSelectedDayAppointments(prevDay => prevDay ? prevDay.filter(a => a.id !== matchId) : null);
+                }
+                // Chiudi il modal dettaglio se è quello della partita annullata
+                if (isAppointmentModalOpen && selectedAppointment?.id === matchId) {
+                    setIsAppointmentModalOpen(false);
+                    setSelectedAppointment(null);
+                }
+            }
+            success(isConfirming ? "Confermata e notifica inviata!" : "Annullata con successo e notifiche inviate.");
 
         } catch (err) {
             console.error(err);
@@ -415,7 +444,7 @@ export default function BusinessDashboard({ user, name }) {
         async function loadCampi() {
             const { data, error } = await supabase
                 .from('sports_courts')
-                .select('id, name, sport_type, price_p_p')
+                .select('id, name, sport_type, price_p_p, isOutdoor')
                 .eq('center_id', user.id);
             if (!error) {
                 setCampi(data);
@@ -680,6 +709,13 @@ export default function BusinessDashboard({ user, name }) {
 
                         <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full mt-2">
                             <button
+                                onClick={() => handleUpdateStatus(selectedAppointment.id, 'rejected')}
+                                disabled={processingId === selectedAppointment.id}
+                                className="flex-1 bg-red-600 border-b-4 border-red-700 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-red-200 transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                <X size={18} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> {processingId === selectedAppointment.id ? "ANNULLAMENTO..." : "ANNULLA PARTITA"}
+                            </button>
+                            <button
                                 onClick={saveParticipantsList}
                                 disabled={appointmentParticipants.length === 0 || isSavingParticipants}
                                 className="flex-1 bg-green-600 border-b-4 border-green-700 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-green-200 transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
@@ -705,7 +741,7 @@ export default function BusinessDashboard({ user, name }) {
                         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4 mx-auto shadow-inner">
                             <AlertCircle size={24} />
                         </div>
-                        <h3 className="text-xl font-black text-center text-slate-800 uppercase tracking-tighter mb-4">Motivo del Rifiuto</h3>
+                        <h3 className="text-xl font-black text-center text-slate-800 uppercase tracking-tighter mb-4">Motivo Annullamento / Rifiuto</h3>
                         <div className="space-y-3 mb-6">
                             {[
                                 "Campo occupato (Torneo / Scuola Calcio)",
@@ -735,13 +771,13 @@ export default function BusinessDashboard({ user, name }) {
                             )}
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setRejectingMatchId(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl active:scale-95 transition-transform">Annulla</button>
+                            <button onClick={() => setRejectingMatchId(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl active:scale-95 transition-transform">Indietro</button>
                             <button
                                 onClick={handleConfirmReject}
                                 disabled={rejectionReason === 'Altro' && !customReason.trim()}
                                 className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-transform disabled:opacity-50"
                             >
-                                Conferma Rifiuto
+                                Conferma
                             </button>
                         </div>
                     </div>
@@ -1020,6 +1056,9 @@ export default function BusinessDashboard({ user, name }) {
                                                 </h4>
                                                 <span className="bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase">
                                                     {court.sport_type}
+                                                </span>
+                                                <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border ${(court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true) ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
+                                                    {court.isOutdoor ? "All'aperto" : "Coperto"}
                                                 </span>
                                                 {court.price_p_p != null && (
                                                     <span className="bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border border-blue-400">

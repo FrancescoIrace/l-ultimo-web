@@ -1,5 +1,10 @@
 [
   {
+    "date": "28 maggio 2026",
+    "title": "fix business",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "25 maggio 2026",
     "title": "Add statistiche",
     "description": "Modifica all'app"
@@ -42,11 +47,6 @@
   {
     "date": "25 maggio 2026",
     "title": "Add prezzo per persona del campo scelto",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "Rimosso welcome modal",
     "description": "Modifica all'app"
   }
 ]

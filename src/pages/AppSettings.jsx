@@ -144,6 +144,7 @@ export default function AppSettings({ session }) {
 
       <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-6">Impostazioni app</h1>
 
+      {/* 
       <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 p-5">
         <h2 className="text-xl font-bold mb-3 dark:text-white">Aspetto (Tema)</h2>
         <div className="flex items-center justify-between">
@@ -156,6 +157,7 @@ export default function AppSettings({ session }) {
           </button>
         </div>
       </section>
+      */}
 
       <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 p-5">
         <h2 className="text-xl font-bold mb-3 dark:text-white">Ricerca partite</h2>

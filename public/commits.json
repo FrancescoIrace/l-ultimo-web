@@ -1,5 +1,20 @@
 [
   {
+    "date": "29 maggio 2026",
+    "title": "Comm modalità scura",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "28 maggio 2026",
+    "title": "Business dashboard darkmode",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "28 maggio 2026",
+    "title": "Aggiunta modalità dark",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "28 maggio 2026",
     "title": "Change UI gestioneCampi",
     "description": "Modifica all'app"
@@ -32,21 +47,6 @@
   {
     "date": "25 maggio 2026",
     "title": "fix policy",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "fix notifica se il numero non è presente",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "Add tasto contatta su whatsapp",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "Add modale controllo partita",
     "description": "Modifica all'app"
   }
 ]

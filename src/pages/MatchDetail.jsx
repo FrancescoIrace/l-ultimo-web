@@ -29,6 +29,8 @@ export default function MatchDetail({ user }) {
     const [isMatchStarted, setIsMatchStarted] = useState(false);
     const [weatherData, setWeatherData] = useState(null);
     const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+    const [localTeams, setLocalTeams] = useState(null);
+    const [isSavingTeams, setIsSavingTeams] = useState(false);
 
     const checkMatchStatus = (matchDatetime) => {
         const oraInizio = new Date(matchDatetime).getTime(); // Timestamp inizio match
@@ -83,7 +85,7 @@ export default function MatchDetail({ user }) {
         // 2. Partecipanti + Dati del Profilo
         const { data: partData, error: partError } = await supabase
             .from('participants')
-            .select(`id, user_id, status, waitlist_order, final_attendance, profiles (username, avatar_url, gender)`)
+            .select(`id, user_id, status, waitlist_order, final_attendance, team_number, profiles (username, avatar_url, gender)`)
             .eq('match_id', id);
 
         if (partError) {
@@ -212,6 +214,70 @@ export default function MatchDetail({ user }) {
 
         fetchWeather();
     }, [match?.location_lat, match?.location_lng, match?.datetime]);
+
+    const handleSetTeamLocal = (participantId, teamNumber) => {
+        setLocalTeams(prev => {
+            const currentTeams = prev || confirmedPlayers.reduce((acc, p) => {
+                acc[p.id] = p.team_number;
+                return acc;
+            }, {});
+            return {
+                ...currentTeams,
+                [participantId]: teamNumber
+            };
+        });
+    };
+
+    const generateRandomTeamsLocal = () => {
+        if (!confirmedPlayers.length) return;
+        
+        const shuffled = [...confirmedPlayers].sort(() => 0.5 - Math.random());
+        const half = Math.ceil(shuffled.length / 2);
+        
+        const currentTeams = localTeams || confirmedPlayers.reduce((acc, p) => {
+            acc[p.id] = p.team_number;
+            return acc;
+        }, {});
+
+        const newTeams = { ...currentTeams };
+        shuffled.forEach((p, index) => {
+            newTeams[p.id] = index < half ? 1 : 2;
+        });
+
+        setLocalTeams(newTeams);
+    };
+
+    const handleSaveTeams = async () => {
+        if (!localTeams) return;
+        setIsSavingTeams(true);
+        
+        const payload = confirmedPlayers.map(p => ({
+            id: p.id,
+            match_id: id,
+            user_id: p.user_id,
+            team_number: localTeams[p.id] !== undefined ? localTeams[p.id] : p.team_number,
+            status: p.status
+        }));
+
+        try {
+            const { error: bulkError } = await supabase
+                .from('participants')
+                .upsert(payload, { onConflict: 'id' });
+
+            if (bulkError) throw bulkError;
+            success("Squadre salvate con successo!");
+            setLocalTeams(null);
+        } catch (err) {
+            console.error('Errore salvataggio squadre:', err);
+            error("Errore durante il salvataggio delle squadre");
+        } finally {
+            setIsSavingTeams(false);
+        }
+    };
+
+    const handleCancelEditTeams = () => {
+        setLocalTeams(null);
+    };
 
     const handleLeave = async () => {
         if (match.creator_id === user.id) {
@@ -906,18 +972,52 @@ Scopri di più qui: ${window.location.href}`;
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>
 
-                {/* Sezione Confermati */}
-                <div className="space-y-3">
-                    {confirmedPlayers.map((p, index) => (
+                {/* Controlli Organizzatore per Random e Salvataggio */}
+                {user.id === match?.creator_id && confirmedPlayers.length > 0 && (
+                    <div className="flex flex-col gap-2 mb-4">
+                        <button
+                            onClick={generateRandomTeamsLocal}
+                            className={`w-full py-3 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 ${localTeams ? 'bg-indigo-500 shadow-indigo-200' : 'bg-indigo-600 shadow-indigo-300'}`}
+                        >
+                            <RefreshCw size={18} /> Genera Squadre Casuali
+                        </button>
+                        
+                        {localTeams && (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCancelEditTeams}
+                                    className="flex-1 py-3 bg-red-100 hover:bg-red-200 text-red-600 active:scale-95 transition-all rounded-xl font-bold font-sm"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    onClick={handleSaveTeams}
+                                    disabled={isSavingTeams}
+                                    className="flex-[2] py-3 bg-green-500 hover:bg-green-600 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-green-200 flex justify-center items-center gap-2"
+                                >
+                                    {isSavingTeams ? <Loader className="animate-spin" size={18} /> : 'Salva Modifiche Squadre'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
+                {/* Funzione di utilità per renderizzare un singolo giocatore */}
+                {(() => {
+                    const activePlayers = localTeams ? confirmedPlayers.map(p => ({
+                        ...p,
+                        team_number: localTeams[p.id] !== undefined ? localTeams[p.id] : p.team_number
+                    })) : confirmedPlayers;
+
+                    const renderPlayer = (p) => (
                         <div
                             key={p.id}
-                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-95 transition-all cursor-pointer  ${p.user_id === user.id ? 'border-blue-200 bg-blue-50 ' : 'border-slate-100 bg-white'
-                                }`}
-                            onClick={() => { (p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
+                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${
+                                p.user_id === user.id ? 'border-blue-200 bg-blue-50' : 'border-slate-100 bg-white'
+                            }`}
+                            onClick={() => { p.user_id !== user.id ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                         >
                             <div className="flex items-center gap-4">
-                                {/* Avatar o Iniziale */}
                                 <div className={`w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden flex-shrink-0 ${p.final_attendance ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}>
                                     {p.profiles?.avatar_url ? (
                                         <img src={p.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
@@ -943,10 +1043,9 @@ Scopri di più qui: ${window.location.href}`;
                                     </div>
                                 </div>
 
-                                {/* Bottone Feedback: appare solo se il match è finito E non sono io */}
                                 {isMatchFinished && p.user_id !== user.id && (
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles, p.user_id); }} // Una funzione che apre un form
+                                        onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles, p.user_id); }}
                                         className="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full"
                                     >
                                         VOTA
@@ -954,14 +1053,91 @@ Scopri di più qui: ${window.location.href}`;
                                 )}
                             </div>
 
-                            {/* Tag Organizzatore */}
-                            {p.user_id === match.creator_id && (
-                                <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Organizzatore</span>
+                            <div className="flex flex-col items-end gap-2">
+                                {p.user_id === match.creator_id && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Organizzatore</span>
+                                )}
+                                
+                                {user.id === match.creator_id && (
+                                    <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                                        <button 
+                                            onClick={() => handleSetTeamLocal(p.id, 1)}
+                                            className={`w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm ${p.team_number === 1 ? 'bg-blue-600 text-white shadow-blue-200 ring-2 ring-blue-300 ring-offset-1' : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'}`}
+                                        >
+                                            A
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSetTeamLocal(p.id, 2)}
+                                            className={`w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm ${p.team_number === 2 ? 'bg-slate-700 text-white shadow-slate-300 ring-2 ring-slate-400 ring-offset-1' : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'}`}
+                                        >
+                                            B
+                                        </button>
+                                         <button 
+                                            onClick={() => handleSetTeamLocal(p.id, null)}
+                                            className={`w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm ${!p.team_number ? 'bg-gray-400 text-white ring-2 ring-gray-300 ring-offset-1' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'}`}
+                                            title="Rimuovi da squadra"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
 
+                    const team1Players = activePlayers.filter(p => p.team_number === 1);
+                    const team2Players = activePlayers.filter(p => p.team_number === 2);
+                    const unassignedPlayers = activePlayers.filter(p => !p.team_number || p.team_number === 0);
+
+                    return (
+                        <div className="space-y-4">
+                            {/* Team 1  */}
+                            {team1Players.length > 0 && (
+                                <div className="bg-white rounded-2xl shadow-sm p-4 border border-blue-200">
+                                    <h4 className="font-bold text-md text-blue-600 mb-3 flex justify-between items-center">
+                                        <span>Squadra A (Colorati)</span>
+                                        <span className="text-sm bg-blue-100 px-2 py-1 rounded-full">{team1Players.length}/{Math.ceil(match.max_players / 2)}</span>
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {team1Players.map(renderPlayer)}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {(team1Players.length > 0 && team2Players.length > 0) && (
+                                <div className="flex justify-center my-2">
+                                     <span className="font-black italic text-slate-300 text-2xl">VS</span>
+                                </div>
+                            )}
+
+                            {/* Team 2 */}
+                            {team2Players.length > 0 && (
+                                <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-200">
+                                    <h4 className="font-bold text-md text-slate-600 mb-3 flex justify-between items-center">
+                                        <span>Squadra B (Bianchi)</span>
+                                        <span className="text-sm bg-slate-100 px-2 py-1 rounded-full">{team2Players.length}/{Math.floor(match.max_players / 2)}</span>
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {team2Players.map(renderPlayer)}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Unassigned */}
+                            {unassignedPlayers.length > 0 && (
+                                <div className="bg-white rounded-2xl shadow-sm p-4 border border-dashed border-slate-300 mt-4">
+                                    <h4 className="font-bold text-sm text-slate-500 mb-3 flex justify-between items-center">
+                                        <span>In attesa di assegnazione</span>
+                                        <span className="text-xs bg-slate-100 px-2 py-1 rounded-full">{unassignedPlayers.length}</span>
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {unassignedPlayers.map(renderPlayer)}
+                                    </div>
+                                </div>
                             )}
                         </div>
-                    ))}
-                </div>
+                    );
+                })()}
 
                 {/* Sezione Lista d'attesa */}
                 {waitingPlayers.length > 0 && (

@@ -233,8 +233,8 @@ const handleRadiusChange = (newRadius) => {
 // Se la tua app supporta dark mode, aggiungi in HomeFilters.jsx
 
 /*
-<div className={`rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 ...`}>
-  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+<div className={`rounded-2xl bg-white border border-slate-200 p-4 ...`}>
+  <p className="text-sm font-semibold text-slate-700 ">
     Raggio di ricerca
   </p>
   {/* Resto del codice */}

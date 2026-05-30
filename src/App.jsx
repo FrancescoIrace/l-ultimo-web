@@ -100,7 +100,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600 dark:bg-slate-900 dark:text-blue-400">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600 ">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: [1, 1.1, 1], opacity: 1 }}
@@ -143,13 +143,13 @@ function App() {
       )} */}
       {/* QUESTO COMPONENTE NON CI SARA' PIU' QUANDO L'APP SI TROVERA' SUL PLAY STORE */}
       <PWAInstallBanner />
-      <div className={`w-full mx-auto bg-slate-50 dark:bg-slate-900 min-h-screen ${userRole === 'center' ? '' : 'max-w-md'}`}>
-        <header className="bg-white dark:bg-slate-800 border-blue-400 border-b-2 p-1 flex justify-between items-center sticky top-0 z-10">
+      <div className={`w-full mx-auto bg-slate-50 min-h-screen ${userRole === 'center' ? '' : 'max-w-md'}`}>
+        <header className="bg-white border-blue-400 border-b-2 p-1 flex justify-between items-center sticky top-0 z-10">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform">
-            <h1 className="text-4xl font-black text-blue-600 dark:text-blue-400 tracking-tighter flex items-center">
+            <h1 className="text-4xl font-black text-blue-600 tracking-tighter flex items-center">
                 L'ULTIMO
                 {userRole === 'center' && (
-                  <span className="text-sm ml-2 bg-blue-600 text-white dark:bg-blue-400 dark:text-slate-900 px-2.5 py-0.5 rounded-lg align-middle inline-block font-bold tracking-normal">BUSINESS</span>
+                  <span className="text-sm ml-2 bg-blue-600 text-white px-2.5 py-0.5 rounded-lg align-middle inline-block font-bold tracking-normal">BUSINESS</span>
                 )}
             </h1>
           </button>
@@ -159,12 +159,12 @@ function App() {
 
             <button
               onClick={() => navigate('/profile')}
-              className="mr-3 border-2 border-blue-600 rounded-full hover:bg-blue-50 dark:hover:bg-slate-700 transition-all overflow-hidden"
+              className="mr-3 border-2 border-blue-600 rounded-full hover:bg-blue-50 transition-all overflow-hidden"
             >
               {session.avatar_url ? (
                 <img src={session.avatar_url} alt="avatar" className="w-12 h-12 object-cover" />
               ) : (
-                <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xl font-bold text-slate-600 dark:text-slate-300">
+                <div className="w-12 h-12 bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-600 ">
                   {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
                 </div>
               )}

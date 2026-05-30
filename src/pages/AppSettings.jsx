@@ -4,11 +4,9 @@ import { supabase } from '../lib/supabase';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import UserLocationInput from '../components/UserLocationInput';
 import { AlertContext } from '../components/AlertComponent';
-import { useDarkMode } from '../hooks/useDarkMode';
 
 export default function AppSettings({ session }) {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useDarkMode();
   const { showAlert } = useContext(AlertContext);
   const [loading, setLoading] = useState(false);
   const [searchRadius, setSearchRadius] = useState(10);
@@ -133,7 +131,7 @@ export default function AppSettings({ session }) {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-slate-950 min-h-screen transition-colors">
+    <div className="max-w-md mx-auto p-6 bg-white min-h-screen transition-colors">
       <button
         onClick={() => navigate(-1)}
         type="button"
@@ -142,13 +140,13 @@ export default function AppSettings({ session }) {
         TORNA INDIETRO
       </button>
 
-      <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-6">Impostazioni app</h1>
+      <h1 className="text-3xl font-black text-slate-900 mb-6">Impostazioni app</h1>
 
       {/* 
-      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 p-5">
-        <h2 className="text-xl font-bold mb-3 dark:text-white">Aspetto (Tema)</h2>
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <h2 className="text-xl font-bold mb-3 ">Aspetto (Tema)</h2>
         <div className="flex items-center justify-between">
-          <span className="text-slate-700 dark:text-slate-300">Modalità Scura</span>
+          <span className="text-slate-700 ">Modalità Scura</span>
           <button
             onClick={toggleTheme}
             className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${theme === 'dark' ? 'bg-blue-600' : 'bg-slate-300'}`}
@@ -159,9 +157,9 @@ export default function AppSettings({ session }) {
       </section>
       */}
 
-      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 p-5">
-        <h2 className="text-xl font-bold mb-3 dark:text-white">Ricerca partite</h2>
-        <label className="block text-sm text-slate-600 dark:text-slate-400 mb-2">Raggio di ricerca (km)</label>
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <h2 className="text-xl font-bold mb-3 ">Ricerca partite</h2>
+        <label className="block text-sm text-slate-600 mb-2">Raggio di ricerca (km)</label>
         <input
           type="range"
           min="1"
@@ -173,8 +171,8 @@ export default function AppSettings({ session }) {
         <div className="mt-3 text-slate-700 font-bold">{searchRadius} km</div>
       </section>
 
-      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-bold mb-3 dark:text-white">Localizzazione</h2>
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
+        <h2 className="text-xl font-bold mb-3 ">Localizzazione</h2>
         <div className="flex flex-col gap-3 mb-4">
           <button
             type="button"
@@ -208,33 +206,33 @@ export default function AppSettings({ session }) {
         )}
       </section>
 
-      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-bold mb-3 dark:text-white">Notifiche</h2>
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
+        <h2 className="text-xl font-bold mb-3 ">Notifiche</h2>
         
         {/* Notifiche generiche */}
-        <div className="mb-4 border-t pt-4 border-slate-200 dark:border-slate-800 ">
-          <label className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+        <div className="mb-4 border-t pt-4 border-slate-200 ">
+          <label className="flex items-center gap-3 text-slate-700 ">
             <input
               type="checkbox"
               checked={notificationsEnabled}
               onChange={(e) => setNotificationsEnabled(e.target.checked)}
               className="h-4 w-4"
             />
-            <span className="text-slate-700 dark:text-slate-300">Notifiche partite vicine</span>
+            <span className="text-slate-700 ">Notifiche partite vicine</span>
           </label>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestite dal database in real-time</p>
+          <p className="text-sm text-slate-500 mt-1">Gestite dal database in real-time</p>
         </div>
 
         {/* Notifiche Push */}
         {isPushSupported ? (
-          <div className="border-t pt-4 mt-4 border-slate-200 dark:border-slate-800">
-            <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-3">Notifiche push (anche app chiusa)</h3>
+          <div className="border-t pt-4 mt-4 border-slate-200 ">
+            <h3 className="font-semibold text-slate-700 mb-3">Notifiche push (anche app chiusa)</h3>
             <div className="flex flex-col gap-2">
               {isPushSubscribed ? (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300">✅ Attive su questo dispositivo</span>
+                    <span className="text-sm text-slate-600 ">✅ Attive su questo dispositivo</span>
                   </div>
                   <button
                     disabled={pushLoading}
@@ -248,7 +246,7 @@ export default function AppSettings({ session }) {
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="h-2 w-2 rounded-full bg-gray-400"></span>
-                    <span className="text-sm text-slate-600 dark:text-slate-300">⭕ Non attive</span>
+                    <span className="text-sm text-slate-600 ">⭕ Non attive</span>
                   </div>
                   <button
                     disabled={pushLoading}
@@ -263,15 +261,15 @@ export default function AppSettings({ session }) {
             <p className="text-xs text-slate-500 mt-2">Riceverai notifiche anche quando l'app è chiusa</p>
           </div>
         ) : (
-          <div className="border-t pt-4 mt-4 text-sm text-slate-600 dark:text-slate-300">
+          <div className="border-t pt-4 mt-4 text-sm text-slate-600 ">
             <span className="text-yellow-700">⚠️</span> Notifiche push non supportate su questo browser
           </div>
         )}
       </section>
 
-          <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-bold mb-3 dark:text-white">Privacy</h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+          <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
+        <h2 className="text-xl font-bold mb-3 ">Privacy</h2>
+        <p className="text-sm text-slate-500 mt-2">
           Visualizza l'informativa sulla privacy{' '}
           <Link to="/privacy-policy?from=settings" className="text-blue-600 underline">
             qui
@@ -279,9 +277,9 @@ export default function AppSettings({ session }) {
         </p>
       </section>
 
-      <section className="rounded-3xl border border-red-200 bg-red-50 p-5 dark:border-red-700 dark:bg-red-900">
-        <h2 className="text-xl font-bold text-red-700 dark:text-red-300 mb-3">Elimina profilo</h2>
-        <p className="text-slate-700 dark:text-slate-300 mb-4">Questa azione rimuoverà il tuo profilo e le tue partecipazioni. Verrai disconnesso.</p>
+      <section className="rounded-3xl border border-red-200 bg-red-50 p-5 ">
+        <h2 className="text-xl font-bold text-red-700 mb-3">Elimina profilo</h2>
+        <p className="text-slate-700 mb-4">Questa azione rimuoverà il tuo profilo e le tue partecipazioni. Verrai disconnesso.</p>
         <button
           disabled={loading}
           onClick={handleDeleteProfile}

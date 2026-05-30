@@ -19,7 +19,7 @@ function formatDatetimeForTimestamp(dateTimeString) {
 }
 
 export default function CreateMatch() {
-    const { id } = useParams(); // Se c'Ã¨ un ID, siamo in modalitÃ  modifica
+    const { id } = useParams(); // Se c'è un ID, siamo in modalità modifica
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [activeMatchCount, setActiveMatchCount] = useState(0);
@@ -141,7 +141,7 @@ export default function CreateMatch() {
         loadUserAndCountMatches();
     }, []);
 
-    // 1. Se c'Ã¨ un ID, carichiamo i dati attuali dal DB
+    // 1. Se c'è un ID, carichiamo i dati attuali dal DB
     useEffect(() => {
         if (id) { // id preso da useParams
             const fetchMatchData = async () => {
@@ -175,12 +175,12 @@ export default function CreateMatch() {
                         datetime: datetimeForInput,
                     });
 
-                    // 2. IMPOSTIAMO IL CENTRO (Questo farÃ  apparire il centro selezionato)
+                    // 2. IMPOSTIAMO IL CENTRO (Questo farà apparire il centro selezionato)
                     if (matchData.sports_courts?.profiles) {
                         const center = matchData.sports_courts.profiles;
                         setSelectedCenter(center);
 
-                        // 3. CARICHIAMO I CAMPI DI QUEL CENTRO (Questo farÃ  apparire la lista campi)
+                        // 3. CARICHIAMO I CAMPI DI QUEL CENTRO (Questo farà apparire la lista campi)
                         const { data: courts } = await supabase
                             .from('sports_courts')
                             .select('*')
@@ -198,7 +198,7 @@ export default function CreateMatch() {
         setLoading(true);
 
         if (containsLinks(formData.description)) {
-            error("La descrizione non puÃ² contenere link.");
+            error("La descrizione non può contenere link.");
             setLoading(false);
             return;
         }
@@ -210,7 +210,7 @@ export default function CreateMatch() {
 
             // 2. Verifica limite partite attive
             if (activeMatchCount >= 5) {
-                error(`Hai giÃ  ${activeMatchCount} partite attive.`);
+                error(`Hai già ${activeMatchCount} partite attive.`);
                 setLoading(false);
                 return;
             }
@@ -218,7 +218,7 @@ export default function CreateMatch() {
             // 3. VALIDAZIONE ORARI (CORRETTA PER FUSO ORARIO)
             if (selectedCenter) {
                 const targetCenterId = typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter;
-                // Passiamo formData.datetime cosÃ¬ com'Ã¨ (stringa locale dal picker)
+                // Passiamo formData.datetime così com'è (stringa locale dal picker)
                 const { isValid, isClosed, message } = await validateBookingTime(supabase, formData.datetime, targetCenterId);
 
                 if (!isValid) {
@@ -232,7 +232,7 @@ export default function CreateMatch() {
                         error(message);
                     }
                     setLoading(false);
-                    return; // Blocca la creazione se l'orario non Ã¨ valido nel fuso locale
+                    return; // Blocca la creazione se l'orario non è valido nel fuso locale
                 }
             }
 
@@ -265,7 +265,7 @@ export default function CreateMatch() {
             }
 
             // 5. INSERIMENTO / AGGIORNAMENTO PARTITA
-            // Usiamo l'ID se presente per capire se Ã¨ un update o un insert
+            // Usiamo l'ID se presente per capire se è un update o un insert
             const isUpdate = !!id;
 
             const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
@@ -283,7 +283,7 @@ export default function CreateMatch() {
                 creator_id: user.id,
                 team_id: formData.team_id || null,
                 reservation_status: formData.court_id ? (id ? undefined : 'draft') : 'none'
-                // Nota: se Ã¨ un update, potresti voler NON sovrascrivere lo stato della prenotazione
+                // Nota: se è un update, potresti voler NON sovrascrivere lo stato della prenotazione
             };
 
             let query = supabase.from('matches');
@@ -330,7 +330,7 @@ export default function CreateMatch() {
         setLoading(true);
 
         if (containsLinks(formData.description)) {
-            error("La descrizione non puÃ² contenere link.");
+            error("La descrizione non può contenere link.");
             setLoading(false);
             return;
         }
@@ -340,8 +340,8 @@ export default function CreateMatch() {
         // const date = new Date(formData.datetime.replace(' ', 'T'));
         // const weather = await getWeather(formData.location_lat, formData.location_lng, date);
         // if (weather && isWithinSevenDays(date) && weather.rainProbability === 0) {
-        //     console.log("ProbabilitÃ  di pioggia:", weather.rainProbability);
-        //     confirmDangerous(`âš ï¸ Attenzione! C'Ã¨ una probabilitÃ  di pioggia del ${weather.rainProbability}% alla data e ora selezionata. Vuoi comunque procedere con l'aggiornamento?`, async () => {
+        //     console.log("Probabilità di pioggia:", weather.rainProbability);
+        //     confirmDangerous(`⚠️ Attenzione! C'è una probabilità di pioggia del ${weather.rainProbability}% alla data e ora selezionata. Vuoi comunque procedere con l'aggiornamento?`, async () => {
         //         return;
         //     });
         // }
@@ -373,7 +373,7 @@ export default function CreateMatch() {
         setLoading(false);
     };
 
-    // SE C'Ãˆ UN ID, MOSTRIAMO IL FORM DI MODIFICA
+    // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
         return (
             <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
@@ -394,7 +394,7 @@ export default function CreateMatch() {
                             disabled
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
                             value={formData.sport}
-                            onChange={handleSportChange}  // â† NUOVO
+                            onChange={handleSportChange}  // ← NUOVO
                         >
                             <option>Calcetto</option>
                             <option>Calcio a 7</option>
@@ -410,17 +410,17 @@ export default function CreateMatch() {
                         </select>
                     </div>
 
-                    {/* VISIBILITÀ MATCH */}
+                    {/* VISIBILIT� MATCH */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilità Match</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilit� Match</label>
                         <div className="flex gap-2">
                             <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
                                 <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} disabled />
-                                🌐 Pubblico
+                                ?? Pubblico
                             </label>
                             <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id !== null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
                                 <input type="radio" className="hidden" name="visibility" checked={formData.team_id !== null} onChange={() => setFormData({ ...formData, team_id: myTeams.length > 0 ? myTeams[0].id : '' })} disabled />
-                                🛡️ Squadra
+                                ??? Squadra
                             </label>
                         </div>
                         
@@ -466,7 +466,7 @@ export default function CreateMatch() {
                                 lang="it-IT"
                                 required
                                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                                value={formData.datetime || ''} // Ora Ã¨ giÃ  in formato locale YYYY-MM-DDTHH:MM
+                                value={formData.datetime || ''} // Ora è già in formato locale YYYY-MM-DDTHH:MM
                                 onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
                             />
                         </div>
@@ -533,7 +533,7 @@ export default function CreateMatch() {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />
                         {containsLinks(formData.description) && (
-                            <p className="mt-2 text-xs text-red-600 font-bold">âŒ Non sono consentiti link nella descrizione</p>
+                            <p className="mt-2 text-xs text-red-600 font-bold">❌ Non sono consentiti link nella descrizione</p>
                         )}
                     </div>
 
@@ -549,7 +549,7 @@ export default function CreateMatch() {
         );
     }
 
-    // SE NON C'Ãˆ UN ID, MOSTRIAMO IL FORM DI CREAZIONE NORMALE
+    // SE NON C'È UN ID, MOSTRIAMO IL FORM DI CREAZIONE NORMALE
     return (
         <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
             <button
@@ -584,7 +584,7 @@ export default function CreateMatch() {
                         </div>
                     </div>
                     {activeMatchCount >= 5 && (
-                        <p className="mt-1">âŒ Hai raggiunto il limite. Aspetta che una partita finisca.</p>
+                        <p className="mt-1">❌ Hai raggiunto il limite. Aspetta che una partita finisca.</p>
                     )}
                 </div>
 
@@ -610,7 +610,7 @@ export default function CreateMatch() {
                     </select>
                 </div>
 
-                {/* VISIBILITÀ MATCH */}
+                {/* VISIBILIT� MATCH */}
                 <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilità Match</label>
                     <div className="flex gap-2">
@@ -670,7 +670,7 @@ export default function CreateMatch() {
                         <input
                             type="datetime-local"
                             lang="it-IT"
-                            //la data passata non Ã¨ selezionabile
+                            //la data passata non è selezionabile
                             min={new Date().toISOString().slice(0, 16)}
                             required
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
@@ -741,7 +741,7 @@ export default function CreateMatch() {
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                     {containsLinks(formData.description) && (
-                        <p className="mt-2 text-xs text-red-600 font-bold">âŒ Non sono consentiti link nella descrizione</p>
+                        <p className="mt-2 text-xs text-red-600 font-bold">❌ Non sono consentiti link nella descrizione</p>
                     )}
                 </div>
 

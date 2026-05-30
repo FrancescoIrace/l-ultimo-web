@@ -568,17 +568,17 @@ export default function BusinessDashboard({ user, name }) {
     const listAppointments = getFilteredAppointmentsForList();
 
     return (
-        <div className="p-2 md:p-6 lg:p-4 max-w-[1700px] mx-auto bg-slate-50/50 min-h-screen dark:bg-slate-900/50 rounded-3xl">
+        <div className="p-2 md:p-6 lg:p-4 max-w-[1700px] mx-auto bg-slate-50/50 min-h-screen /50 rounded-3xl">
 
             {/* Modal Partite del Giorno (Multi-Partite) */}
             {selectedDayAppointments && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in dark:bg-slate-800/50" onClick={() => setSelectedDayAppointments(null)}>
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 md:p-8 shadow-2xl max-w-sm md:max-w-xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
-                            <h3 className="text-lg md:text-2xl font-black text-slate-800 dark:text-slate-200 uppercase tracking-tighter">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /50" onClick={() => setSelectedDayAppointments(null)}>
+                    <div className="bg-white rounded-3xl p-5 md:p-8 shadow-2xl max-w-sm md:max-w-xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                            <h3 className="text-lg md:text-2xl font-black text-slate-800 uppercase tracking-tighter">
                                 Partite del {new Date(selectedDayDate).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })}
                             </h3>
-                            <button onClick={() => setSelectedDayAppointments(null)} className="p-2 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-200 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600">
+                            <button onClick={() => setSelectedDayAppointments(null)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200 ">
                                 <X size={20} />
                             </button>
                         </div>
@@ -592,14 +592,14 @@ export default function BusinessDashboard({ user, name }) {
                                             setSelectedDayAppointments(null);
                                             handleOpenAppointmentModal(app);
                                         }}
-                                        className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:hover:bg-blue-800 border border-blue-100 dark:border-blue-700 rounded-2xl p-4 cursor-pointer active:scale-95 transition-all flex justify-between items-center"
+                                        className="bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-2xl p-4 cursor-pointer active:scale-95 transition-all flex justify-between items-center"
                                     >
                                         <div className="flex flex-col">
-                                            <span className="text-xl font-black text-blue-900 dark:text-blue-200">{time}</span>
-                                            <span className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">{app.sports_courts?.name || app.sport}</span>
-                                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-300 mt-1">{app.title}</span>
+                                            <span className="text-xl font-black text-blue-900 ">{time}</span>
+                                            <span className="text-sm font-bold text-blue-600 uppercase tracking-tight">{app.sports_courts?.name || app.sport}</span>
+                                            <span className="text-xs font-semibold text-slate-500 mt-1">{app.title}</span>
                                         </div>
-                                        <div className="bg-white dark:bg-slate-700 p-2 rounded-full shadow-sm text-blue-500 dark:text-blue-200">
+                                        <div className="bg-white p-2 rounded-full shadow-sm text-blue-500 ">
                                             <ChevronRight size={20} />
                                         </div>
                                     </div>
@@ -612,11 +612,11 @@ export default function BusinessDashboard({ user, name }) {
 
             {/* Modal Dettaglio Partita Prenotata */}
             {isAppointmentModalOpen && selectedAppointment && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in dark:bg-slate-800/50" onClick={() => setIsAppointmentModalOpen(false)}>
-                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] dark:bg-slate-800" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /50" onClick={() => setIsAppointmentModalOpen(false)}>
+                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] " onClick={e => e.stopPropagation()}>
 
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter dark:text-slate-200">
+                            <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter ">
                                 Dettagli Prenotazione
                             </h3>
                             <button onClick={() => setIsAppointmentModalOpen(false)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
@@ -624,42 +624,42 @@ export default function BusinessDashboard({ user, name }) {
                             </button>
                         </div>
 
-                        <div className="bg-blue-50/50 dark:bg-blue-900 rounded-2xl p-4 md:p-6 border border-blue-100 dark:border-blue-700 flex flex-col gap-2 mb-6">
-                            <span className="text-xs md:text-sm lg:text-base font-bold uppercase text-blue-600 dark:text-blue-400 tracking-widest">{selectedAppointment.sport} - {selectedAppointment.sports_courts?.name}</span>
+                        <div className="bg-blue-50/50 rounded-2xl p-4 md:p-6 border border-blue-100 flex flex-col gap-2 mb-6">
+                            <span className="text-xs md:text-sm lg:text-base font-bold uppercase text-blue-600 tracking-widest">{selectedAppointment.sport} - {selectedAppointment.sports_courts?.name}</span>
                             <div className="flex justify-between items-center">
-                                <span className="font-bold text-slate-700 dark:text-slate-200 md:text-xl">{selectedAppointment.title}</span>
-                                <span className="text-sm md:text-base lg:text-lg font-black bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-lg">
+                                <span className="font-bold text-slate-700 md:text-xl">{selectedAppointment.title}</span>
+                                <span className="text-sm md:text-base lg:text-lg font-black bg-blue-100 text-blue-800 px-2 py-1 rounded-lg">
                                     {new Date(selectedAppointment.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             </div>
-                            <div className="flex mt-3 md:mt-4 pt-3 md:pt-4 border-t border-blue-100 dark:border-blue-700 justify-between items-center">
-                                <span className="text-sm md:text-base lg:text-lg text-slate-600 dark:text-slate-400 font-medium">Giocatori iscritti:</span>
-                                <span className="font-black text-lg md:text-2xl lg:text-3xl text-slate-800 dark:text-slate-200">{selectedAppointment.current_players || 0} / {selectedAppointment.max_players || '-'}</span>
+                            <div className="flex mt-3 md:mt-4 pt-3 md:pt-4 border-t border-blue-100 justify-between items-center">
+                                <span className="text-sm md:text-base lg:text-lg text-slate-600 font-medium">Giocatori iscritti:</span>
+                                <span className="font-black text-lg md:text-2xl lg:text-3xl text-slate-800 ">{selectedAppointment.current_players || 0} / {selectedAppointment.max_players || '-'}</span>
                             </div>
                         </div>
 
                         {(() => {
                             const hasPhone = !!selectedAppointment.profiles?.cellulare;
                             return (
-                                <div className={`rounded-2xl p-4 md:p-5 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ${hasPhone ? 'bg-green-50/50 dark:bg-green-900 border-green-200 dark:border-green-700' : 'bg-slate-50/50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
+                                <div className={`rounded-2xl p-4 md:p-5 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ${hasPhone ? 'bg-green-50/50 border-green-200 ' : 'bg-slate-50/50 border-slate-200 '}`}>
                                     <div className="flex flex-col">
-                                        <span className={`text-xs md:text-[13px] font-bold uppercase tracking-widest ${hasPhone ? 'text-green-700 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}`}>Organizzatore Partita</span>
-                                        <span className="text-base md:text-lg font-black text-slate-800 dark:text-slate-200">{selectedAppointment.profiles?.full_name || selectedAppointment.profiles?.username}</span>
-                                        <span className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mt-0.5">{selectedAppointment.profiles?.cellulare || "Nessun numero fornito"}</span>
+                                        <span className={`text-xs md:text-[13px] font-bold uppercase tracking-widest ${hasPhone ? 'text-green-700 ' : 'text-slate-500 '}`}>Organizzatore Partita</span>
+                                        <span className="text-base md:text-lg font-black text-slate-800 ">{selectedAppointment.profiles?.full_name || selectedAppointment.profiles?.username}</span>
+                                        <span className="text-xs md:text-sm font-bold text-slate-500 mt-0.5">{selectedAppointment.profiles?.cellulare || "Nessun numero fornito"}</span>
                                     </div>
                                     {hasPhone ? (
                                         <a 
                                             href={`https://wa.me/${String(selectedAppointment.profiles.cellulare).replace(/\D/g, '').startsWith('39') ? String(selectedAppointment.profiles.cellulare).replace(/\D/g, '') : '39' + String(selectedAppointment.profiles.cellulare).replace(/\D/g, '')}?text=Ciao%20${encodeURIComponent(selectedAppointment.profiles.full_name || selectedAppointment.profiles.username)}!%20Ti%20contattiamo%20dal%20centro%20sportivo%20per%20la%20tua%20prenotazione%20di%20${encodeURIComponent(selectedAppointment.sport)}.`} 
                                             target="_blank" 
                                             rel="noreferrer"
-                                            className="w-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 dark:shadow-none active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
+                                            className="w-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
                                         >
                                             <MessageCircle size={20} className="md:w-6 md:h-6" /> Contatta su WhatsApp
                                         </a>
                                     ) : (
                                         <button 
                                             onClick={() => handleSendOrganizerNotification(selectedAppointment)}
-                                            className="w-full sm:w-auto bg-slate-800 text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg dark:shadow-none active:scale-95 transition-all text-sm md:text-base hover:bg-slate-700"
+                                            className="w-full sm:w-auto bg-slate-800 text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm md:text-base hover:bg-slate-700"
                                         >
                                             <Bell size={20} className="md:w-6 md:h-6" /> Invia notifica In-App
                                         </button>
@@ -668,23 +668,23 @@ export default function BusinessDashboard({ user, name }) {
                             );
                         })()}
 
-                        <div className="flex-1 overflow-y-auto mb-4 scrollbar-hide border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative dark:bg-slate-800 dark:border-slate-700">
+                        <div className="flex-1 overflow-y-auto mb-4 scrollbar-hide border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative ">
                             {appointmentParticipants.length === 0 ? (
-                                <div className="text-center p-6 text-sm font-bold text-slate-400 dark:text-slate-500">Nessun partecipante caricato.</div>
+                                <div className="text-center p-6 text-sm font-bold text-slate-400 ">Nessun partecipante caricato.</div>
                             ) : (
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr>
-                                            <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 dark:text-slate-200 border-b">Nome</th>
-                                            <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 dark:text-slate-200 border-b text-center">Pagato?</th>
+                                            <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 border-b">Nome</th>
+                                            <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 border-b text-center">Pagato?</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {appointmentParticipants.map(part => {
                                             const isConfirmed = part.status === 'confirmed';
                                             return (
-                                                <tr key={part.id} className="border-b last:border-0 border-slate-100 dark:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-slate-700/50 transition-colors">
-                                                    <td className="p-2 md:p-4 text-sm md:text-base lg:text-lg font-bold text-slate-700 dark:text-slate-200">
+                                                <tr key={part.id} className="border-b last:border-0 border-slate-100 hover:bg-slate-100/50 /50 transition-colors">
+                                                    <td className="p-2 md:p-4 text-sm md:text-base lg:text-lg font-bold text-slate-700 ">
                                                         {part.profiles?.full_name || part.profiles?.username || "Utente Sconosciuto"}
                                                     </td>
 
@@ -692,7 +692,7 @@ export default function BusinessDashboard({ user, name }) {
                                                         <div className="flex justify-center">
                                                             <button
                                                                 onClick={() => toggleHasPaid(part.id, part.isPagato)}
-                                                                className={`flex items-center gap-1 md:gap-2 px-3 py-1 md:px-4 md:py-2 rounded-xl active:scale-95 text-xs md:text-sm lg:text-base font-bold transition-all ${part.isPagato ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 text-slate-500 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600'}`}
+                                                                className={`flex items-center gap-1 md:gap-2 px-3 py-1 md:px-4 md:py-2 rounded-xl active:scale-95 text-xs md:text-sm lg:text-base font-bold transition-all ${part.isPagato ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 text-slate-500 hover:bg-slate-300 '}`}
                                                             >
                                                                 {part.isPagato ? <CheckCircle size={16} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> : <XCircle size={16} className="md:w-5 md:h-5 lg:w-6 lg:h-6" />}
                                                                 {part.isPagato ? 'Sì' : 'No'}
@@ -707,25 +707,25 @@ export default function BusinessDashboard({ user, name }) {
                             )}
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full mt-2 dark:bg-slate-800">
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full mt-2 ">
                             <button
                                 onClick={() => handleUpdateStatus(selectedAppointment.id, 'rejected')}
                                 disabled={processingId === selectedAppointment.id}
-                                className="flex-1 bg-red-600 border-b-4 border-red-700 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-red-200 dark:shadow-none transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 bg-red-600 border-b-4 border-red-700 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-red-200 transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 <X size={18} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> {processingId === selectedAppointment.id ? "ANNULLAMENTO..." : "ANNULLA PARTITA"}
                             </button>
                             <button
                                 onClick={saveParticipantsList}
                                 disabled={appointmentParticipants.length === 0 || isSavingParticipants}
-                                className="flex-1 bg-green-600 border-b-4 border-green-700 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-green-200 dark:shadow-none transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 bg-green-600 border-b-4 border-green-700 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-green-200 transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 {isSavingParticipants ? "SALVATAGGIO..." : "SALVA MODIFICHE"}
                             </button>
                             <button
                                 onClick={printParticipantsList}
                                 disabled={appointmentParticipants.length === 0}
-                                className="flex-1 bg-slate-900 border-b-4 border-slate-950 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-slate-200 dark:shadow-none transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                                className="flex-1 bg-slate-900 border-b-4 border-slate-950 active:border-b-0 active:translate-y-[4px] text-white font-bold p-4 md:p-5 rounded-xl shadow-xl shadow-slate-200 transition-all text-sm md:text-base lg:text-lg flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 <Download size={18} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> STAMPA LISTA
                             </button>
@@ -736,19 +736,19 @@ export default function BusinessDashboard({ user, name }) {
 
             {/* Modal Rifiuto */}
             {rejectingMatchId && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in dark:bg-slate-900/80">
-                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-2xl max-w-sm w-full mx-auto animate-slide-up relative">
-                        <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-200 flex items-center justify-center text-red-600 mb-4 mx-auto shadow-inner">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /80">
+                    <div className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full mx-auto animate-slide-up relative">
+                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4 mx-auto shadow-inner">
                             <AlertCircle size={24} />
                         </div>
-                        <h3 className="text-xl font-black text-center text-slate-800 dark:text-slate-200 uppercase tracking-tighter mb-4">Motivo Annullamento / Rifiuto</h3>
+                        <h3 className="text-xl font-black text-center text-slate-800 uppercase tracking-tighter mb-4">Motivo Annullamento / Rifiuto</h3>
                         <div className="space-y-3 mb-6">
                             {[
                                 "Campo occupato (Torneo / Scuola Calcio)",
                                 "Orario non disponibile / Chiusura straordinaria",
                                 "Altro"
                             ].map(reason => (
-                                <label key={reason} className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                                <label key={reason} className="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
                                     <input
                                         type="radio"
                                         name="rejectionReason"
@@ -757,12 +757,12 @@ export default function BusinessDashboard({ user, name }) {
                                         onChange={(e) => setRejectionReason(e.target.value)}
                                         className="w-4 h-4 text-red-600 focus:ring-red-500"
                                     />
-                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{reason}</span>
+                                    <span className="text-sm font-bold text-slate-700 ">{reason}</span>
                                 </label>
                             ))}
                             {rejectionReason === 'Altro' && (
                                 <textarea
-                                    className="w-full p-3 text-sm bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-red-500 mt-2"
+                                    className="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500 mt-2"
                                     placeholder="Specifica il motivo manuale..."
                                     value={customReason}
                                     onChange={(e) => setCustomReason(e.target.value)}
@@ -771,7 +771,7 @@ export default function BusinessDashboard({ user, name }) {
                             )}
                         </div>
                         <div className="flex gap-3">
-                            <button onClick={() => setRejectingMatchId(null)} className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-bold rounded-xl active:scale-95 transition-transform">Indietro</button>
+                            <button onClick={() => setRejectingMatchId(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl active:scale-95 transition-transform">Indietro</button>
                             <button
                                 onClick={handleConfirmReject}
                                 disabled={rejectionReason === 'Altro' && !customReason.trim()}
@@ -785,45 +785,45 @@ export default function BusinessDashboard({ user, name }) {
             )}
 
             {/* PANNELLO DATI CENTRO (HEADER) */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 dark:bg-slate-800/50 dark:border-slate-700/50">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 /50 /50">
                 <div >
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-3 bg-red-100 text-red-600 rounded-xl shadow-inner">
                             <MapPin size={24} />
                         </div>
-                        <h2 className="text-slate-800 dark:text-slate-200 text-2xl">Centro Sportivo <i className='font-black'>{name || ''}</i></h2>
+                        <h2 className="text-slate-800 text-2xl">Centro Sportivo <i className='font-black'>{name || ''}</i></h2>
                     </div>
-                    <p className="sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg md:text-lg">Benvenuto 👏<br className="md:hidden" /> nella tua dashboard direzionale. Qui puoi gestire il centro, controllare le richieste di prenotazione, le tue risorse e gli orari di apertura.</p>
+                    <p className="sm:text-sm text-slate-500 max-w-lg md:text-lg">Benvenuto 👏<br className="md:hidden" /> nella tua dashboard direzionale. Qui puoi gestire il centro, controllare le richieste di prenotazione, le tue risorse e gli orari di apertura.</p>
                 </div>
                 {/* Statistiche Rapide */}
                 <div className="flex flex-wrap md:flex-nowrap gap-3 mt-4 md:mt-0 w-full md:w-auto">
-                    <div className="flex-1 md:flex-none bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                    <div className="flex-1 md:flex-none bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
                         <span className="text-3xl font-black text-blue-600">{requests.length}</span>
-                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider text-center">Richieste<br/>Da Gestire</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Richieste<br/>Da Gestire</span>
                     </div>
-                    <div className="flex-1 md:flex-none bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                    <div className="flex-1 md:flex-none bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
                         <span className="text-3xl font-black text-slate-800">{listAppointments.length}</span>
-                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider text-center">Prenotazioni<br/>Settimana</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Prenotazioni<br/>Settimana</span>
                     </div>
-                    <div className="flex-1 md:flex-none bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
+                    <div className="flex-1 md:flex-none bg-slate-50 border border-slate-100 rounded-2xl p-4 flex flex-col items-center justify-center min-w-[120px] shadow-sm">
                         <span className="text-3xl font-black text-green-600">{campi.length}</span>
-                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider text-center">Campi<br/>Totali</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider text-center">Campi<br/>Totali</span>
                     </div>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 dark:text-slate-200">
+            <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 ">
 
                 {/* COLONNA SINISTRA PRINCIPALE SOTTO HEADER */}
                 <div className="lg:col-span-8 flex flex-col gap-6">
 
                     {/* SEZIONE RICHIESTE */}
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-600 shadow-sm">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-black text-slate-800 dark:text-slate-200 uppercase tracking-tighter">
-                                Richieste <span className="text-blue-600 dark:text-blue-400">Pendenti</span>
+                            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
+                                Richieste <span className="text-blue-600 ">Pendenti</span>
                             </h2>
-                            <span className="bg-blue-100 text-blue-600 dark:bg-blue-600 dark:text-white px-4 py-1.5 rounded-full text-xs font-black uppercase shadow-sm">
+                            <span className="bg-blue-100 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase shadow-sm">
                                 {requests.length} da gestire
                             </span>
                         </div>
@@ -831,8 +831,8 @@ export default function BusinessDashboard({ user, name }) {
                         {/* CAROUSEL CONTAINER */}
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory px-1">
                             {requests.length === 0 ? (
-                                <div className="w-full bg-slate-50 dark:bg-slate-700 rounded-[32px] p-10 border-2 border-dashed border-slate-200 dark:border-slate-600 flex flex-col items-center">
-                                    <p className="text-slate-400 dark:text-slate-400 font-bold text-sm">Nessuna richiesta attiva</p>
+                                <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center">
+                                    <p className="text-slate-400 font-bold text-sm">Nessuna richiesta attiva</p>
                                 </div>
                             ) : (
                                 <>
@@ -844,21 +844,21 @@ export default function BusinessDashboard({ user, name }) {
                                         const orario = dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
                                         return (
-                                            <div key={req.id} className={`flex-shrink-0 w-[80vw] md:w-[350px] rounded-[40px] p-2 border shadow-2xl shadow-slate-200/50 snap-center transition-all ${isExpired ? 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-600 shadow-red-200/50 dark:shadow-red-900/50' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-600'}`}>
+                                            <div key={req.id} className={`flex-shrink-0 w-[80vw] md:w-[350px] rounded-[40px] p-2 border shadow-2xl shadow-slate-200/50 snap-center transition-all ${isExpired ? 'bg-red-50 border-red-200 shadow-red-200/50 /50' : 'bg-white border-slate-100 '}`}>
                                                 <div className="flex flex-col h-full">
 
                                                     {/* 1. SEZIONE TEMPO (Il focus principale) */}
                                                     <div className={`flex items-center gap-4 p-4 rounded-[35px] text-white ${isExpired ? 'bg-red-700' : 'bg-slate-900'}`}>
                                                         {/* Blocco Data */}
                                                         <div className={`flex flex-col items-center justify-center rounded-[25px] w-16 h-16 shadow-lg ${isExpired ? 'bg-red-600 shadow-red-500/30' : 'bg-blue-600 shadow-blue-500/30'}`}>
-                                                            <span className="text-xl font-black leading-none dark:text-white">{giorno}</span>
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider dark:text-white">{mese}</span>
+                                                            <span className="text-xl font-black leading-none ">{giorno}</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider ">{mese}</span>
                                                         </div>
 
                                                         {/* Blocco Orario */}
                                                         <div className="flex flex-col">
-                                                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest">Orario Inizio</span>
-                                                            <span className="text-2xl font-black tracking-tighter dark:text-white">{orario}</span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Orario Inizio</span>
+                                                            <span className="text-2xl font-black tracking-tighter ">{orario}</span>
                                                         </div>
 
                                                         <div className="ml-auto pr-2">
@@ -869,21 +869,21 @@ export default function BusinessDashboard({ user, name }) {
                                                     </div>
 
                                                     {/* 2. SEZIONE CAMPO (Identificazione immediata) */}
-                                                    <div className="px-6 py-5 dark:text-white">
+                                                    <div className="px-6 py-5 ">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest">Risorsa Richiesta</span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Risorsa Richiesta</span>
                                                         </div>
-                                                        <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter truncate">
+                                                        <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter truncate">
                                                             {req.sports_courts?.name || "Campo non specificato"}
                                                         </h3>
-                                                        <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-1">
+                                                        <p className="text-sm font-bold text-blue-600 mt-1">
                                                             {req.sport} • {req.title}
                                                         </p>
                                                     </div>
 
                                                     {/* 3. AZIONI RAPIDE */}
-                                                    <div className="mt-auto p-2 flex gap-2 dark:text-white">
+                                                    <div className="mt-auto p-2 flex gap-2 ">
                                                         <button
                                                             disabled={processingId === req.id}
                                                             onClick={() => handleUpdateStatus(req.id, 'rejected')}
@@ -910,26 +910,26 @@ export default function BusinessDashboard({ user, name }) {
                     </div>
 
                     {/* PANNELLO CALENDARIO - Il più importante */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:shadow-none">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm ">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
                                     <CalendarIcon size={20} />
                                 </div>
-                                <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Calendario <span className='text-blue-600 dark:text-blue-400'>Prenotazioni</span></h3>
+                                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Calendario <span className='text-blue-600 '>Prenotazioni</span></h3>
                             </div>
                             {/* Switch Visibilità */}
-                            <div className="flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl max-w-min">
+                            <div className="flex p-1 bg-slate-100 rounded-xl max-w-min">
                                 <button
                                     onClick={() => setCalendarView('list')}
-                                    className={`p-2 rounded-lg flex items-center justify-center transition-all ${calendarView === 'list' ? 'bg-white shadow-sm text-blue-600 dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                    className={`p-2 rounded-lg flex items-center justify-center transition-all ${calendarView === 'list' ? 'bg-white shadow-sm text-blue-600 ' : 'text-slate-500 hover:text-slate-700 '}`}
                                     title="Visualizzazione a lista"
                                 >
                                     <List size={18} />
                                 </button>
                                 <button
                                     onClick={() => setCalendarView('calendar')}
-                                    className={`p-2 rounded-lg flex items-center justify-center transition-all ${calendarView === 'calendar' ? 'bg-white shadow-sm text-blue-600 dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                    className={`p-2 rounded-lg flex items-center justify-center transition-all ${calendarView === 'calendar' ? 'bg-white shadow-sm text-blue-600 ' : 'text-slate-500 hover:text-slate-700 '}`}
                                     title="Visualizzazione a calendario"
                                 >
                                     <CalendarIcon size={18} />
@@ -939,8 +939,8 @@ export default function BusinessDashboard({ user, name }) {
                         {/* Qui andrà un mini-calendario o la lista del giorno */}
                         {calendarView === 'list' ? (
                             listAppointments.length === 0 ? (
-                                <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-[32px] p-10 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
-                                    <p className="text-slate-400 dark:text-slate-400 font-bold text-sm">Nessuna prenotazione nei prossimi 7 giorni</p>
+                                <div className="w-full bg-slate-50 rounded-[32px] p-10 border-2 border-dashed border-slate-200 flex flex-col items-center text-center">
+                                    <p className="text-slate-400 font-bold text-sm">Nessuna prenotazione nei prossimi 7 giorni</p>
                                 </div>
                             ) : (
                                 <>
@@ -954,30 +954,30 @@ export default function BusinessDashboard({ user, name }) {
                                                 <div
                                                     key={app.id}
                                                     onClick={() => handleOpenAppointmentModal(app)}
-                                                    className="bg-slate-50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-[32px] p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center gap-4">
+                                                    className="bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors rounded-[32px] p-4 border-2 border-dashed border-slate-200 flex items-center gap-4">
                                                     {/* Blocco Giorno */}
                                                     <div className="flex flex-col">
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-xl font-black leading-none">{giorno}</span>
                                                             <span className="text-[10px] font-bold uppercase tracking-wider">{mese}</span>
                                                         </div>
-                                                        <span className="text-sm font-bold text-slate-400 dark:text-slate-400">{orario}</span>
+                                                        <span className="text-sm font-bold text-slate-400 ">{orario}</span>
                                                     </div>
 
                                                     {/* Blocco Campo */}
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2">
                                                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest">Campo</span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Campo</span>
                                                         </div>
-                                                        <h3 className="text-xl font-black text-slate-800 dark:text-slate-200 uppercase tracking-tighter truncate">
+                                                        <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter truncate">
                                                             {app.sports_courts?.name || "Campo non specificato"}
                                                         </h3>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <p className="text-sm font-bold text-blue-600">
                                                                 {app.sport} • {app.title}
                                                             </p>
-                                                            <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded text-xs font-bold ml-auto">
+                                                            <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-xs font-bold ml-auto">
                                                                 {app.current_players || 0}/{app.max_players || '-'}
                                                             </span>
                                                         </div>
@@ -996,13 +996,13 @@ export default function BusinessDashboard({ user, name }) {
                 <div className="lg:col-span-4 flex flex-col gap-6">
 
                     {/* PANNELLO CAMPI */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex-1 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex-1 ">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-green-100 text-green-600 rounded-xl shadow-inner">
                                 <LayoutDashboard size={20} />
                             </div>
-                            <h3 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tighter">I tuoi Campi</h3>
-                            <button onClick={() => navigate('/gestisci-campi')} className="ml-auto text-sm text-slate-400 dark:text-slate-400 hover:text-green-600 flex items-center gap-2 transition-colors">
+                            <h3 className="font-bold text-slate-800 uppercase tracking-tighter">I tuoi Campi</h3>
+                            <button onClick={() => navigate('/gestisci-campi')} className="ml-auto text-sm text-slate-400 hover:text-green-600 flex items-center gap-2 transition-colors">
                                 <span className="hidden sm:inline">Gestisci</span>
                                 <Pencil size={18} />
                             </button>
@@ -1081,13 +1081,13 @@ export default function BusinessDashboard({ user, name }) {
                     </div>
 
                     {/* PANNELLO ORARI */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex-1 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex-1 ">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="p-3 bg-orange-100 text-orange-600 rounded-xl shadow-inner">
                                 <Clock size={20} />
                             </div>
-                            <h3 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tighter">Orari d'apertura</h3>
-                            <button onClick={() => setIsOrariOpen(true)} className="ml-auto text-sm text-slate-400 dark:text-slate-400 hover:text-orange-600 flex items-center gap-2 transition-colors">
+                            <h3 className="font-bold text-slate-800 uppercase tracking-tighter">Orari d'apertura</h3>
+                            <button onClick={() => setIsOrariOpen(true)} className="ml-auto text-sm text-slate-400 hover:text-orange-600 flex items-center gap-2 transition-colors">
                                 <span className="hidden sm:inline">Modifica</span>
                                 <Edit2 size={18} />
                             </button>
@@ -1099,10 +1099,10 @@ export default function BusinessDashboard({ user, name }) {
                         </div>
                         <div className="space-y-2">
                             {orari.map(item => (
-                                <div key={item.day_of_week} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-700 rounded-2xl border border-slate-100 dark:border-slate-600">
-                                    <span className="font-bold text-slate-700 dark:text-slate-200 w-24">{days[item.day_of_week]}</span>
-                                    <span className="text-slate-600 dark:text-slate-300">{item.is_closed ? 'Chiuso' : `${item.open_time.slice(0, 5)} - ${item.close_time.slice(0, 5)}`}</span>
-                                    <span className={`ml-auto px-2 py-1 rounded-lg text-[10px] font-black uppercase ${item.is_closed ? 'bg-red-100 text-red-600 dark:bg-red-700 dark:text-red-300' : 'bg-green-100 text-green-600 dark:bg-green-700 dark:text-green-300'}`}>
+                                <div key={item.day_of_week} className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 ">
+                                    <span className="font-bold text-slate-700 w-24">{days[item.day_of_week]}</span>
+                                    <span className="text-slate-600 ">{item.is_closed ? 'Chiuso' : `${item.open_time.slice(0, 5)} - ${item.close_time.slice(0, 5)}`}</span>
+                                    <span className={`ml-auto px-2 py-1 rounded-lg text-[10px] font-black uppercase ${item.is_closed ? 'bg-red-100 text-red-600 ' : 'bg-green-100 text-green-600 '}`}>
                                         {item.is_closed ? 'Chiuso' : 'Aperto'}
                                     </span>
                                 </div>

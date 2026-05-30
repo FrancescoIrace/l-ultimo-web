@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapPin, X, Search } from 'lucide-react';
 
 export default function LocationPicker({ value, onChange }) {

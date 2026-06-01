@@ -407,14 +407,20 @@ export default function PublicProfile() {
                             <span className="text-xl font-black text-slate-800">{friendCount}</span>
                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Amici</span>
                         </div>
-                        <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
+                        <button 
+                            onClick={() => navigate(`/recensioni/${id}`, { state: { username: profile?.username } })}
+                            className="flex-1 flex flex-col items-center py-3 border-r border-slate-100 hover:bg-blue-50 transition active:scale-95"
+                        >
                             <span className="text-xl font-black text-slate-800">{totalReviews}</span>
                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
-                        </div>
-                        <div className="flex-1 flex flex-col items-center py-3">
+                        </button>
+                        <button 
+                            onClick={() => navigate(`/recensioni/${id}`, { state: { username: profile?.username } })}
+                            className="flex-1 flex flex-col items-center py-3 hover:bg-blue-50 transition active:scale-95"
+                        >
                             <span className="text-xl font-black text-yellow-500">{avgRating > 0 ? avgRating : '—'}</span>
                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
-                        </div>
+                        </button>
                     </div>
 
                     {/* Friendship button (non mostrato se stai guardando il tuo profilo) */}
@@ -512,25 +518,23 @@ export default function PublicProfile() {
                 )}
 
 
-                {/* Lista Commenti */}
-                <div className="space-y-4 p-4">
-                    {reviews.map((rev, index) => (
-                        <div key={index} className="border-b border-slate-100 pb-4">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="font-black text-yellow-500">{'★'.repeat(rev.rating)}</span>
-                                <span className="text-[10px] font-black uppercase text-slate-400">
-                                    da
-                                    <span onClick={() => navigate(`/profile/${rev.reviewer.id}`)}
-                                        className="text-blue-600 cursor-pointer hover:underline ml-1">
-                                        {rev.reviewer.username}
-                                    </span>
-                                </span>
-                            </div>
-                            <p className="text-sm text-slate-600 italic">"{rev.comment}"</p>
-                            <span className="text-[10px] text-slate-400">{new Date(rev.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                {/* ── RECENSIONI (PULSANTE) ── */}
+                <div className="mx-0 mb-4">
+                    <button
+                        onClick={() => navigate(`/recensioni/${id}`, { state: { username: profile?.username } })}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-3xl shadow-sm px-4 py-4 flex items-center gap-3 hover:bg-slate-100 transition active:scale-95"
+                    >
+                        <div className="w-9 h-9 bg-yellow-100 rounded-xl flex items-center justify-center border border-yellow-200">
+                            <span className="text-yellow-500 text-lg font-black leading-none">★</span>
                         </div>
-                    ))}
+                        <div className="flex-1 text-left">
+                            <p className="font-black text-slate-800 text-sm">Recensioni Ricevute</p>
+                            <p className="text-xs text-slate-400">Visualizza i {totalReviews} voti ricevuti</p>
+                        </div>
+                        <ChevronRight size={18} className="text-slate-300" />
+                    </button>
                 </div>
+
             </div>
         );
     }

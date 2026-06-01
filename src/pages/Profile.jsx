@@ -364,7 +364,7 @@ export default function Profile({ session }) {
 
                                 {/* Username */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Username</label>
                                     <input
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.username ?? ''}
@@ -374,7 +374,7 @@ export default function Profile({ session }) {
 
                                 {/* Full Name */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Full Name</label>
                                     <input
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.full_name ?? ''}
@@ -449,7 +449,7 @@ export default function Profile({ session }) {
 
                                 {/* Genere */}
                                 {/* <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Genere</label>
                                     <select
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.gender ?? 'Other'}
@@ -463,7 +463,7 @@ export default function Profile({ session }) {
 
                                 {/* Telefono */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Telefono</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Telefono</label>
                                     <input
                                         type="text"
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
@@ -474,7 +474,7 @@ export default function Profile({ session }) {
 
                                 {/* Sport preferito */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Sport preferito</label>
                                     <select
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.favorite_sport ?? 'Calcetto'}
@@ -769,7 +769,7 @@ export default function Profile({ session }) {
 
                                 {/* Username */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Username</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Username</label>
                                     <input
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.username ?? ''}
@@ -779,7 +779,7 @@ export default function Profile({ session }) {
 
                                 {/* Full Name */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Full Name</label>
                                     <input
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.full_name ?? ''}
@@ -802,7 +802,7 @@ export default function Profile({ session }) {
 
                                 {/* Genere */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Genere</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Genere</label>
                                     <select
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.gender ?? 'Other'}
@@ -816,7 +816,7 @@ export default function Profile({ session }) {
 
                                 {/* Cellulare */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Cellulare</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Cellulare</label>
                                     <input
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.cellulare ?? ''}
@@ -826,7 +826,7 @@ export default function Profile({ session }) {
 
                                 {/* Sport preferito */}
                                 <div>
-                                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Sport preferito</label>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Sport preferito</label>
                                     <select
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
                                         value={editData.favorite_sport ?? 'Calcetto'}

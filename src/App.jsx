@@ -8,6 +8,7 @@ import CreateMatch from './pages/CreateMatch';
 import FindFriends from './pages/FindFriends';
 import FriendRequests from './pages/FriendRequests';
 import MyMatches from './pages/MyMatches';
+import UserReviews from './pages/UserReviews';
 import Home from './pages/Home';
 import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
@@ -25,14 +26,12 @@ import ResetPassword from './pages/ResetPassword';
 import { NotificationBell } from './components/NotificationBell';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
-import { useDarkMode } from './hooks/useDarkMode';
 import BusinessDashboard from './pages/business/BusinessDashboard';
 import GestisciCampi from './pages/business/GestisciCampi';
 import TeamsPage from './pages/TeamsPage';
 import TeamDetail from './pages/TeamDetail';
 
 function App() {
-  useDarkMode(); // Inizializza il tema su mount root
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -100,7 +99,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600 ">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: [1, 1.1, 1], opacity: 1 }}
@@ -164,7 +163,7 @@ function App() {
               {session.avatar_url ? (
                 <img src={session.avatar_url} alt="avatar" className="w-12 h-12 object-cover" />
               ) : (
-                <div className="w-12 h-12 bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-600 ">
+                <div className="w-12 h-12 bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-600">
                   {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -206,6 +205,8 @@ function App() {
               <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
               <Route path="/richieste-amici" element={<FriendRequests user={session.user} />} />
               <Route path="/le-mie-partite" element={<MyMatches session={session} />} />
+              <Route path="/recensioni" element={<UserReviews session={session} />} />
+              <Route path="/recensioni/:id" element={<UserReviews session={session} />} />
               <Route path="/organizza" element={<CreateMatch />} />
               <Route path="/modifica/:id" element={<CreateMatch />} />
               <Route path="/squadre" element={<TeamsPage session={session} />} />

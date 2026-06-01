@@ -389,30 +389,30 @@ export default function CreateMatch() {
                 <form onSubmit={handleUpdate} className="space-y-5">
                     {/* SPORT */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Sport</label>
+                        <label className="block text-sm font-bold text-slate-500 uppercase mb-2">Sport</label>
                         <select
                             disabled
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
                             value={formData.sport}
                             onChange={handleSportChange}  // ← NUOVO
                         >
-                            <option>Calcetto</option>
-                            <option>Calcio a 7</option>
-                            <option>Calcio a 11</option>
-                            <option>Padel</option>
-                            <option>Basket (allenamento)</option>
-                            <option>Basket (3vs3)</option>
-                            <option>Basket (5vs5)</option>
-                            <option>Tennis singolo</option>
-                            <option>Tennis doppio</option>
-                            <option>Volley</option>
-                            <option>Personalizza</option>
+                            <option value="Calcetto" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcetto</option>
+                            <option value="Calcio a 7" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 7</option>
+                            <option value="Calcio a 11" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 11</option>
+                            <option value="Padel" className="bg-white text-slate-800 py-1 font-medium">🎾 Padel</option>
+                            <option value="Basket (allenamento)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (allenamento)</option>
+                            <option value="Basket (3vs3)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (3vs3)</option>
+                            <option value="Basket (5vs5)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (5vs5)</option>
+                            <option value="Tennis singolo" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis singolo</option>
+                            <option value="Tennis doppio" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis doppio</option>
+                            <option value="Volley" className="bg-white text-slate-800 py-1 font-medium">🏐 Volley</option>
+                            <option value="Personalizzato" className="bg-white text-slate-800 py-1 font-medium">⚙️ Personalizzato</option>
                         </select>
                     </div>
 
                     {/* VISIBILIT� MATCH */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilit� Match</label>
+                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Visibilit� Match</label>
                         <div className="flex gap-2">
                             <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
                                 <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} disabled />
@@ -446,11 +446,11 @@ export default function CreateMatch() {
 
                     {/* TITOLO */}
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
+                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
                         <input
                             type="text"
                             maxLength={32}
-                            placeholder="Es: Partitella tra amici"
+                            
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -460,7 +460,7 @@ export default function CreateMatch() {
                     {/* DATA E GIOCATORI */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Quando</label>
+                            <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Quando</label>
                             <input
                                 type="datetime-local"
                                 lang="it-IT"
@@ -471,11 +471,11 @@ export default function CreateMatch() {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Giocatori Totali</label>
+                            <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Giocatori Totali</label>
                             <input
                                 type="number"
                                 required
-                                disabled={formData.sport !== 'Personalizza'}
+                                disabled={formData.sport !== 'Personalizzato'}
                                 min="2"
                                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
                                 value={formData.max_players}
@@ -487,7 +487,7 @@ export default function CreateMatch() {
                     {/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
                     <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
                         <div className="flex items-center justify-between mb-2">
-                            <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
+                            <label className="block text-sm font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
                             <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded"> Work in Progress</span>
                         </div>
                         <select
@@ -523,9 +523,9 @@ export default function CreateMatch() {
                     />
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
+                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
                         <textarea
-                            placeholder="Descrizione della partita"
+                            
                             maxLength={300}
                             className={`w-full h-50 resize-none p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 ${containsLinks(formData.description) ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 focus:ring-blue-500'
                                 }`}
@@ -590,29 +590,29 @@ export default function CreateMatch() {
 
                 {/* SPORT */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Sport</label>
+                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Sport</label>
                     <select
                         className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                         value={formData.sport}
                         onChange={handleSportChange}
                     >
-                        <option>Calcetto</option>
-                        <option>Calcio a 7</option>
-                        <option>Calcio a 11</option>
-                        <option>Padel</option>
-                        <option>Basket (allenamento)</option>
-                        <option>Basket (3vs3)</option>
-                        <option>Basket (5vs5)</option>
-                        <option>Tennis singolo</option>
-                        <option>Tennis doppio</option>
-                        <option>Volley</option>
-                        <option>Personalizza</option>
+                        <option value="Calcetto" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcetto</option>
+                        <option value="Calcio a 7" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 7</option>
+                        <option value="Calcio a 11" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 11</option>
+                        <option value="Padel" className="bg-white text-slate-800 py-1 font-medium">🎾 Padel</option>
+                        <option value="Basket (allenamento)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (allenamento)</option>
+                        <option value="Basket (3vs3)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (3vs3)</option>
+                        <option value="Basket (5vs5)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (5vs5)</option>
+                        <option value="Tennis singolo" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis singolo</option>
+                        <option value="Tennis doppio" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis doppio</option>
+                        <option value="Volley" className="bg-white text-slate-800 py-1 font-medium">🏐 Volley</option>
+                        <option value="Personalizzato" className="bg-white text-slate-800 py-1 font-medium">⚙️ Personalizzato</option>
                     </select>
                 </div>
 
                 {/* VISIBILIT� MATCH */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Visibilità Match</label>
+                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Visibilità Match</label>
                     <div className="flex gap-2">
                         <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 font-semibold hover:bg-slate-100'}`}>
                             <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} />
@@ -653,11 +653,11 @@ export default function CreateMatch() {
 
                 {/* TITOLO */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
+                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
                     <input
                         type="text"
                         maxLength={32}
-                        placeholder="Es: Partitella tra amici"
+                        
                         className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     />
@@ -666,7 +666,7 @@ export default function CreateMatch() {
                 {/* DATA E GIOCATORI */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Quando</label>
+                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Quando</label>
                         <input
                             type="datetime-local"
                             lang="it-IT"
@@ -679,11 +679,11 @@ export default function CreateMatch() {
                     </div>
                     <div>
                         {/* Il numero di giocatori cambia in base allo sport (principalmente), quindi sull'onchange della select dello sport */}
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Giocatori Totali</label>
+                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Giocatori Totali</label>
                         <input
                             type="number"
                             required
-                            disabled={formData.sport !== 'Personalizza'}
+                            disabled={formData.sport !== 'Personalizzato'}
                             min="2"
                             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.max_players}
@@ -695,7 +695,7 @@ export default function CreateMatch() {
                 {/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
                 <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
                     <div className="flex items-center justify-between mb-2">
-                        <label className="block text-xs font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
+                        <label className="block text-sm font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
                         <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded"> Work in Progress</span>
                     </div>
                     <select
@@ -731,9 +731,9 @@ export default function CreateMatch() {
                 />
 
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
+                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
                     <textarea
-                        placeholder="Descrizione della partita"
+                        
                         maxLength={300}
                         className={`w-full h-50 resize-none p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 ${containsLinks(formData.description) ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 focus:ring-blue-500'
                             }`}

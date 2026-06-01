@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -111,6 +111,25 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             </span>
           </div>
 
+        </div>
+
+        {/* Centri Associati (Pannello Bottone) */}
+        <div
+          onClick={() => navigate('/centri')}
+          className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-teal-100 mt-4 text-white cursor-pointer hover:shadow-xl transition-all active:scale-95"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-2xl">
+                <Building2 size={24} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm uppercase tracking-wide">Centri Associati</h3>
+                <p className="text-xs text-white/80 mt-1">Scopri i nostri partner ufficiali</p>
+              </div>
+            </div>
+            <ChevronRight size={24} className="text-white/80" />
+          </div>
         </div>
 
         {/* Banner esempio 1 */}

@@ -20,6 +20,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import PublicMatchLanding from './pages/PublicMatchLanding';
 import WelcomeModal from './components/WelcomeModal';
 import PWADashboard from './pages/PWADashboard';
+import CentersList from './pages/CentersList';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -211,6 +212,7 @@ function App() {
               <Route path="/modifica/:id" element={<CreateMatch />} />
               <Route path="/squadre" element={<TeamsPage session={session} />} />
               <Route path="/squadre/:id" element={<TeamDetail session={session} />} />
+              <Route path="/centri" element={<CentersList />} />
 
             </>
           )}

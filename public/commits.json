@@ -1,5 +1,10 @@
 [
   {
+    "date": "01 giugno 2026",
+    "title": "Fix vari",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "30 maggio 2026",
     "title": "Fix vari + rimozione dark mode",
     "description": "Modifica all'app"
@@ -42,11 +47,6 @@
   {
     "date": "25 maggio 2026",
     "title": "Add statistiche",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "Rem console.log",
     "description": "Modifica all'app"
   }
 ]

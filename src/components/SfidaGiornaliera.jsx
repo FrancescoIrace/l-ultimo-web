@@ -51,6 +51,7 @@ export default function SfidaGiornaliera() {
                 setStatus('ERROR');
             }
         };
+        
 
         initGame();
     }, [navigate]);

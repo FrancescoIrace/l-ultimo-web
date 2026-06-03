@@ -32,6 +32,7 @@ import GestisciCampi from './pages/business/GestisciCampi';
 import TeamsPage from './pages/TeamsPage';
 import TeamDetail from './pages/TeamDetail';
 import SfidaGiornaliera from './components/SfidaGiornaliera';
+import ClassificaMinigame from './components/ClassificaMinigame';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -215,6 +216,7 @@ function App() {
               <Route path="/squadre/:id" element={<TeamDetail session={session} />} />
               <Route path="/centri" element={<CentersList />} />
               <Route path="/sfida" element={<SfidaGiornaliera />} />
+              <Route path="/leaderboard" element={<ClassificaMinigame />} />
 
             </>
           )}

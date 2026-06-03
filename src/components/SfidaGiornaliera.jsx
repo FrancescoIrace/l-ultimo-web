@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Lock, CheckCircle2, XCircle, Trophy, Brain, ChevronLeft, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import allQuestions from '../data/questions.json';
 
 export default function SfidaGiornaliera() {
     const navigate = useNavigate();
@@ -27,12 +28,7 @@ export default function SfidaGiornaliera() {
 
                 const todayDateStr = getCurrentDate();
 
-                // 1. Carichiamo le domande dal file JSON
-                const response = await fetch('/questions.json');
-                if (!response.ok) throw new Error("Impossibile caricare le domande");
-                const allQuestions = await response.json();
-
-                // 2. Check record su daily_game_attempts
+                // 1. Check record su daily_game_attempts
                 const { data: attempt, error: attemptError } = await supabase
                     .from('daily_game_attempts')
                     .select('id')

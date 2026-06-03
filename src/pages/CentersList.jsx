@@ -38,6 +38,51 @@ export default function CentersList() {
       avatar_url: 'https://images.unsplash.com/photo-1600255821058-c4f89958d700?auto=format&fit=crop&q=80&w=200&h=200',
       role: 'center',
       isPlaceholder: true,
+    },
+    {
+      id: 'placeholder-4',
+      username: 'Sporting Village 4',
+      full_name: 'Sporting Village 4',
+      business_address: 'Via Roma 1, Milano',
+      avatar_url: null,
+      role: 'center',
+      isPlaceholder: true,
+    },
+    {
+      id: 'placeholder-5',
+      username: 'Padel & Soccer',
+      full_name: 'Padel & Soccer Club',
+      business_address: 'Via Napoli 2, Roma',
+      avatar_url: null,
+      role: 'center',
+      isPlaceholder: true,
+    },
+    {
+      id: 'placeholder-6',
+      username: 'Tennis Club 6',
+      full_name: 'Tennis Club 6',
+      business_address: 'Torino',
+      avatar_url: null,
+      role: 'center',
+      isPlaceholder: true,
+    },
+    {
+      id: 'placeholder-7',
+      username: 'Centro Fitness 7',
+      full_name: 'Centro Fitness 7',
+      business_address: 'Bologna',
+      avatar_url: null,
+      role: 'center',
+      isPlaceholder: true,
+    },
+    {
+      id: 'placeholder-8',
+      username: 'Playground 8',
+      full_name: 'Playground 8',
+      business_address: 'Firenze',
+      avatar_url: null,
+      role: 'center',
+      isPlaceholder: true,
     }
   ];
 
@@ -73,33 +118,37 @@ export default function CentersList() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 border-b border-slate-200 sticky top-[58px] z-30 shadow-sm flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 -ml-2 text-slate-600 active:bg-slate-100 rounded-full transition-colors"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <div>
-          <h1 className="text-xl font-black text-slate-800 tracking-tight">Centri Associati</h1>
-          <p className="text-xs text-slate-500 font-medium">Trova la struttura perfetta</p>
+      <div className="sticky top-[58px] z-30 bg-slate-50 shadow-sm border-b border-slate-200">
+        {/* Header */}
+        <div className="bg-white px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 -ml-2 text-slate-600 active:bg-slate-100 rounded-full transition-colors"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <div>
+            <h1 className="text-xl font-black text-slate-800 tracking-tight">Centri Associati</h1>
+            <p className="text-xs text-slate-500 font-medium">Trova la struttura perfetta</p>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="p-4 bg-slate-50">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Cerca per nome o indirizzo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Cerca per nome o indirizzo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-          />
-        </div>
-
+      <div className="px-4 pb-4 pt-2 space-y-4">
         {/* List */}
         <div className="space-y-3">
           {loading ? (

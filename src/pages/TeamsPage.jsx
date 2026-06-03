@@ -420,7 +420,7 @@ export default function TeamsPage({ session }) {
             className="space-y-4"
         >
             {/* Barra di ricerca */}
-            <div className="sticky top-0 z-3 pb-4">
+            <div className="sticky top-[58px] z-30 pb-4">
                 <div className="relative">
                     <Search
                         size={18}
@@ -892,7 +892,7 @@ export default function TeamsPage({ session }) {
             {/* Main Content */}
             <div className="mt-3">
                 {/* Tab Navigation */}
-                <div className="sticky top-0 z-20 bg-slate-50 py-3 mb-6 flex gap-3">
+                <div className="sticky top-[58px] z-20 bg-slate-50 py-3 mb-6 flex gap-3">
                     {[
                         { id: 'myTeams', label: '👥 Le mie Squadre' },
                         { id: 'discover', label: '🔍 Esplora' },

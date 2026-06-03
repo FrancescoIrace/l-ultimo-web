@@ -1,6 +1,11 @@
 [
   {
     "date": "01 giugno 2026",
+    "title": "Aggiunte lista centri + Bottone nella dashboard",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "01 giugno 2026",
     "title": "Fix vari",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "28 maggio 2026",
     "title": "fix business",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "25 maggio 2026",
-    "title": "Add statistiche",
     "description": "Modifica all'app"
   }
 ]

@@ -564,7 +564,7 @@ export default function Profile({ session }) {
                                     <span className="text-xl font-black text-slate-800">{friendCount}</span>
                                     <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Amici</span>
                                 </button>
-                                <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
+                                {/* <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
                                     <span className="text-xl font-black text-slate-800">{myReviews.length}</span>
                                     <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
                                 </div>
@@ -575,7 +575,25 @@ export default function Profile({ session }) {
                                             : '—'}
                                     </span>
                                     <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
-                                </div>
+                                </div> */}
+                                <button
+                                    onClick={() => navigate('/recensioni')}
+                                    className="flex-1 flex flex-col items-center py-3 border-r border-slate-100 hover:bg-blue-50 transition active:scale-95"
+                                >
+                                    <span className="text-xl font-black text-slate-800">{myReviews.length}</span>
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
+                                </button>
+                                <button
+                                    onClick={() => navigate('/recensioni')}
+                                    className="flex-1 flex flex-col items-center py-3 hover:bg-blue-50 transition active:scale-95"
+                                >
+                                    <span className="text-xl font-black text-yellow-500">
+                                        {myReviews.length > 0
+                                            ? (myReviews.reduce((acc, r) => acc + r.rating, 0) / myReviews.length).toFixed(1)
+                                            : '—'}
+                                    </span>
+                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
+                                </button>
                             </div>
                         </div>
 
@@ -684,7 +702,7 @@ export default function Profile({ session }) {
                         </div>
 
                         {/* ── PARTITE PROSSIME (solo anteprima) ── */}
-                        <div className="mx-4 mb-4">
+                        {/* <div className="mx-4 mb-4">
                             <AccordionItem
                                 title="Prossime Partite"
                                 matches={myMatches
@@ -696,15 +714,28 @@ export default function Profile({ session }) {
                                 titleColor="text-blue-600"
                                 userId={session.user.id}
                             />
-                        </div>
+                        </div> */}
 
                         {/* ── RECENSIONI ── */}
                         <div className="mx-4 mb-6">
-                            <AccorditionReviews
+                            {/* <AccorditionReviews
                                 title="Recensioni Ricevute"
                                 reviews={myReviews}
                                 isOpen={false}
-                            />
+                            /> */}
+                            <button
+                                onClick={() => navigate('/recensioni', { state: { username: profile?.username } })}
+                                className="w-full bg-white rounded-3xl shadow-sm px-4 py-4 flex items-center gap-3 hover:bg-slate-50 transition active:scale-95"
+                            >
+                                <div className="w-9 h-9 bg-yellow-50 rounded-xl flex items-center justify-center">
+                                    <span className="text-yellow-500 text-lg font-black leading-none">★</span>
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <p className="font-black text-slate-800 text-sm">Le mie recensioni</p>
+                                    <p className="text-xs text-slate-400">Visualizza i voti ricevuti</p>
+                                </div>
+                                <ChevronRight size={18} className="text-slate-300" />
+                            </button>
                         </div>
 
                         {/* ── AZIONI ── */}

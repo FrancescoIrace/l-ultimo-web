@@ -222,7 +222,7 @@ export default function TeamsManager({ userId }) {
       className="space-y-4"
     >
       {/* Barra di ricerca */}
-      <div className="sticky top-0 z-10 bg-white pb-4">
+      <div className="sticky top-[58px] z-10 bg-white pb-4">
         <div className="relative">
           <Search
             size={18}

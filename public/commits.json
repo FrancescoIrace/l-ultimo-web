@@ -1,6 +1,11 @@
 [
   {
     "date": "03 giugno 2026",
+    "title": "v3",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "03 giugno 2026",
     "title": "Fix import",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "01 giugno 2026",
     "title": "Fix vari",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "30 maggio 2026",
-    "title": "Fix vari + rimozione dark mode",
     "description": "Modifica all'app"
   }
 ]

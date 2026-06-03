@@ -41,6 +41,7 @@ export default function SfidaGiornaliera() {
                 if (attempt) {
                     setStatus('ALREADY_PLAYED');
                 } else {
+                    console.log("Domande caricate:", allQuestions.length);
                     // Seleziona 3 domande casuali uniche dal pool completo
                     const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
                     setQuizSet(shuffled.slice(0, 3));
@@ -51,7 +52,7 @@ export default function SfidaGiornaliera() {
                 setStatus('ERROR');
             }
         };
-        
+
 
         initGame();
     }, [navigate]);

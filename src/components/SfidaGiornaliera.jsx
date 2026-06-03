@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Lock, CheckCircle2, XCircle, Trophy, Brain, ChevronLeft, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import allQuestions from '../data/questions.json';
+import allQuestions from '../../public/questions.json'; // Assicurati di avere un file JSON con le domande del quiz
 
 export default function SfidaGiornaliera() {
     const navigate = useNavigate();
@@ -13,6 +13,8 @@ export default function SfidaGiornaliera() {
     const [earnedPoints, setEarnedPoints] = useState(0);
     const [timeLeft, setTimeLeft] = useState(30);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [domande, setDomande] = useState([]);
+
 
     // Helper per la data locale (Formato YYYY-MM-DD)
     const getCurrentDate = () => new Date().toISOString().split('T')[0];
@@ -41,9 +43,12 @@ export default function SfidaGiornaliera() {
                 if (attempt) {
                     setStatus('ALREADY_PLAYED');
                 } else {
-                    console.log("Domande caricate:", allQuestions.length);
+                    //fetch domande dal file questions.json in public
+                    const domande = await fetch('/questions.json').then(res => res.json());
+                    setDomande(domande);
+
                     // Seleziona 3 domande casuali uniche dal pool completo
-                    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+                    const shuffled = [...domande].sort(() => 0.5 - Math.random());
                     setQuizSet(shuffled.slice(0, 3));
                     setStatus('PLAYING');
                 }

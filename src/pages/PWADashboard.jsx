@@ -97,20 +97,14 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             Squadre
           </button>
 
-          <div className="relative">
-            <button
-              onClick={() => navigate('/')}
-              disabled
-              className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
-            >
-              <Trophy size={24} />
-              Tornei
-            </button>
-            <span className="absolute top-3 right-0 rotate-20 inline-flex rounded-full bg-rose-500 px-2 py-0.5 text-white text-[8px] font-bold shadow-md">
-              Work In Progress
-            </span>
-          </div>
-
+          <button
+            onClick={() => navigate('/')}
+            disabled
+            className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
+          >
+            <Trophy size={24} />
+            Tornei
+          </button>
         </div>
 
         {/* Centri Associati (Pannello Bottone) */}
@@ -129,6 +123,30 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
               </div>
             </div>
             <ChevronRight size={24} className="text-white/80" />
+          </div>
+        </div>
+
+        {/* Banner Gamification - Sfida Giornaliera */}
+        <div
+          onClick={() => navigate('/sfida')}
+          className="mt-6 bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+        >
+          {/* Sfondo decorativo */}
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+              <Trophy className="text-white drop-shadow-md" size={28} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
+                Quiz del Giorno ⚡️
+              </h3>
+              <p className="text-emerald-50 text-sm font-medium mt-0.5 leading-snug">
+                Sblocca fino a <span className="bg-emerald-600/50 px-1.5 py-0.5 rounded text-white font-bold opacity-100">+ {'60'} pt</span> rispondendo a 3 domande flash!
+              </p>
+            </div>
+            <ChevronRight className="text-white flex-shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" size={24} />
           </div>
         </div>
 
@@ -170,13 +188,17 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           </button>
         </div>
 
-        {/* NEWS */}
-        {/* <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
+      </div>
+
+
+
+      {/* NEWS */}
+      {/* <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
           <InstagramEmbed />
         </div> */}
 
-        {/* Stats */}
-        {/* <div className="grid grid-cols-3 gap-3">
+      {/* Stats */}
+      {/* <div className="grid grid-cols-3 gap-3">
           <div className="bg-blue-50 rounded-2xl p-3 text-center border border-blue-100">
             <p className="text-2xl font-black text-blue-600">5</p>
             <p className="text-xs text-slate-600 mt-1">Partite</p>
@@ -191,8 +213,8 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           </div>
         </div> */}
 
-        {/* Recent Activity */}
-        {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      {/* Recent Activity */}
+      {/* <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <h3 className="font-bold text-slate-800 mb-3">📅 Prossime Partite</h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
@@ -211,7 +233,6 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             </div>
           </div>
         </div> */}
-      </div>
     </div>
   );
 }

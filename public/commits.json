@@ -1,6 +1,11 @@
 [
   {
     "date": "03 giugno 2026",
+    "title": "fix domande?",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "03 giugno 2026",
     "title": "console.log",
     "description": "Modifica all'app"
   },
@@ -42,11 +47,6 @@
   {
     "date": "03 giugno 2026",
     "title": "fix z-index vari",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "01 giugno 2026",
-    "title": "Aggiunte lista centri + Bottone nella dashboard",
     "description": "Modifica all'app"
   }
 ]

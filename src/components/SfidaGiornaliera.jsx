@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader, Lock, CheckCircle2, XCircle, Trophy, Brain, ChevronLeft, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import allQuestions from '../questions.json'; // Assicurati di avere un file JSON con le domande del quiz
 
 export default function SfidaGiornaliera() {
     const navigate = useNavigate();
@@ -13,7 +12,7 @@ export default function SfidaGiornaliera() {
     const [earnedPoints, setEarnedPoints] = useState(0);
     const [timeLeft, setTimeLeft] = useState(30);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [domande] = useState(allQuestions);
+    const [domande] = useState(questions); // Carica le domande dal JSON
 
 
     // Helper per la data locale (Formato YYYY-MM-DD)
@@ -289,4 +288,1108 @@ export default function SfidaGiornaliera() {
         </div>
     );
 }
+
+const questions = [
+    {
+        "id": 1,
+        "question": "Quanto dura un tempo in una partita di calcio a 11 regolamentare?",
+        "options": [
+            "40 minuti",
+            "45 minuti",
+            "50 minuti",
+            "60 minuti"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 2,
+        "question": "Nel basket, quanti punti vale un tiro libero?",
+        "options": [
+            "1 punto",
+            "2 punti",
+            "3 punti",
+            "Nessun punto"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 3,
+        "question": "Chi detiene il record di punti all-time nella NBA?",
+        "options": [
+            "Michael Jordan",
+            "Kobe Bryant",
+            "LeBron James",
+            "Kareem Abdul-Jabbar"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 4,
+        "question": "Quanti giocatori ci sono in una squadra di calcetto (futsal) in campo?",
+        "options": [
+            "5",
+            "6",
+            "7",
+            "8"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 5,
+        "question": "Nel padel, chi serve per primo nel tie-break?",
+        "options": [
+            "Chi ha risposto nel game precedente",
+            "Chi ha servito nel game precedente",
+            "Si sorteggia di nuovo",
+            "Sempre il giocatore di destra"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 6,
+        "question": "Quale pilota di F1 ha vinto 7 mondiali come Michael Schumacher?",
+        "options": [
+            "Sebastian Vettel",
+            "Max Verstappen",
+            "Lewis Hamilton",
+            "Fernando Alonso"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 7,
+        "question": "Quanti set deve vincere un uomo per aggiudicarsi un match in un torneo del Grande Slam?",
+        "options": [
+            "2",
+            "3",
+            "4",
+            "5"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 8,
+        "question": "In quale città si sono svolte le prime Olimpiadi moderne del 1896?",
+        "options": [
+            "Parigi",
+            "Londra",
+            "Roma",
+            "Atene"
+        ],
+        "correctIndex": 3
+    },
+    {
+        "id": 9,
+        "question": "Quale nazionale ha vinto più Mondiali di calcio?",
+        "options": [
+            "Italia",
+            "Germania",
+            "Brasile",
+            "Argentina"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 10,
+        "question": "Come si chiama il punteggio di 0-0 nel tennis?",
+        "options": [
+            "Zero",
+            "Love",
+            "Nil",
+            "Niente"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 11,
+        "question": "Nel calcetto, se il pallone esce lateralmente, come viene effettuata la rimessa?",
+        "options": [
+            "Con le mani",
+            "Con i piedi",
+            "Indifferente",
+            "Con un lancio del portiere"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 12,
+        "question": "Chi è il ciclista con il maior numero di Tour de France vinti (senza squalifiche)?",
+        "options": [
+            "Eddy Merckx",
+            "Marco Pantani",
+            "Lance Armstrong",
+            "Chris Froome"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 13,
+        "question": "In quale sport si usa il termine 'strike'?",
+        "options": [
+            "Baseball",
+            "Tennis",
+            "Pallavolo",
+            "Scherma"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 14,
+        "question": "Qual è la distanza ufficiale di una maratona?",
+        "options": [
+            "21,097 km",
+            "42,195 km",
+            "45,000 km",
+            "38,500 km"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 15,
+        "question": "Quanti tempi si giocano in una partita di basket NBA?",
+        "options": [
+            "2",
+            "3",
+            "4",
+            "1"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 16,
+        "question": "Nel volley, qual è il numero massimo di tocchi per squadra prima di rinviare la palla?",
+        "options": [
+            "2",
+            "3",
+            "4",
+            "1"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 17,
+        "question": "Chi è il pugile soprannominato 'The Greatest'?",
+        "options": [
+            "Mike Tyson",
+            "Rocky Marciano",
+            "Muhammad Ali",
+            "Floyd Mayweather"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 18,
+        "question": "Quale nazione ospiterà i Mondiali di calcio 2026 insieme a USA e Messico?",
+        "options": [
+            "Brasile",
+            "Canada",
+            "Argentina",
+            "Cile"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 19,
+        "question": "Nel golf, come si definisce il completamento di una buca con un colpo sotto il par?",
+        "options": [
+            "Eagle",
+            "Birdie",
+            "Bogey",
+            "Albatross"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 20,
+        "question": "Quanti giocatori compongono una squadra di pallanuoto in acqua?",
+        "options": [
+            "5",
+            "6",
+            "7",
+            "11"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 21,
+        "question": "Chi ha vinto l'oro nei 100 metri piani a Tokyo 2020?",
+        "options": [
+            "Usain Bolt",
+            "Marcell Jacobs",
+            "Fred Kerley",
+            "Andre De Grasse"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 22,
+        "question": "In che anno l'Italia ha vinto il suo quarto mondiale di calcio?",
+        "options": [
+            "1982",
+            "1990",
+            "2006",
+            "2010"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 23,
+        "question": "Quale squadra NBA ha vinto più titoli nella storia?",
+        "options": [
+            "Lakers",
+            "Celtics",
+            "Bulls",
+            "Warriors"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 24,
+        "question": "Nel baseball, quante basi deve toccare un giocatore per fare un punto?",
+        "options": [
+            "3",
+            "4",
+            "5",
+            "2"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 25,
+        "question": "Come viene chiamato il fallo di mano intenzionale fuori area del portiere?",
+        "options": [
+            "Punizione semplice",
+            "Espulsione",
+            "Ammonizione",
+            "Nessun fallo"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 26,
+        "question": "Qual è il colore della maglia del leader della classifica a punti al Giro d'Italia?",
+        "options": [
+            "Rosa",
+            "Gialla",
+            "Ciclamino",
+            "Azzurra"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 27,
+        "question": "Chi detiene il record mondiale dei 100 e 200 metri piani?",
+        "options": [
+            "Carl Lewis",
+            "Tyson Gay",
+            "Usain Bolt",
+            "Yohan Blake"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 28,
+        "question": "Nel tennis, cosa succede dopo il 'Deuce'?",
+        "options": [
+            "Tie-break",
+            "Vittoria del set",
+            "Vantaggio",
+            "Cambio campo"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 29,
+        "question": "In F1, cosa indica la bandiera a scacchi?",
+        "options": [
+            "Incidente",
+            "Ultimo giro",
+            "Fine gara",
+            "Pit stop obbligatorio"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 30,
+        "question": "Quanti arbitri ci sono in campo in una partita di calcio a 11?",
+        "options": [
+            "1",
+            "2",
+            "3",
+            "4"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 31,
+        "question": "Quale tennista ha vinto più volte il Roland Garros?",
+        "options": [
+            "Roger Federer",
+            "Novak Djokovic",
+            "Rafael Nadal",
+            "Bjorn Borg"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 32,
+        "question": "Nel basket, quanti falli di squadra servono in un quarto per far scattare il 'bonus'?",
+        "options": [
+            "4",
+            "5",
+            "6",
+            "3"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 33,
+        "question": "Chi è il pilota di MotoGP con il maggior numero di titoli mondiali in classe regina?",
+        "options": [
+            "Marc Marquez",
+            "Casey Stoner",
+            "Valentino Rossi",
+            "Giacomo Agostini"
+        ],
+        "correctIndex": 3
+    },
+    {
+        "id": 34,
+        "question": "In quale sport si usa il termine 'checkmate' (scacco matto)?",
+        "options": [
+            "Dama",
+            "Scacchi",
+            "Bridge",
+            "Poker"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 35,
+        "question": "Quante corsie ha solitamente una pista di atletica regolamentare?",
+        "options": [
+            "6",
+            "8",
+            "10",
+            "12"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 36,
+        "question": "Quale città ha ospitato le Olimpiadi estive del 2024?",
+        "options": [
+            "Los Angeles",
+            "Parigi",
+            "Brisbane",
+            "Madrid"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 37,
+        "question": "Chi è soprannominato 'La Pulce' nel calcio?",
+        "options": [
+            "Cristiano Ronaldo",
+            "Lionel Messi",
+            "Neymar",
+            "Dybala"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 38,
+        "question": "Nel volley, il 'Libero' può schiacciare?",
+        "options": [
+            "Sì",
+            "Solo dalla seconda linea",
+            "No",
+            "Solo se è il capitano"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 39,
+        "question": "Quale parte del corpo non può toccare la palla nel pallanuoto (tranne il portiere)?",
+        "options": [
+            "La testa",
+            "Due mani contemporaneamente",
+            "Il petto",
+            "I piedi"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 40,
+        "question": "Quanto pesa una palla da bowling professionale (massimo)?",
+        "options": [
+            "5kg",
+            "7.2kg",
+            "10kg",
+            "3kg"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 41,
+        "question": "Chi ha vinto più titoli mondiali costruttori in F1?",
+        "options": [
+            "McLaren",
+            "Ferrari",
+            "Mercedes",
+            "Red Bull"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 42,
+        "question": "In che anno si è ritirato Roger Federer?",
+        "options": [
+            "2020",
+            "2021",
+            "2022",
+            "2023"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 43,
+        "question": "Nel nuoto, qual è lo stile più lento?",
+        "options": [
+            "Dorso",
+            "Farfalla",
+            "Rana",
+            "Stile libero"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 44,
+        "question": "Quanti periodi ci sono in una partita di Hockey su ghiaccio?",
+        "options": [
+            "2",
+            "3",
+            "4",
+            "1"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 45,
+        "question": "Qual è il punteggio massimo ottenibile in una singola serie di freccette (3 dardi)?",
+        "options": [
+            "100",
+            "150",
+            "180",
+            "200"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 46,
+        "question": "Chi è l'allenatore con più Champions League vinte nella storia del calcio?",
+        "options": [
+            "Guardiola",
+            "Ancelotti",
+            "Zidane",
+            "Mourinho"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 47,
+        "question": "Nel calcetto (futsal), quanti falli cumulativi per tempo può fare una squadra prima del tiro libero diretto?",
+        "options": [
+            "3",
+            "4",
+            "5",
+            "6"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 48,
+        "question": "Quale paese ha vinto la prima Coppa del Mondo di calcio nel 1930?",
+        "options": [
+            "Argentina",
+            "Uruguay",
+            "Brasile",
+            "Italia"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 49,
+        "question": "Nel basket, quanti secondi ha una squadra per superare la metà campo?",
+        "options": [
+            "5",
+            "8",
+            "10",
+            "24"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 50,
+        "question": "Cosa significa l'acronimo VAR?",
+        "options": [
+            "Video Assistant Referee",
+            "Visual Aid Record",
+            "Virtual Assistant Referee",
+            "Video Auto Review"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 51,
+        "question": "Quante sono le stelle sulla bandiera olimpica?",
+        "options": [
+            "3",
+            "4",
+            "5",
+            "6"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 52,
+        "question": "In quale sport si gareggia per la 'America's Cup'?",
+        "options": [
+            "Polo",
+            "Vela",
+            "Equitazione",
+            "Golf"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 53,
+        "question": "Chi ha vinto il Pallone d'Oro nel 2023?",
+        "options": [
+            "Haaland",
+            "Mbappé",
+            "Messi",
+            "Benzema"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 54,
+        "question": "Nel tennis, su quale superficie si gioca Wimbledon?",
+        "options": [
+            "Terra battuta",
+            "Cemento",
+            "Erba",
+            "Sintetico"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 55,
+        "question": "Quanti minuti dura un 'round' nel pugilato professionistico maschile?",
+        "options": [
+            "2",
+            "3",
+            "5",
+            "10"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 56,
+        "question": "In quale città giocano i Lakers?",
+        "options": [
+            "Chicago",
+            "New York",
+            "Los Angeles",
+            "Miami"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 57,
+        "question": "Quale atleta detiene il record di medaglie d'oro olimpiche?",
+        "options": [
+            "Usain Bolt",
+            "Michael Phelps",
+            "Carl Lewis",
+            "Larisa Latynina"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 58,
+        "question": "Nel padel, se la palla tocca la griglia dopo il rimbalzo a terra è valida?",
+        "options": [
+            "Sì",
+            "No",
+            "Solo nel servizio",
+            "Dipende dall'arbitro"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 59,
+        "question": "Chi è il miglior marcatore della storia della Nazionale Italiana di calcio?",
+        "options": [
+            "Riva",
+            "Meazza",
+            "Piola",
+            "Del Piero"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 60,
+        "question": "Nel calcetto, il portiere può raccogliere con le mani un passaggio volontario di piedi di un compagno?",
+        "options": [
+            "Sì",
+            "No",
+            "Solo fuori area",
+            "Solo se colpito di ginocchio"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 61,
+        "question": "Quanti sono i giocatori di una squadra di pallavolo in campo?",
+        "options": [
+            "5",
+            "6",
+            "7",
+            "4"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 62,
+        "question": "Come si chiama il trofeo vinto dai vincitori della NBA?",
+        "options": [
+            "Larry O'Brien Trophy",
+            "Vince Lombardi Trophy",
+            "Stanley Cup",
+            "World Series Trophy"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 63,
+        "question": "Nel ciclismo, chi indossa la 'Maglia Bianca' al Tour de France?",
+        "options": [
+            "Il leader della montagna",
+            "Il miglior giovane",
+            "Il leader della classifica a punti",
+            "L'ultimo in classifica"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 64,
+        "question": "Quale nazionale ha vinto l'Europeo di calcio nel 2021?",
+        "options": [
+            "Inghilterra",
+            "Francia",
+            "Spagna",
+            "Italia"
+        ],
+        "correctIndex": 3
+    },
+    {
+        "id": 65,
+        "question": "Nel basket, che cosa si intende per 'infrazione di passi'?",
+        "options": [
+            "Camminare senza palleggiare",
+            "Correre troppo velocemente",
+            "Palleggiare con due mani",
+            "Saltare a canestro"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 66,
+        "question": "Quanto è alta la rete da tennis al centro?",
+        "options": [
+            "0.914 m",
+            "1.00 m",
+            "1.10 m",
+            "0.85 m"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 67,
+        "question": "Qual è il tempo massimo per tirare nel basket NBA/FIBA?",
+        "options": [
+            "20 secondi",
+            "24 secondi",
+            "30 secondi",
+            "35 secondi"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 68,
+        "question": "Chi è lo 'Special One' del calcio?",
+        "options": [
+            "Pep Guardiola",
+            "Jurgen Klopp",
+            "José Mourinho",
+            "Carlo Ancelotti"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 69,
+        "question": "Nel calcio, quanti cartellini gialli nello stesso match determinano l'espulsione?",
+        "options": [
+            "1",
+            "2",
+            "3",
+            "Nessuno"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 70,
+        "question": "In quale città si trova il circuito di Interlagos?",
+        "options": [
+            "Città del Messico",
+            "San Paolo",
+            "Barcellona",
+            "Monaco"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 71,
+        "question": "Nel salto in alto, come si chiama la tecnica più usata oggi?",
+        "options": [
+            "Ventrale",
+            "Fosbury",
+            "A forbice",
+            "Tuffo"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 72,
+        "question": "Chi ha vinto il mondiale di F1 nel 2021 in un finale controverso?",
+        "options": [
+            "Hamilton",
+            "Verstappen",
+            "Perez",
+            "Bottas"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 73,
+        "question": "Nel calcio, a che distanza si trova il dischetto del rigore dalla porta?",
+        "options": [
+            "9 metri",
+            "11 metri",
+            "12 metri",
+            "10 metri"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 74,
+        "question": "Qual è il limite di falli personali per un giocatore in una partita NBA?",
+        "options": [
+            "4",
+            "5",
+            "6",
+            "7"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 75,
+        "question": "Nel calcetto, quanto dura un tempo di gioco regolamentare?",
+        "options": [
+            "20 minuti",
+            "25 minuti",
+            "30 minuti",
+            "45 minuti"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 76,
+        "question": "Quale tennista italiana ha vinto il Roland Garros 2010?",
+        "options": [
+            "Pennetta",
+            "Schiavone",
+            "Errani",
+            "Vinci"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 77,
+        "question": "Quanti punti vale un canestro realizzato da oltre la linea dei 6.75m nel basket FIBA?",
+        "options": [
+            "2",
+            "3",
+            "4",
+            "1"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 78,
+        "question": "Nel calcio, come viene sanzionato un retropassaggio di piede controllato con le mani dal portiere nella propria area?",
+        "options": [
+            "Calcio di rigore",
+            "Calcio di punizione indiretto",
+            "Espulsione",
+            "Calcio di rinvio"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 79,
+        "question": "Chi è il detentore del record di presenze in Serie A?",
+        "options": [
+            "Del Piero",
+            "Buffon",
+            "Maldini",
+            "Totti"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 80,
+        "question": "Quanti sono i cerchi sulla bandiera olimpica?",
+        "options": [
+            "4",
+            "5",
+            "6",
+            "7"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 81,
+        "question": "Quale squadra di calcio gioca le partite in casa all'Old Trafford?",
+        "options": [
+            "Liverpool",
+            "Manchester City",
+            "Manchester United",
+            "Arsenal"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 82,
+        "question": "In che anno è morto Ayrton Senna?",
+        "options": [
+            "1992",
+            "1993",
+            "1994",
+            "1995"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 83,
+        "question": "Nel curling, come si chiama l'oggetto lanciato sul ghiaccio?",
+        "options": [
+            "Disco",
+            "Sasso",
+            "Palla",
+            "Stone"
+        ],
+        "correctIndex": 3
+    },
+    {
+        "id": 84,
+        "question": "Quale nazione ha inventato il calcio moderno?",
+        "options": [
+            "Brasile",
+            "Italia",
+            "Inghilterra",
+            "Francia"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 85,
+        "question": "Nel tennis, cos'è un 'Ace'?",
+        "options": [
+            "Un fallo",
+            "Un servizio vincente senza tocco dell'avversario",
+            "Un colpo a rete",
+            "Il cambio campo"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 86,
+        "question": "Nel basket, quale infrazione si commette interrompendo il palleggio e riprendendolo subito dopo?",
+        "options": [
+            "Passi",
+            "Doppio palleggio",
+            "Sfondamento",
+            "Infrazione di campo"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 87,
+        "question": "In quale sport si usa il termine 'ippon'?",
+        "options": [
+            "Karate",
+            "Judo",
+            "Sumo",
+            "Scherma"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 88,
+        "question": "Quale città italiana ospiterà le Olimpiadi invernali 2026?",
+        "options": [
+            "Torino",
+            "Milano-Cortina",
+            "Roma",
+            "Napoli"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 89,
+        "question": "Cosa significa NBA?",
+        "options": [
+            "National Basketball Association",
+            "National Basket Alliance",
+            "North Basketball Association",
+            "National Basket Academy"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 90,
+        "question": "Nel calcetto a 5 regolamentare, il tempo di gioco è effettivo (cronometro stoppato a palla ferma)?",
+        "options": [
+            "Sì",
+            "No",
+            "Solo negli ultimi due minuti",
+            "Solo se lo decide l'arbitro"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 91,
+        "question": "Nel calcio, chi ha vinto la prima storica edizione della UEFA Conference League?",
+        "options": [
+            "Feyenoord",
+            "Roma",
+            "West Ham",
+            "Fiorentina"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 92,
+        "question": "In che anno si sono tenute le Olimpiadi di Roma?",
+        "options": [
+            "1956",
+            "1960",
+            "1964",
+            "1968"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 93,
+        "question": "Nel basket, qual è l'altezza ufficiale del canestro da terra?",
+        "options": [
+            "2.90 metri",
+            "3.00 metri",
+            "3.05 metri",
+            "3.15 metri"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 94,
+        "question": "Chi è il tennista con più titoli del Grande Slam vinti (uomini)?",
+        "options": [
+            "Nadal",
+            "Federer",
+            "Djokovic",
+            "Sampras"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 95,
+        "question": "In F1, qual è il punteggio assegnato al primo classificato?",
+        "options": [
+            "10",
+            "15",
+            "20",
+            "25"
+        ],
+        "correctIndex": 3
+    },
+    {
+        "id": 96,
+        "question": "Quale squadra di basket ha il record di vittorie in una stagione regolare NBA (73-9)?",
+        "options": [
+            "Bulls",
+            "Lakers",
+            "Warriors",
+            "Celtics"
+        ],
+        "correctIndex": 2
+    },
+    {
+        "id": 97,
+        "question": "Nel volley, si può toccare la rete con il corpo durante il gioco?",
+        "options": [
+            "Sì",
+            "No",
+            "Solo se non intenzionale",
+            "Solo il Libero"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 98,
+        "question": "Nel calcio, quanti minuti durano complessivamente i due tempi supplementari?",
+        "options": [
+            "20 minuti",
+            "30 minuti",
+            "40 minuti",
+            "15 minuti"
+        ],
+        "correctIndex": 1
+    },
+    {
+        "id": 99,
+        "question": "Nel basket, quanti secondi può rimanere al massimo un giocatore attaccante nell'area dei tre secondi avversaria?",
+        "options": [
+            "3",
+            "5",
+            "8",
+            "24"
+        ],
+        "correctIndex": 0
+    },
+    {
+        "id": 100,
+        "question": "Nel calcetto, da dove si calcia il tiro libero diretto concesso per il superamento del limite dei falli?",
+        "options": [
+            "Dal dischetto del rigore",
+            "Da una linea posta a 10 metri dalla porta",
+            "Dalla metà campo",
+            "Da dove è stato commesso il fallo"
+        ],
+        "correctIndex": 1
+    }
+]
+
 

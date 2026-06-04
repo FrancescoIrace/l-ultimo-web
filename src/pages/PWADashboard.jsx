@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight,ClipboardClock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -8,7 +9,10 @@ import { InstagramEmbed } from './PagesUtils/utils';
 
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications }) {
   const navigate = useNavigate();
+  const [status, setStatus] = useState('LOADING'); // LOADING, ALREADY_PLAYED, PLAYING, RESULTS, ERROR
   const { showAlert } = useContext(AlertContext);
+  const getCurrentDate = () => new Date().toISOString().split('T')[0];
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -28,6 +32,36 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
       showAlert('❌ Errore: ' + error.message, 'error');
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const todayDateStr = getCurrentDate();
+
+        // 1. Check record su daily_game_attempts
+        const { data: attempt, error: attemptError } = await supabase
+          .from('daily_game_attempts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('played_at', todayDateStr)
+          .maybeSingle();
+
+        if (attemptError) throw attemptError;
+
+        if (attempt) {
+          setStatus('ALREADY_PLAYED');
+          // console.log('Utente ha già giocato oggi');
+        } else {
+          setStatus('PLAYING');
+          // console.log('Utente non ha giocato oggi, pronto per giocare');
+        }
+      } catch (err) {
+        console.error('Errore durante il caricamento del quiz:', err);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -127,28 +161,58 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         </div>
 
         {/* Banner Gamification - Sfida Giornaliera */}
-        <div
-          onClick={() => navigate('/sfida')}
-          className="mt-6 bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
-        >
-          {/* Sfondo decorativo */}
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+        {status === 'LOADING' ? (
+          <>
+            <div
+              onClick={() => navigate('/sfida')}
+              className="mt-6 bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+            >
+              {/* Sfondo decorativo */}
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
 
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
-              <Trophy className="text-white drop-shadow-md" size={28} />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+                  <ClipboardClock className="text-white drop-shadow-md" size={28} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
+                    Quiz del Giorno ⚡️
+                  </h3>
+                  <p className="text-emerald-50 text-sm font-medium mt-0.5 leading-snug">
+                    Sblocca fino a <span className="bg-emerald-600/50 px-1.5 py-0.5 rounded text-white font-bold opacity-100">+ {'60'} pt</span> rispondendo a 3 domande flash!
+                  </p>
+                </div>
+                <ChevronRight className="text-white flex-shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" size={24} />
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
-                Quiz del Giorno ⚡️
-              </h3>
-              <p className="text-emerald-50 text-sm font-medium mt-0.5 leading-snug">
-                Sblocca fino a <span className="bg-emerald-600/50 px-1.5 py-0.5 rounded text-white font-bold opacity-100">+ {'60'} pt</span> rispondendo a 3 domande flash!
-              </p>
+          </>
+        ) : (
+          <>
+            <div
+              onClick={() => navigate('/leaderboard')}
+              className="mt-6 bg-gradient-to-r from-red-600 to-yellow-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+            >
+              {/* Sfondo decorativo */}
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+                  <Trophy className="text-white drop-shadow-md" size={28} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
+                    Visualizza la Classifica
+                  </h3>
+                  <p className="text-emerald-50 text-sm font-medium mt-0.5 leading-snug">
+                    Hai già giocato oggi! Dai un'occhiata alla classifica e riprova domani!
+                  </p>
+                </div>
+                <ChevronRight className="text-white flex-shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" size={24} />
+              </div>
             </div>
-            <ChevronRight className="text-white flex-shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" size={24} />
-          </div>
-        </div>
+          </>
+        )}
+
 
         {/* Banner esempio 1 */}
         <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">

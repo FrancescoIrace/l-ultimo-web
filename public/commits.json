@@ -1,5 +1,20 @@
 [
   {
+    "date": "04 giugno 2026",
+    "title": "Fix domande sfida giornaliera",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "03 giugno 2026",
+    "title": "json inserito come costante",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "03 giugno 2026",
+    "title": "mannac a miserij",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "03 giugno 2026",
     "title": "fix domande?",
     "description": "Modifica all'app"
@@ -32,21 +47,6 @@
   {
     "date": "03 giugno 2026",
     "title": "aggiunta classifica",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "Add mini gioco",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "fix lista centri",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "fix z-index vari",
     "description": "Modifica all'app"
   }
 ]

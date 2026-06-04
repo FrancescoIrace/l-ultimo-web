@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight,ClipboardClock } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -144,7 +144,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         {/* Centri Associati (Pannello Bottone) */}
         <div
           onClick={() => navigate('/centri')}
-          className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-teal-100 mt-4 text-white cursor-pointer hover:shadow-xl transition-all active:scale-95"
+          className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 shadow-lg border border-teal-100 mt-4 text-white cursor-pointer hover:shadow-xl transition-all active:scale-95"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -165,7 +165,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           <>
             <div
               onClick={() => navigate('/sfida')}
-              className="mt-6 bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+              className="mt-4 bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
             >
               {/* Sfondo decorativo */}
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
@@ -190,7 +190,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           <>
             <div
               onClick={() => navigate('/leaderboard')}
-              className="mt-6 bg-gradient-to-r from-red-600 to-yellow-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+              className="mt-4 bg-gradient-to-r from-red-600 to-yellow-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
             >
               {/* Sfondo decorativo */}
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
@@ -213,9 +213,51 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           </>
         )}
 
+        {/* Banner Richiesta Sponsorizzazione */}
+        <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
+          <div className="flex items-start gap-4">
+            {/* <div className="flex-none rounded-3xl bg-white/10 p-3">
+              <span className="text-xs uppercase tracking-[0.1em] font-bold text-white/80">Banner Pubblicitario</span>
+            </div> */}
+            <div className="min-w-0">
+              <p className="font-bold text-sm">In cerca di Pubblicità?</p>
+              <p className="text-xs text-white/80 mt-1">Contattaci per sponsorizzare la tua attività e raggiungere nuovi utenti!</p>
+            </div>
+          </div>
+          <a
+            href={`https://wa.me/${String(3285816683).startsWith('39') ? String(3285816683) : '39' + String(3285816683)}?text=Ciao%20L%27ultimo,%20siamo%20interessati%20a%20sponsorizzare%20la%20nostra%20attivit%C3%A0.`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center justify-center rounded-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
+          >
+            <MessageCircle size={20} className="md:w-6 md:h-6" /> Invia un Messaggio
+          </a>
+        </div>
+
+        {/* Banner Feedback */}
+        <div className="bg-fuchsia-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
+          <div className="flex items-start gap-4">
+            {/* <div className="flex-none rounded-3xl bg-white/10 p-3">
+              <span className="text-xs uppercase tracking-[0.1em] font-bold text-white/80">Feedback</span>
+            </div> */}
+            <div className="min-w-0">
+              <p className="font-bold text-sm">Hai dei suggerimenti?</p>
+              <p className="text-xs text-white/80 mt-1">Facci sapere cosa ne pensi della nostra app e come possiamo migliorare!</p>
+            </div>
+          </div>
+          <a
+            href={`https://wa.me/${String(3285816683).startsWith('39') ? String(3285816683) : '39' + String(3285816683)}?text=Ciao%20L%27ultimo,%20abbiamo%20dei%20suggerimenti%20per%20la%20tua%20app.`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center justify-center rounded-full sm:w-auto bg-[#25D366] text-white gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
+          >
+            <MessageCircle size={20} className="md:w-6 md:h-6" /> Invia un Messaggio
+          </a>
+        </div>
+
 
         {/* Banner esempio 1 */}
-        <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
+        {/* <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
           <div className="flex items-start gap-4">
             <div className="flex-none rounded-3xl bg-white/10 p-3">
               <span className="text-xs uppercase tracking-[0.2em] font-bold text-white/80">Sponsorizzato</span>
@@ -231,10 +273,10 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           >
             Scopri l'offerta
           </button>
-        </div>
+        </div> */}
 
         {/* Banner esempio 2 */}
-        <div className="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-3xl p-4 shadow-lg border border-yellow-100 mt-4 text-white">
+        {/* <div className="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-3xl p-4 shadow-lg border border-yellow-100 mt-4 text-white">
           <div className="flex items-start gap-4">
             <div className="flex-none rounded-3xl bg-white/10 p-3">
               <span className="text-xs uppercase tracking-[0.2em] font-bold text-white/80">Sponsorizzato</span>
@@ -250,7 +292,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           >
             Apri in Maps
           </button>
-        </div>
+        </div> */}
 
       </div>
 

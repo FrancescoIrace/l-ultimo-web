@@ -37,7 +37,7 @@ export default function Profile({ session }) {
         updated_at: '',
         avatar_url: null,
         favorite_sport: '',
-        cellulare: '',
+        cellulare: null,
         role: '',
         business_address: '',
         lat: null,
@@ -159,24 +159,40 @@ export default function Profile({ session }) {
         e.preventDefault();
         setLoading(true);
 
+        // Validazione cellulare: rimuoviamo spazi e controlliamo se è un numero
+        const cleanCellulare = editData.cellulare ? String(editData.cellulare).trim() : '';
+        if (cleanCellulare && isNaN(cleanCellulare)) {
+            showAlertError("Il cellulare deve essere un numero!");
+            setLoading(false);
+            return;
+        }
+
+        // Validazione ZIP code se presente
+        const cleanZipCode = editData.zip_code ? String(editData.zip_code).trim() : '';
+        if (cleanZipCode && isNaN(cleanZipCode)) {
+            showAlertError("Il CAP deve essere un numero!");
+            setLoading(false);
+            return;
+        }
+
         const { error } = await supabase
             .from('profiles')
             .update({
                 username: editData.username,
                 full_name: editData.full_name,
                 province: editData.province,
-                zip_code: editData.zip_code,
+                zip_code: cleanZipCode || null,
                 gender: editData.gender,
                 location: editData.location,
-                location_lat: editData.location_lat,
-                location_lng: editData.location_lng,
+                location_lat: editData.location_lat ? parseFloat(editData.location_lat) : null,
+                location_lng: editData.location_lng ? parseFloat(editData.location_lng) : null,
                 updated_at: new Date(),
                 avatar_url: editData.avatar_url,
                 favorite_sport: editData.favorite_sport,
-                cellulare: editData.cellulare,
+                cellulare: cleanCellulare || null,
                 business_address: editData.business_address,
-                lat: editData.lat,
-                lng: editData.lng
+                lat: editData.lat ? parseFloat(editData.lat) : null,
+                lng: editData.lng ? parseFloat(editData.lng) : null
             })
             .eq('id', session.user.id);
 
@@ -850,7 +866,7 @@ export default function Profile({ session }) {
                                     <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Cellulare</label>
                                     <input
                                         className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                        value={editData.cellulare ?? ''}
+                                        value={editData.cellulare ?? 0}
                                         onChange={(e) => setEditData({ ...editData, cellulare: e.target.value })}
                                     />
                                 </div>

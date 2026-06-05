@@ -35,7 +35,8 @@ export default function GestisciCampi({ centerId }) {
             name: newCourt.name,
             sport_type: newCourt.sport_type,
             price_p_p: newCourt.price_p_p ? parseFloat(newCourt.price_p_p) : null,
-            isOutdoor: newCourt.isOutdoor
+            isOutdoor: newCourt.isOutdoor,
+            hasCamera: newCourt.hasCamera || false,
         };
 
         const createPayload = {
@@ -50,7 +51,7 @@ export default function GestisciCampi({ centerId }) {
                 .eq('id', editingCourtId);
 
             if (!err) {
-                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
+                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
                 setEditingCourtId(null);
                 setOpenAdd(false);
                 fetchCourts();
@@ -64,7 +65,7 @@ export default function GestisciCampi({ centerId }) {
                 .insert([createPayload]);
 
             if (!err) {
-                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
+                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
                 setOpenAdd(false);
                 fetchCourts();
                 success('Campo creato!');
@@ -98,6 +99,7 @@ export default function GestisciCampi({ centerId }) {
     }
 
     const isOutdoorValue = (court) => court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true;
+    const hasCameraValue = (court) => court.hasCamera ?? court.has_camera ?? false;
 
     const courtForm = (
         <div className="space-y-3">
@@ -128,26 +130,24 @@ export default function GestisciCampi({ centerId }) {
                     onChange={e => setNewCourt({ ...newCourt, price_p_p: e.target.value })}
                 />
             </div>
-            <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700 w-1/2">
+            <div className="flex gap-3">
+                <label className="flex flex-1 items-center justify-between gap-2 cursor-pointer font-bold text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
+                    <span className="flex items-center gap-2">⛅ All'aperto</span>
                     <input
-                        type="radio"
-                        name="courtFormIsOutdoor"
+                        type="checkbox"
                         checked={newCourt.isOutdoor === true}
-                        onChange={() => setNewCourt({ ...newCourt, isOutdoor: true })}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        onChange={(e) => setNewCourt({ ...newCourt, isOutdoor: e.target.checked })}
+                        className="w-5 h-5 accent-blue-600 rounded-lg cursor-pointer"
                     />
-                    ⛅ All'aperto
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer font-bold text-sm text-slate-700 w-1/2">
+                <label className="flex flex-1 items-center justify-between gap-2 cursor-pointer font-bold text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
+                    <span className="flex items-center gap-2">📷 Camera</span>
                     <input
-                        type="radio"
-                        name="courtFormIsOutdoor"
-                        checked={newCourt.isOutdoor === false}
-                        onChange={() => setNewCourt({ ...newCourt, isOutdoor: false })}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                        type="checkbox"
+                        checked={newCourt.hasCamera === true}
+                        onChange={(e) => setNewCourt({ ...newCourt, hasCamera: e.target.checked })}
+                        className="w-5 h-5 accent-blue-600 rounded-lg cursor-pointer"
                     />
-                    🏟️ Coperto
                 </label>
             </div>
             <button
@@ -160,7 +160,7 @@ export default function GestisciCampi({ centerId }) {
                 <button
                     onClick={() => {
                         setEditingCourtId(null);
-                        setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
+                        setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
                         setOpenAdd(false);
                     }}
                     className="w-full text-slate-500 font-bold p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-sm"
@@ -186,11 +186,11 @@ export default function GestisciCampi({ centerId }) {
                         if (openAdd) {
                             setOpenAdd(false);
                             setEditingCourtId(null);
-                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
+                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
                         } else {
                             setOpenAdd(true);
                             setEditingCourtId(null);
-                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
+                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
                         }
                     }}
                     className={`lg:hidden ${openAdd ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white p-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all`}
@@ -245,6 +245,7 @@ export default function GestisciCampi({ centerId }) {
                             {courts.map(court => {
                                 const style = GetSportStyle(court.sport_type);
                                 const outdoor = isOutdoorValue(court);
+                                const hasCamera = hasCameraValue(court);
                                 const isEditing = editingCourtId === court.id;
                                 return (
                                     <div
@@ -276,6 +277,9 @@ export default function GestisciCampi({ centerId }) {
                                                             {court.price_p_p}€/p
                                                         </span>
                                                     )}
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide ${hasCamera ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                        {hasCamera ? "📷 Con Telecamera" : "🏟️ Senza Telecamera"}
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -288,7 +292,8 @@ export default function GestisciCampi({ centerId }) {
                                                             name: court.name,
                                                             sport_type: court.sport_type,
                                                             price_p_p: court.price_p_p || '',
-                                                            isOutdoor: isOutdoorValue(court)
+                                                            isOutdoor: isOutdoorValue(court),
+                                                            hasCamera: hasCameraValue(court)
                                                         });
                                                         setOpenAdd(true);
                                                         window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -351,6 +351,9 @@ export default function PublicProfile() {
                                                 <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
                                                     {court.indoor ? 'Indoor' : 'Outdoor'}
                                                 </span>
+                                                <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                                                    {court.hasCamera ? '📷 Con Telecamera' : '🏟️ Senza Telecamera'}
+                                                </span>
                                             </div>
                                         </div>
                                         {court.price_p_p && (

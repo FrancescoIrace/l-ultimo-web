@@ -1,5 +1,10 @@
 [
   {
+    "date": "05 giugno 2026",
+    "title": "fix se utente ha giocato o no",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "04 giugno 2026",
     "title": "Inserimento nuovi banner",
     "description": "Modifica all'app"
@@ -42,11 +47,6 @@
   {
     "date": "03 giugno 2026",
     "title": "Fix import",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "fix caricamento domande",
     "description": "Modifica all'app"
   }
 ]

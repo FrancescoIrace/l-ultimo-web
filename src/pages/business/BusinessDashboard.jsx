@@ -82,7 +82,8 @@ export default function BusinessDashboard({ user, name }) {
                 name,
                 center_id,
                 price_p_p,
-                isOutdoor
+                isOutdoor,
+                hasCamera
             )
         `)
             .eq('sports_courts.center_id', user.id)
@@ -444,7 +445,7 @@ export default function BusinessDashboard({ user, name }) {
         async function loadCampi() {
             const { data, error } = await supabase
                 .from('sports_courts')
-                .select('id, name, sport_type, price_p_p, isOutdoor')
+                .select('id, name, sport_type, price_p_p, isOutdoor,hasCamera')
                 .eq('center_id', user.id);
             if (!error) {
                 setCampi(data);
@@ -755,7 +756,7 @@ export default function BusinessDashboard({ user, name }) {
                                         value={reason}
                                         checked={rejectionReason === reason}
                                         onChange={(e) => setRejectionReason(e.target.value)}
-                                        className="w-4 h-4 text-red-600 focus:ring-red-500"
+                                        className="w-4 h-4 accent-red-600 focus:ring-red-500"
                                     />
                                     <span className="text-sm font-bold text-slate-700 ">{reason}</span>
                                 </label>
@@ -1059,6 +1060,9 @@ export default function BusinessDashboard({ user, name }) {
                                                 </span>
                                                 <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border ${(court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true) ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
                                                     {court.isOutdoor ? "All'aperto" : "Coperto"}
+                                                </span>
+                                                <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border ${(court.hasCamera ?? court.has_camera ?? court.hascamera ?? false) ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
+                                                    {court.hasCamera ? "📷 Con Telecamera" : "🏟️ Senza Telecamera"}
                                                 </span>
                                                 {court.price_p_p != null && (
                                                     <span className="bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border border-blue-400">

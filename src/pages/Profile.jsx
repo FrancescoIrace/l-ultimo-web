@@ -306,9 +306,10 @@ export default function Profile({ session }) {
                                 <button
                                     onClick={() => navigate(-1)}
                                     type="button"
-                                    className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                                    className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
                                 >
-                                    TORNA INDIETRO
+                                    <ChevronRight size={14} className="rotate-180" />
+                                    Indietro
                                 </button>
                                 <h1 className="text-2xl font-black mb-4">Dashboard Centro Sportivo</h1>
                                 <p className="text-slate-600 mb-6">Ciao {profile.username}, questa è la tua dashboard dedicata alla gestione del centro sportivo. Qui potrai creare e gestire le partite, visualizzare le prenotazioni e interagire con i tuoi clienti.</p>

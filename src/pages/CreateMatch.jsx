@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
-import { Info } from 'lucide-react';
+import { Info, ChevronRight } from 'lucide-react';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -66,13 +66,13 @@ export default function CreateMatch() {
         setSelectedCenter(centerId);
         if (!centerId) {
             setAvailableCourts([]);
+            setFormData(prev => ({ ...prev, court_id: null })); // Resetta il campo se togli il centro
             return;
         }
 
         const center = centers.find(c => c.id === centerId);
 
         if (center && center.business_address) {
-            // Aggiorniamo la posizione nel form automaticamente
             setFormData(prev => ({
                 ...prev,
                 location: center.business_address,
@@ -102,6 +102,32 @@ export default function CreateMatch() {
     const containsLinks = (text) => {
         const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/gi;
         return urlRegex.test(text);
+    };
+
+    const roundToHalfHour = (dateTimeString) => {
+        if (!dateTimeString) return '';
+
+        // Il formato nativo è YYYY-MM-DDTHH:MM
+        const [date, time] = dateTimeString.split('T');
+        if (!time) return dateTimeString;
+
+        let [hours, minutes] = time.split(':');
+        let mins = parseInt(minutes, 10);
+
+        // Arrotonda al blocco di 30 minuti più vicino (00 o 30)
+        if (mins < 15) {
+            mins = 0;
+        } else if (mins >= 15 && mins < 45) {
+            mins = 30;
+        } else {
+            mins = 0;
+            // Se va a 60, aumentiamo l'ora di 1
+            let hrs = parseInt(hours, 10) + 1;
+            hours = hrs < 10 ? `0${hrs}` : `${hrs}`;
+        }
+
+        const finalMinutes = mins === 0 ? '00' : '30';
+        return `${date}T${hours}:${finalMinutes}`;
     };
 
     // Carica l'ID utente e conta le partite attive
@@ -223,8 +249,8 @@ export default function CreateMatch() {
 
                 if (!isValid) {
                     if (isClosed) {
-                        const targetCenterObj = typeof selectedCenter === 'object' 
-                            ? selectedCenter 
+                        const targetCenterObj = typeof selectedCenter === 'object'
+                            ? selectedCenter
                             : centers.find(c => c.id === targetCenterId);
                         const nomeCampo = targetCenterObj ? (targetCenterObj.full_name || targetCenterObj.username) : "Il centro";
                         error(`impossibile creare partita, ${nomeCampo} chiuso in questo giorno`);
@@ -356,7 +382,8 @@ export default function CreateMatch() {
                 location_lng: formData.location_lng,
                 datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
                 description: formData.description,
-                team_id: formData.team_id || null, // Aggiunto team_id per l'update
+                team_id: formData.team_id || null,
+                court_id: formData.court_id || null, 
             })
             .eq('id', id)
             .select()
@@ -376,123 +403,112 @@ export default function CreateMatch() {
     // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
         return (
-            <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
+            <div className="max-w-md mx-auto p-6 bg-slate-50/50 min-h-screen antialiased">
                 <button
                     onClick={() => navigate('/match/' + id)}
                     type="button"
-                    className="w-60 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                    className="mb-6 flex items-center gap-1.5 text-xs font-bold uppercase text-red-500 hover:text-red-700 transition"
                 >
-                    TORNA ALLA PAGINA DEL MATCH
+                    <ChevronRight size={14} className="rotate-180" />
+                    Torna alla pagina del match
                 </button>
-                <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase">Modifica Match</h2>
+                <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase tracking-tight">Modifica Match</h2>
 
                 <form onSubmit={handleUpdate} className="space-y-5">
                     {/* SPORT */}
                     <div>
-                        <label className="block text-sm font-bold text-slate-500 uppercase mb-2">Sport</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sport</label>
                         <select
                             disabled
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
+                            className="w-full p-3.5 bg-slate-100 border border-slate-200 rounded-xl outline-none cursor-not-allowed opacity-60 font-medium text-slate-700"
                             value={formData.sport}
-                            onChange={handleSportChange}  // ← NUOVO
+                            onChange={handleSportChange}
                         >
-                            <option value="Calcetto" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcetto</option>
-                            <option value="Calcio a 7" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 7</option>
-                            <option value="Calcio a 11" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 11</option>
-                            <option value="Padel" className="bg-white text-slate-800 py-1 font-medium">🎾 Padel</option>
-                            <option value="Basket (allenamento)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (allenamento)</option>
-                            <option value="Basket (3vs3)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (3vs3)</option>
-                            <option value="Basket (5vs5)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (5vs5)</option>
-                            <option value="Tennis singolo" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis singolo</option>
-                            <option value="Tennis doppio" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis doppio</option>
-                            <option value="Volley" className="bg-white text-slate-800 py-1 font-medium">🏐 Volley</option>
-                            <option value="Personalizzato" className="bg-white text-slate-800 py-1 font-medium">⚙️ Personalizzato</option>
+                            <option value="Calcetto">⚽ Calcetto</option>
+                            <option value="Calcio a 7">⚽ Calcio a 7</option>
+                            <option value="Calcio a 11">⚽ Calcio a 11</option>
+                            <option value="Padel">🎾 Padel</option>
+                            <option value="Basket (allenamento)">🏀 Basket (allenamento)</option>
+                            <option value="Basket (3vs3)">🏀 Basket (3vs3)</option>
+                            <option value="Basket (5vs5)">🏀 Basket (5vs5)</option>
+                            <option value="Tennis singolo">🎾 Tennis singolo</option>
+                            <option value="Tennis doppio">🎾 Tennis doppio</option>
+                            <option value="Volley">🏐 Volley</option>
+                            <option value="Personalizzato">⚙️ Personalizzato</option>
                         </select>
                     </div>
 
-                    {/* VISIBILIT� MATCH */}
+                    {/* VISIBILITÀ MATCH */}
                     <div>
-                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Visibilit� Match</label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Visibilità Match</label>
                         <div className="flex gap-2">
-                            <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
-                                <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} disabled />
-                                ?? Pubblico
-                            </label>
-                            <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id !== null ? 'bg-blue-50 border-blue-200 text-blue-700 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 font-semibold hover:bg-slate-100'}`}>
-                                <input type="radio" className="hidden" name="visibility" checked={formData.team_id !== null} onChange={() => setFormData({ ...formData, team_id: myTeams.length > 0 ? myTeams[0].id : '' })} disabled />
-                                ??? Squadra
-                            </label>
-                        </div>
-                        
-                        {formData.team_id !== null && (
-                            <div className="mt-3">
-                                <select
-                                    disabled
-                                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
-                                    value={formData.team_id || ''}
-                                    onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
-                                >
-                                    <option value="" disabled>Seleziona una squadra...</option>
-                                    {myTeams.length > 0 ? myTeams.map(team => (
-                                        <option key={team.id} value={team.id}>{team.name}</option>
-                                    )) : (
-                                        /* In case it has a team_id but it's not in myTeams (maybe was fetched from matchData) we could just show the id or fetch it, but usually this is enough */
-                                        <option value={formData.team_id}>Squadra selezionata</option>
-                                    )}
-                                </select>
+                            <div className={`flex-1 p-3.5 border rounded-xl text-center font-bold text-sm opacity-60 cursor-not-allowed transition-all ${formData.team_id === null ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/10' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                🌐 Pubblico
                             </div>
-                        )}
+                            <div className={`flex-1 p-3.5 border rounded-xl text-center font-bold text-sm opacity-60 cursor-not-allowed transition-all ${formData.team_id !== null ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/10' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                🛡️ Squadra
+                            </div>
+                        </div>
                     </div>
 
                     {/* TITOLO */}
                     <div>
-                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            Titolo <span className="text-slate-400 text-[10px] lowercase italic normal-case">(max 32 caratteri)</span>
+                        </label>
                         <input
                             type="text"
                             maxLength={32}
-                            
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         />
                     </div>
 
                     {/* DATA E GIOCATORI */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Quando</label>
-                            <input
-                                type="datetime-local"
-                                lang="it-IT"
-                                required
-                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                                value={formData.datetime || ''} // Ora è già in formato locale YYYY-MM-DDTHH:MM
-                                onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Giocatori Totali</label>
-                            <input
-                                type="number"
-                                required
-                                disabled={formData.sport !== 'Personalizzato'}
-                                min="2"
-                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed opacity-50"
-                                value={formData.max_players}
-                                onChange={(e) => setFormData({ ...formData, max_players: parseInt(e.target.value) })}
-                            />
-                        </div>
+                    {/* QUANDO (Data e Ora) */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quando</label>
+                        <input
+                            type="datetime-local"
+                            lang="it-IT"
+                            step="1800" // Mostra intervalli di 30 minuti sulla ghiera nativa
+                            required
+                            className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
+                            value={formData.datetime || ''}
+                            onChange={(e) => {
+                                const roundedValue = roundToHalfHour(e.target.value);
+                                setFormData({ ...formData, datetime: roundedValue });
+                            }}
+                        />
                     </div>
 
-                    {/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
-                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
-                        <div className="flex items-center justify-between mb-2">
-                            <label className="block text-sm font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
-                            <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded"> Work in Progress</span>
+                    {/* GIOCATORI TOTALI */}
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giocatori Totali</label>
+                        <input
+                            type="number"
+                            required
+                            disabled={formData.sport !== 'Personalizzato'}
+                            min="2"
+                            className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800 disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                            value={formData.max_players}
+                            onChange={(e) => setFormData({ ...formData, max_players: parseInt(e.target.value) })}
+                        />
+                    </div>
+
+                    {/* SELEZIONE CENTRO AFFILIATO - WIP ELEGANTE */}
+                    {/* SELEZIONE CENTRO AFFILIATO */}
+                    <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                Centro affiliato <span className="lowercase italic normal-case font-normal text-slate-400">(opzionale)</span>
+                            </label>
                         </div>
                         <select
-                            // disabled
-                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3"
+                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
+                            // Estrae l'ID se selectedCenter è un oggetto (caricato da DB) o usa direttamente la stringa
+                            value={selectedCenter ? (typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter) : ""}
                             onChange={(e) => {
                                 const centerId = e.target.value;
                                 handleCenterChange(centerId);
@@ -504,8 +520,8 @@ export default function CreateMatch() {
 
                         {availableCourts.length > 0 && (
                             <select
-                                // disabled
-                                className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none"
+                                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
+                                value={formData.court_id || ""}
                                 onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'draft' })}
                             >
                                 <option value="">Scegli il campo...</option>
@@ -523,27 +539,29 @@ export default function CreateMatch() {
                     />
 
                     <div>
-                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                            Descrizione <span className="text-slate-400 text-[10px] lowercase italic normal-case">(max 300 caratteri)</span>
+                        </label>
                         <textarea
-                            
                             maxLength={300}
-                            className={`w-full h-50 resize-none p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 ${containsLinks(formData.description) ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 focus:ring-blue-500'
+                            className={`w-full h-32 resize-none p-3.5 bg-white border rounded-xl outline-none shadow-sm transition-all font-medium text-slate-800 focus:ring-1 ${containsLinks(formData.description)
+                                ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                                : 'border-gray-100 focus:border-blue-500 focus:ring-blue-500'
                                 }`}
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />
                         {containsLinks(formData.description) && (
-                            <p className="mt-2 text-xs text-red-600 font-bold">❌ Non sono consentiti link nella descrizione</p>
+                            <p className="mt-1.5 text-xs text-red-600 font-bold flex items-center gap-1">❌ Link non consentiti nella descrizione</p>
                         )}
                     </div>
 
                     <button
                         disabled={loading}
-                        className="w-full mt-4 cursor-pointer bg-yellow-50 text-yellow-600 border border-yellow-600 py-4 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-yellow-200 transition-all active:scale-95 disabled:opacity-50"
+                        className="w-full mt-2 cursor-pointer bg-amber-500 text-white py-4 rounded-2xl font-bold shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all active:scale-[0.99] disabled:opacity-50"
                     >
-                        {loading ? 'Creazione in corso...' : 'SALVA MODIFICHE'}
+                        {loading ? 'Salvataggio...' : 'SALVA MODIFICHE'}
                     </button>
-
                 </form>
             </div>
         );
@@ -551,88 +569,95 @@ export default function CreateMatch() {
 
     // SE NON C'È UN ID, MOSTRIAMO IL FORM DI CREAZIONE NORMALE
     return (
-        <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
+        <div className="max-w-md mx-auto p-6 bg-slate-50/50 min-h-screen antialiased">
             <button
                 onClick={() => navigate(-1)}
                 type="button"
-                className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+                className="mb-6 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
             >
-                TORNA INDIETRO
+                <ChevronRight size={14} className="rotate-180" />
+                Indietro
             </button>
-            <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase">Organizza Match</h2>
+            <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase tracking-tight">Organizza Match</h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Info partite attive */}
-                <div className={`border rounded-xl p-3 text-xs font-semibold ${activeMatchCount >= 5 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                {/* BADGE PARTITE ATTIVE - PREMIUM CARD STYLE */}
+                <div className={`border rounded-2xl p-4 shadow-sm bg-white transition-all duration-300 ${activeMatchCount >= 5 ? 'border-red-100' : 'border-gray-100'}`}>
                     <div className="flex items-center justify-between">
-                        <p>
-                            Partite attive: <span className="font-black">{activeMatchCount}</span>/5
+                        <p className={`text-xs font-bold uppercase tracking-wider ${activeMatchCount >= 5 ? 'text-red-500' : 'text-slate-400'}`}>
+                            Partite attive nello slot
                         </p>
-                        <div className="relative cursor-help">
+                        <div className="relative">
                             <button
                                 type="button"
                                 onClick={() => setTooltipActive(!tooltipActive)}
-                                className="p-1 hover:opacity-70 transition-opacity"
+                                className={`p-1 rounded-full transition ${activeMatchCount >= 5 ? 'text-red-500 hover:bg-red-50' : 'text-blue-500 hover:bg-blue-50'}`}
                             >
-                                <Info size={16} className="inline" />
+                                <Info size={16} />
                             </button>
                             {tooltipActive && (
-                                <div className="absolute bottom-full right-0 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 animate-fade-in">
+                                <div className="absolute bottom-full right-0 mb-2 bg-slate-900 text-white text-[11px] font-medium rounded-xl px-3 py-1.5 whitespace-nowrap z-10 shadow-xl animate-fade-in">
                                     Puoi avere max 5 partite attive contemporaneamente
                                 </div>
                             )}
                         </div>
                     </div>
+                    <div className="flex items-baseline gap-1 mt-1">
+                        <span className={`text-3xl font-black ${activeMatchCount >= 5 ? 'text-red-600' : 'text-blue-600'}`}>{activeMatchCount}</span>
+                        <span className="text-slate-400 font-bold text-sm">/ 5 disponibili</span>
+                    </div>
                     {activeMatchCount >= 5 && (
-                        <p className="mt-1">❌ Hai raggiunto il limite. Aspetta che una partita finisca.</p>
+                        <p className="mt-2 text-xs text-red-600 font-bold bg-red-50/50 p-2 rounded-lg border border-red-100">
+                            ❌ Hai raggiunto il limite. Aspetta che una partita finisca.
+                        </p>
                     )}
                 </div>
 
                 {/* SPORT */}
                 <div>
-                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Sport</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sport</label>
                     <select
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
                         value={formData.sport}
                         onChange={handleSportChange}
                     >
-                        <option value="Calcetto" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcetto</option>
-                        <option value="Calcio a 7" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 7</option>
-                        <option value="Calcio a 11" className="bg-white text-slate-800 py-1 font-medium">⚽ Calcio a 11</option>
-                        <option value="Padel" className="bg-white text-slate-800 py-1 font-medium">🎾 Padel</option>
-                        <option value="Basket (allenamento)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (allenamento)</option>
-                        <option value="Basket (3vs3)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (3vs3)</option>
-                        <option value="Basket (5vs5)" className="bg-white text-slate-800 py-1 font-medium">🏀 Basket (5vs5)</option>
-                        <option value="Tennis singolo" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis singolo</option>
-                        <option value="Tennis doppio" className="bg-white text-slate-800 py-1 font-medium">🎾 Tennis doppio</option>
-                        <option value="Volley" className="bg-white text-slate-800 py-1 font-medium">🏐 Volley</option>
-                        <option value="Personalizzato" className="bg-white text-slate-800 py-1 font-medium">⚙️ Personalizzato</option>
+                        <option value="Calcetto">⚽ Calcetto</option>
+                        <option value="Calcio a 7">⚽ Calcio a 7</option>
+                        <option value="Calcio a 11">⚽ Calcio a 11</option>
+                        <option value="Padel">🎾 Padel</option>
+                        <option value="Basket (allenamento)">🏀 Basket (allenamento)</option>
+                        <option value="Basket (3vs3)">🏀 Basket (3vs3)</option>
+                        <option value="Basket (5vs5)">🏀 Basket (5vs5)</option>
+                        <option value="Tennis singolo">🎾 Tennis singolo</option>
+                        <option value="Tennis doppio">🎾 Tennis doppio</option>
+                        <option value="Volley">🏐 Volley</option>
+                        <option value="Personalizzato">⚙️ Personalizzato</option>
                     </select>
                 </div>
 
-                {/* VISIBILIT� MATCH */}
+                {/* VISIBILITÀ MATCH - SELETTORI PREMIUM */}
                 <div>
-                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Visibilità Match</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Visibilità Match</label>
                     <div className="flex gap-2">
-                        <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id === null ? 'bg-blue-50 border-blue-300 text-blue-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 font-semibold hover:bg-slate-100'}`}>
+                        <label className={`flex-1 p-3.5 border rounded-xl text-center cursor-pointer font-bold text-sm transition-all duration-200 ${formData.team_id === null ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20 active:scale-[0.98]' : 'bg-white border-gray-100 text-slate-500 hover:bg-slate-50'}`}>
                             <input type="radio" className="hidden" name="visibility" checked={formData.team_id === null} onChange={() => setFormData({ ...formData, team_id: null })} />
                             🌐 Pubblico
                         </label>
-                        <label className={`flex-1 p-3 border rounded-xl text-center cursor-pointer transition-all ${formData.team_id !== null ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-bold shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500 font-semibold hover:bg-slate-100'}`}>
+                        <label className={`flex-1 p-3.5 border rounded-xl text-center cursor-pointer font-bold text-sm transition-all duration-200 ${formData.team_id !== null ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-500/20 active:scale-[0.98]' : 'bg-white border-gray-100 text-slate-500 hover:bg-slate-50'}`}>
                             <input type="radio" className="hidden" name="visibility" checked={formData.team_id !== null} onChange={() => setFormData({ ...formData, team_id: myTeams.length > 0 ? myTeams[0].id : '' })} />
                             🛡️ Squadra
                         </label>
                     </div>
-                    
+
                     {formData.team_id !== null && (
-                        <motion.div 
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-3"
+                        <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-2"
                         >
                             {myTeams.length > 0 ? (
                                 <select
-                                    className="w-full p-3 bg-white border border-indigo-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-indigo-900"
+                                    className="w-full p-3.5 bg-white border border-indigo-100 rounded-xl outline-none shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-medium text-indigo-900"
                                     value={formData.team_id || ''}
                                     onChange={(e) => setFormData({ ...formData, team_id: e.target.value })}
                                 >
@@ -642,9 +667,9 @@ export default function CreateMatch() {
                                     ))}
                                 </select>
                             ) : (
-                                <div className="p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm">
-                                    <p className="font-semibold">Nessuna squadra trovata.</p>
-                                    <p className="text-xs mt-1">Devi unirti o creare una squadra per organizzare match privati per il team.</p>
+                                <div className="p-3 bg-amber-50 border border-amber-100 text-amber-700 rounded-xl text-xs font-medium">
+                                    <p className="font-bold">Nessuna squadra trovata.</p>
+                                    <p className="text-slate-500 mt-0.5 font-normal">Crea o unisciti a un team per organizzare match privati.</p>
                                 </div>
                             )}
                         </motion.div>
@@ -653,54 +678,69 @@ export default function CreateMatch() {
 
                 {/* TITOLO */}
                 <div>
-                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Titolo <span className="text-slate-400 text-[10px] align-middle italic">(max 32 caratteri)</span></label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                        Titolo <span className="text-slate-400 text-[10px] lowercase italic normal-case">(max 32 caratteri)</span>
+                    </label>
                     <input
                         type="text"
                         maxLength={32}
-                        
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     />
                 </div>
 
                 {/* DATA E GIOCATORI */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Quando</label>
-                        <input
-                            type="datetime-local"
-                            lang="it-IT"
-                            //la data passata non è selezionabile
-                            min={new Date().toISOString().slice(0, 16)}
-                            required
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                            onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        {/* Il numero di giocatori cambia in base allo sport (principalmente), quindi sull'onchange della select dello sport */}
-                        <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Giocatori Totali</label>
-                        <input
-                            type="number"
-                            required
-                            disabled={formData.sport !== 'Personalizzato'}
-                            min="2"
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
-                            value={formData.max_players}
-                            onChange={(e) => setFormData({ ...formData, max_players: parseInt(e.target.value) })}
-                        />
-                    </div>
+                {/* QUANDO (Data e Ora) */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quando</label>
+                    <input
+                        type="datetime-local"
+                        lang="it-IT"
+                        // Arrotonda il valore minimo all'inizio dell'ora corrente per non sballare lo step dei 30 minuti
+                        min={(() => {
+                            const now = new Date();
+                            now.setMinutes(0, 0, 0); // Imposta i minuti a :00
+                            // Converte in ISO string mantenendo il fuso orario locale corretto per l'input nativo
+                            const offset = now.getTimezoneOffset() * 60000;
+                            return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+                        })()}
+                        step="1800" // Intervalli perfetti di 30 minuti
+                        required
+                        className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
+                        value={formData.datetime || ''}
+                        onChange={(e) => {
+                            const roundedValue = roundToHalfHour(e.target.value);
+                            setFormData({ ...formData, datetime: roundedValue });
+                        }}
+                    />
                 </div>
 
-                {/* SELEZIONE CENTRO AFFILIATO - DISABILITATO */}
-                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-300 opacity-60">
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-bold text-amber-700 uppercase">Prenota in un centro affiliato (Opzionale)</label>
-                        <span className="inline-block bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded"> Work in Progress</span>
+                {/* GIOCATORI TOTALI */}
+                <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Giocatori Totali</label>
+                    <input
+                        type="number"
+                        required
+                        disabled={formData.sport !== 'Personalizzato'}
+                        min="2"
+                        className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800 disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                        value={formData.max_players}
+                        onChange={(e) => setFormData({ ...formData, max_players: parseInt(e.target.value) })}
+                    />
+                </div>
+
+                {/* SELEZIONE CENTRO AFFILIATO - WIP ELEGANTE */}
+                {/* SELEZIONE CENTRO AFFILIATO */}
+                <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-3">
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Centro affiliato <span className="lowercase italic normal-case font-normal text-slate-400">(opzionale)</span>
+                        </label>
                     </div>
                     <select
-                        // disabled
-                        className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none mb-3"
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
+                        // Estrae l'ID se selectedCenter è un oggetto (caricato da DB) o usa direttamente la stringa
+                        value={selectedCenter ? (typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter) : ""}
                         onChange={(e) => {
                             const centerId = e.target.value;
                             handleCenterChange(centerId);
@@ -712,8 +752,8 @@ export default function CreateMatch() {
 
                     {availableCourts.length > 0 && (
                         <select
-                            // disabled
-                            className="w-full p-3 bg-slate-100 border border-amber-200 rounded-xl outline-none"
+                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
+                            value={formData.court_id || ""}
                             onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'draft' })}
                         >
                             <option value="">Scegli il campo...</option>
@@ -731,27 +771,28 @@ export default function CreateMatch() {
                 />
 
                 <div>
-                    <label className="block text-sm font-bold text-slate-500 uppercase mb-1.5">Descrizione <i className="text-slate-400 text-[10px]">(max 300 caratteri)</i></label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                        Descrizione <span className="text-slate-400 text-[10px] lowercase italic normal-case">(max 300 caratteri)</span>
+                    </label>
                     <textarea
-                        
                         maxLength={300}
-                        className={`w-full h-50 resize-none p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 ${containsLinks(formData.description) ? 'border-red-400 focus:ring-red-400' : 'border-slate-200 focus:ring-blue-500'
+                        className={`w-full h-32 resize-none p-3.5 bg-white border rounded-xl outline-none shadow-sm transition-all font-medium text-slate-800 focus:ring-1 ${containsLinks(formData.description)
+                            ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
+                            : 'border-gray-100 focus:border-blue-500 focus:ring-blue-500'
                             }`}
-                        value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                     {containsLinks(formData.description) && (
-                        <p className="mt-2 text-xs text-red-600 font-bold">❌ Non sono consentiti link nella descrizione</p>
+                        <p className="mt-1.5 text-xs text-red-600 font-bold flex items-center gap-1">❌ Link non consentiti nella descrizione</p>
                     )}
                 </div>
 
                 <button
                     disabled={loading || activeMatchCount >= 5}
-                    className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full cursor-pointer bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Creazione in corso...' : 'PUBBLICA PARTITA'}
                 </button>
-
             </form>
         </div>
     );

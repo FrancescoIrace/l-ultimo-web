@@ -62,10 +62,10 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
 
         if (attempt) {
           setStatus('ALREADY_PLAYED');
-          console.log('Utente ha già giocato oggi');
+          // console.log('Utente ha già giocato oggi');
         } else {
           setStatus('PLAYING');
-          console.log('Utente non ha giocato oggi, pronto per giocare');
+          // console.log('Utente non ha giocato oggi, pronto per giocare');
         }
       } catch (err) {
         console.error('Errore durante il caricamento del quiz:', err);

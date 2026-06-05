@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle,Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   const navigate = useNavigate();
   const [status, setStatus] = useState('LOADING'); // LOADING, ALREADY_PLAYED, PLAYING, RESULTS, ERROR
   const { showAlert } = useContext(AlertContext);
+  const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
 
 
@@ -18,6 +19,17 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
     await supabase.auth.signOut();
     onLogout?.();
     navigate('/');
+  };
+
+  const handleTorneiClick = () => {
+    if (isTorneiNotReady) return; // Evita click ripetuti se è già attivo
+
+    setIsTorneiNotReady(true);
+
+    // Dopo 1 secondo (1000 millisecondi) torna come prima
+    setTimeout(() => {
+      setIsTorneiNotReady(false);
+    }, 1000);
   };
 
   const handleActivateNotifications = async () => {
@@ -57,6 +69,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         }
       } catch (err) {
         console.error('Errore durante il caricamento del quiz:', err);
+        setStatus('ERROR');
       }
     };
 
@@ -90,74 +103,94 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3 mt-6 relative">
+        <div className="grid grid-cols-2 gap-4 p-4">
           <button
             onClick={() => navigate('/organizza')}
-            className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
+            className="flex flex-col items-center justify-center h-28 bg-blue-600 rounded-2xl shadow-md active:scale-95 transition-transform cursor-pointer"
           >
-            <Zap size={24} />
-            Organizza Match
+            <Zap size={24} className="text-white w-6 h-6" />
+            <span className="text-sm font-bold text-white mt-2">Organizza Match</span>
           </button>
 
           <button
             onClick={() => navigate('/partite')}
-            className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
+            className="flex flex-col items-center justify-center h-28 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-95 transition-transform cursor-pointer"
           >
-            <MapPin size={24} />
-            Trova Partite
+            <MapPin size={24} className="text-blue-600 w-6 h-6" />
+            <span className="text-slate-800 font-semibold text-sm mt-2">Trova Partite</span>
           </button>
 
           <button
             onClick={() => navigate('/profile')}
-            className="bg-gradient-to-br from-green-500 to-green-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
+            className="flex flex-col items-center justify-center h-28 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-95 transition-transform cursor-pointer"
           >
-            <User size={24} />
-            Il Mio Profilo
+            <User size={24} className="text-blue-600 w-6 h-6" />
+            <span className="text-slate-800 font-semibold text-sm mt-2">Il Mio Profilo</span>
           </button>
 
           <button
             onClick={() => navigate('/trova-amici')}
-            className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95"
+            className="flex flex-col items-center justify-center h-28 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-95 transition-transform cursor-pointer"
           >
-            <UserPlus size={24} />
-            Trova amici
+            <UserPlus size={24} className="text-blue-600 w-6 h-6" />
+            <span className="text-slate-800 font-semibold text-sm mt-2">Trova amici</span>
           </button>
 
           <button
             onClick={() => navigate('/squadre')}
-            className="bg-gradient-to-br from-yellow-300 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
+            className="flex flex-col items-center justify-center h-28 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-95 transition-transform cursor-pointer"
           >
-            <Puzzle size={24} />
-            Squadre
+            <Puzzle size={24} className="text-blue-600 w-6 h-6" />
+            <span className="text-slate-800 font-semibold text-sm mt-2">Squadre</span>
           </button>
 
           <button
-            onClick={() => navigate('/')}
-            disabled
-            className="bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 hover:shadow-lg transition-all active:scale-95 w-full"
+            onClick={handleTorneiClick}
+            className={`flex flex-col items-center justify-center h-28 rounded-2xl border transition-all duration-300 cursor-pointer active:scale-95 ${isTorneiNotReady
+              ? "bg-slate-100 border-slate-200 shadow-none text-slate-400"
+              : "bg-white border-gray-100 shadow-sm"
+              }`}
           >
-            <Trophy size={24} />
-            Tornei
+            {/* Se è cliccato nascondiamo l'icona e mostriamo solo il testo centrato */}
+            {!isTorneiNotReady ? (
+              <>
+                <Trophy className="text-blue-600 w-6 h-6" />
+                <span className="text-slate-800 font-semibold text-sm mt-2 transition-all">
+                  Tornei
+                </span>
+              </>
+            ) : (
+              <>
+                <Loader className="text-blue-600 w-6 h-6" />
+                <span className="text-slate-800 font-semibold text-sm mt-2 transition-all">
+                  Prossimamente
+                </span>
+              </>
+            )}
           </button>
         </div>
 
         {/* Centri Associati (Pannello Bottone) */}
         <div
           onClick={() => navigate('/centri')}
-          className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl p-5 shadow-lg border border-teal-100 mt-4 text-white cursor-pointer hover:shadow-xl transition-all active:scale-95"
+          className="group flex items-center justify-between p-4 mx-4 my-2 bg-white border border-gray-100 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/20 rounded-2xl">
-                <Building2 size={24} className="text-white" />
-              </div>
-              <div>
-                <h3 className="font-black text-sm uppercase tracking-wide">Centri Associati</h3>
-                <p className="text-xs text-white/80 mt-1">Scopri i nostri partner ufficiali</p>
-              </div>
+          {/* Blocco di sinistra: Icona + Testi */}
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-100 transition-colors duration-200">
+              <Building2 size={24} />
             </div>
-            <ChevronRight size={24} className="text-white/80" />
+            <div>
+              <h3 className="text-slate-900 font-bold text-base">Centri Associati</h3>
+              <p className="text-slate-500 text-xs mt-0.5">Scopri i nostri partner ufficiali</p>
+            </div>
           </div>
+
+          {/* Freccia a destra: spinta fuori grazie al justify-between del padre */}
+          <ChevronRight
+            size={22}
+            className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
+          />
         </div>
 
         {/* Banner Gamification - Sfida Giornaliera */}
@@ -165,24 +198,32 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           <>
             <div
               onClick={() => navigate('/sfida')}
-              className="mt-4 bg-gradient-to-r from-emerald-600 to-lime-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+              className="group relative overflow-hidden flex items-center justify-between p-5 mx-4 my-2 bg-gradient-to-r from-violet-600 to-indigo-700 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
             >
-              {/* Sfondo decorativo */}
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+              {/* Sfondo decorativo di luce sfocata */}
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500 pointer-events-none"></div>
 
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
-                  <ClipboardClock className="text-white drop-shadow-md" size={28} />
+              <div className="flex items-center gap-4 relative z-10 w-full">
+                {/* Contenitore Icona Orologio/Quiz */}
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+                  <ClipboardClock className="text-amber-400 drop-shadow-md" size={24} />
                 </div>
+
+                {/* Testi e Badge Punti */}
                 <div className="flex-1">
                   <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
                     Quiz del Giorno ⚡️
                   </h3>
-                  <p className="text-emerald-50 text-sm font-medium mt-0.5 leading-snug">
-                    Sblocca fino a <span className="bg-emerald-600/50 px-1.5 py-0.5 rounded text-white font-bold opacity-100">+ {'60'} pt</span> rispondendo a 3 domande flash!
+                  <p className="text-indigo-100/90 text-xs font-medium mt-1 leading-snug">
+                    Sblocca fino a <span className="bg-white/20 px-1.5 py-0.5 rounded text-amber-300 font-bold border border-white/10">+60 pt</span> rispondendo a 3 domande flash!
                   </p>
                 </div>
-                <ChevronRight className="text-white flex-shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" size={24} />
+
+                {/* Freccetta d'azione */}
+                <ChevronRight
+                  className="text-white flex-shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+                  size={22}
+                />
               </div>
             </div>
           </>
@@ -190,70 +231,84 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           <>
             <div
               onClick={() => navigate('/leaderboard')}
-              className="mt-4 bg-gradient-to-r from-red-600 to-yellow-600 rounded-2xl p-5 shadow-lg shadow-emerald-200 cursor-pointer hover:shadow-xl active:scale-95 transition-all overflow-hidden relative group"
+              className="group relative overflow-hidden flex items-center justify-between p-5 mx-4 my-2 bg-gradient-to-r from-violet-600 to-indigo-700 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
             >
-              {/* Sfondo decorativo */}
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
+              {/* Sfondo decorativo di luce sfocata */}
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500 pointer-events-none"></div>
 
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
-                  <Trophy className="text-white drop-shadow-md" size={28} />
+              <div className="flex items-center gap-4 relative z-10 w-full">
+                {/* Contenitore Icona Coppa */}
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+                  <Trophy className="text-amber-400" size={24} />
                 </div>
+
+                {/* Testi */}
                 <div className="flex-1">
-                  <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
+                  <h3 className="text-white font-black text-lg leading-tight">
                     Visualizza la Classifica
                   </h3>
-                  <p className="text-emerald-50 text-sm font-medium mt-0.5 leading-snug">
+                  <p className="text-indigo-100/90 text-xs font-medium mt-1 leading-snug">
                     Hai già giocato oggi! Dai un'occhiata alla classifica e riprova domani!
                   </p>
                 </div>
-                <ChevronRight className="text-white flex-shrink-0 opacity-80 group-hover:translate-x-1 transition-transform" size={24} />
+
+                {/* Freccetta d'azione */}
+                <ChevronRight
+                  className="text-white flex-shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+                  size={22}
+                />
               </div>
             </div>
           </>
         )}
 
         {/* Banner Richiesta Sponsorizzazione */}
-        <div className="bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
-          <div className="flex items-start gap-4">
-            {/* <div className="flex-none rounded-3xl bg-white/10 p-3">
-              <span className="text-xs uppercase tracking-[0.1em] font-bold text-white/80">Banner Pubblicitario</span>
-            </div> */}
-            <div className="min-w-0">
-              <p className="font-bold text-sm">In cerca di Pubblicità?</p>
-              <p className="text-xs text-white/80 mt-1">Contattaci per sponsorizzare la tua attività e raggiungere nuovi utenti!</p>
+        <a
+          href={`https://wa.me/393285816683?text=Ciao%20L%27ultimo,%20siamo%20interessati%20a%20sponsorizzare%20la%20nostra%20attivit%C3%A0.`}
+          target="_blank"
+          rel="noreferrer"
+          className="group relative flex items-center justify-between p-5 mx-4 my-2 bg-gradient-to-r from-sky-400 to-blue-500 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200"
+        >
+          <div className="flex items-center gap-4 max-w-[85%]">
+            <div className="flex flex-col">
+              <p className="text-white font-bold text-base">In cerca di Pubblicità?</p>
+              <p className="text-sky-50 text-xs mt-1 leading-relaxed">
+                Contattaci per sponsorizzare la tua attività e raggiungere nuovi utenti!
+              </p>
             </div>
           </div>
-          <a
-            href={`https://wa.me/${String(3285816683).startsWith('39') ? String(3285816683) : '39' + String(3285816683)}?text=Ciao%20L%27ultimo,%20siamo%20interessati%20a%20sponsorizzare%20la%20nostra%20attivit%C3%A0.`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex items-center justify-center rounded-full sm:w-auto bg-[#25D366] text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
-          >
-            <MessageCircle size={20} className="md:w-6 md:h-6" /> Invia un Messaggio
-          </a>
-        </div>
+
+          <ChevronRight
+            className="text-white flex-shrink-0 opacity-75 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+            size={22}
+          />
+        </a>
 
         {/* Banner Feedback */}
-        <div className="bg-fuchsia-500 rounded-3xl p-4 shadow-lg border border-cyan-100 mt-4 text-white">
-          <div className="flex items-start gap-4">
-            {/* <div className="flex-none rounded-3xl bg-white/10 p-3">
-              <span className="text-xs uppercase tracking-[0.1em] font-bold text-white/80">Feedback</span>
-            </div> */}
-            <div className="min-w-0">
-              <p className="font-bold text-sm">Hai dei suggerimenti?</p>
-              <p className="text-xs text-white/80 mt-1">Facci sapere cosa ne pensi della nostra app e come possiamo migliorare!</p>
+        <a
+          href={`https://wa.me/393285816683?text=Ciao%20L%27ultimo,%20abbiamo%20dei%20suggerimenti%20per%20la%20tua%20app.`}
+          target="_blank"
+          rel="noreferrer"
+          className="group flex items-center justify-between p-5 mx-4 my-2 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200"
+        >
+          <div className="flex items-center gap-4 max-w-[85%]">
+            {/* Icona WhatsApp / Messaggio per dare un tocco di colore nativo */}
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-100 transition-colors duration-200 flex-shrink-0">
+              <MessageCircle size={22} />
+            </div>
+            <div className="flex flex-col">
+              <p className="text-slate-900 font-bold text-sm">Hai dei suggerimenti?</p>
+              <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">
+                Facci sapere cosa ne pensi della nostra app e come possiamo migliorare!
+              </p>
             </div>
           </div>
-          <a
-            href={`https://wa.me/${String(3285816683).startsWith('39') ? String(3285816683) : '39' + String(3285816683)}?text=Ciao%20L%27ultimo,%20abbiamo%20dei%20suggerimenti%20per%20la%20tua%20app.`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex items-center justify-center rounded-full sm:w-auto bg-[#25D366] text-white gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg shadow-[#25D366]/30 active:scale-95 transition-all text-sm md:text-base hover:bg-[#20bd5a]"
-          >
-            <MessageCircle size={20} className="md:w-6 md:h-6" /> Invia un Messaggio
-          </a>
-        </div>
+
+          <ChevronRight
+            className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
+            size={22}
+          />
+        </a>
 
 
         {/* Banner esempio 1 */}
@@ -339,6 +394,6 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             </div>
           </div>
         </div> */}
-    </div>
+    </div >
   );
 }

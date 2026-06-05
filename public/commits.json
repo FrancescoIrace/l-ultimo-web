@@ -1,6 +1,11 @@
 [
   {
     "date": "04 giugno 2026",
+    "title": "Inserimento nuovi banner",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "04 giugno 2026",
     "title": "fix vari + nuova icona",
     "description": "Modifica all'app"
   },
@@ -43,10 +48,5 @@
     "date": "03 giugno 2026",
     "title": "fix caricamento domande",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "Merge pull request #14 from FrancescoIrace/feature/minigame",
-    "description": "Feature/minigame"
   }
 ]

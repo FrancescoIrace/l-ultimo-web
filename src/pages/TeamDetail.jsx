@@ -648,7 +648,8 @@ export default function TeamDetail({ session }) {
                                         { name: 'Basket', icon: '🏀' },
                                         { name: 'Volley', icon: '🏐' },
                                         { name: 'Tennis', icon: '🎾' },
-                                        { name: 'Palestra', icon: '💪' }
+                                        { name: 'Palestra', icon: '💪' },
+                                        { name: 'Corsa', icon: '🏃‍♂️' },
                                     ].map(({ name: sport, icon }) => {
                                         const isSelected = editFormData.sport.includes(sport);
                                         const isDisabled = editFormData.sport.length >= 5 && !isSelected;

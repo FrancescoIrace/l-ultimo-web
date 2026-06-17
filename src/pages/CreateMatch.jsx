@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
-import { Info, ChevronRight } from 'lucide-react';
+import { Info, ChevronRight, Loader } from 'lucide-react';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -53,6 +53,8 @@ export default function CreateMatch() {
         'Tennis singolo': 2,
         'Tennis doppio': 4,
         'Volley': 12,
+        'Corsa': formData.max_players,
+        'Palestra': formData.max_players,
         'Personalizzato': formData.max_players
     };
 
@@ -171,6 +173,8 @@ export default function CreateMatch() {
     useEffect(() => {
         if (id) { // id preso da useParams
             const fetchMatchData = async () => {
+                setLoading(true);
+
                 // Recuperiamo il match includendo i dati del campo e del profilo del centro
                 const { data: matchData } = await supabase
                     .from('matches')
@@ -214,6 +218,8 @@ export default function CreateMatch() {
                         setAvailableCourts(courts || []);
                     }
                 }
+                setLoading(false);
+
             };
             fetchMatchData();
         }
@@ -383,7 +389,7 @@ export default function CreateMatch() {
                 datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
                 description: formData.description,
                 team_id: formData.team_id || null,
-                court_id: formData.court_id || null, 
+                court_id: formData.court_id || null,
             })
             .eq('id', id)
             .select()
@@ -399,6 +405,9 @@ export default function CreateMatch() {
         navigate('/match/' + id);
         setLoading(false);
     };
+
+    if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+
 
     // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
@@ -434,6 +443,8 @@ export default function CreateMatch() {
                             <option value="Tennis singolo">🎾 Tennis singolo</option>
                             <option value="Tennis doppio">🎾 Tennis doppio</option>
                             <option value="Volley">🏐 Volley</option>
+                            <option value="Corsa">🏃 Corsa</option>
+                            <option value="Palestra">🏋️ Palestra</option>
                             <option value="Personalizzato">⚙️ Personalizzato</option>
                         </select>
                     </div>
@@ -489,7 +500,7 @@ export default function CreateMatch() {
                         <input
                             type="number"
                             required
-                            disabled={formData.sport !== 'Personalizzato'}
+                            disabled={formData.sport !== 'Personalizzato' && formData.sport !== 'Corsa' && formData.sport !== 'Palestra'}
                             min="2"
                             className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800 disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
                             value={formData.max_players}
@@ -631,6 +642,8 @@ export default function CreateMatch() {
                         <option value="Tennis singolo">🎾 Tennis singolo</option>
                         <option value="Tennis doppio">🎾 Tennis doppio</option>
                         <option value="Volley">🏐 Volley</option>
+                        <option value="Corsa">🏃 Corsa</option>
+                        <option value="Palestra">🏋️ Palestra</option>
                         <option value="Personalizzato">⚙️ Personalizzato</option>
                     </select>
                 </div>
@@ -721,7 +734,7 @@ export default function CreateMatch() {
                     <input
                         type="number"
                         required
-                        disabled={formData.sport !== 'Personalizzato'}
+                        disabled={formData.sport !== 'Personalizzato' && formData.sport !== 'Corsa' && formData.sport !== 'Palestra'}
                         min="2"
                         className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800 disabled:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed"
                         value={formData.max_players}

@@ -671,7 +671,8 @@ export default function TeamsPage({ session }) {
                             { name: 'Basket', icon: '🏀' },
                             { name: 'Volley', icon: '🏐' },
                             { name: 'Tennis', icon: '🎾' },
-                            { name: 'Palestra', icon: '💪' }
+                            { name: 'Palestra', icon: '💪' },
+                            { name: 'Corsa', icon: '🏃‍♂️' }
                         ].map(({ name: sport, icon }) => {
                             const isSelected = formData.sport.includes(sport);
                             const isDisabled = formData.sport.length >= 5 && !isSelected;

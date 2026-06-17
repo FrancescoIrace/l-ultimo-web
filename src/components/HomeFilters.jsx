@@ -10,6 +10,8 @@ const SPORTS = [
     { id: 'Tennis doppio', label: '🎾 Tennis doppio', icon: '🎾' },
     { id: 'Padel', label: '🏐 Padel', icon: '🏐' },
     { id: 'Volley', label: '🏐 Volley', icon: '🏐' },
+    { id: 'Corsa', label: '🏃‍♂️ Corsa', icon: '🏃‍♂️' },
+    { id: 'Palestra', label: '🏋️ Palestra', icon: '🏋️' },
     { id: 'Basket (allenamento)', label: '🏀 Basket (allenamento)', icon: '🏀' },
     { id: 'Basket (3vs3)', label: '🏀 Basket (3vs3)', icon: '🏀' },
     { id: 'Basket (5vs5)', label: '🏀 Basket (5vs5)', icon: '🏀' },

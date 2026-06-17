@@ -211,8 +211,8 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
 
                 {/* Testi e Badge Punti */}
                 <div className="flex-1">
-                  <h3 className="text-white font-black text-lg leading-tight flex items-center gap-2">
-                    Quiz del Giorno ⚡️
+                  <h3 className="text-white font-black text-md leading-tight flex items-center gap-2 mb-3">
+                    Quiz del Giorno ⚡️<br /> Mondiali 2026 🏆
                   </h3>
                   <p className="text-indigo-100/90 text-xs font-medium mt-1 leading-snug">
                     Sblocca fino a <span className="bg-white/20 px-1.5 py-0.5 rounded text-amber-300 font-bold border border-white/10">+60 pt</span> rispondendo a 3 domande flash!

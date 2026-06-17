@@ -506,6 +506,8 @@ export default function Profile({ session }) {
                                         <option>Tennis singolo</option>
                                         <option>Tennis doppio</option>
                                         <option>Volley</option>
+                                        <option>Corsa</option>
+                                        <option>Palestra</option>
                                     </select>
                                 </div>
 
@@ -889,6 +891,8 @@ export default function Profile({ session }) {
                                         <option>Tennis singolo</option>
                                         <option>Tennis doppio</option>
                                         <option>Volley</option>
+                                        <option>Corsa</option>
+                                        <option>Palestra</option>
                                     </select>
                                 </div>
 

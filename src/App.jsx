@@ -12,6 +12,7 @@ import UserReviews from './pages/UserReviews';
 import Home from './pages/Home';
 import NotFound from './pages/404';
 import MatchDetail from './pages/MatchDetail';
+import MatchDetailV2 from './pages/MatchDetailV2';
 import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import AppSettings from './pages/AppSettings';
@@ -222,7 +223,8 @@ function App() {
           )}
 
           {/* 4. Rotte comuni sempre accessibili */}
-          <Route path="/match/:id" element={<MatchDetail user={session.user} />} />
+          {/* <Route path="/match/:id" element={<MatchDetail user={session.user} />} /> */}
+          <Route path="/match/:id" element={<MatchDetailV2 user={session.user} />} />
           <Route path="/profile" element={<Profile session={session} />} />
           <Route path="/settings" element={<AppSettings session={session} />} />
           <Route path="/profile/:id" element={<PublicProfile />} />

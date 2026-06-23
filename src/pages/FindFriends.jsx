@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest } from '../lib/notificationService';
-import { Search, UserPlus, UserCheck, Clock, Users } from 'lucide-react';
+import { Search, UserPlus, UserCheck, Clock, Users, ChevronRight } from 'lucide-react';
 
 export default function FindFriends({ user }) {
   const [profiles, setProfiles] = useState([]);
@@ -39,7 +39,7 @@ export default function FindFriends({ user }) {
         .from('profiles')
         .select('id, username, avatar_url, gender,location')
         .neq('id', user.id)
-        .neq('role','center')
+        .neq('role', 'center')
         .order('username', { ascending: true });
 
       if (error) {
@@ -95,14 +95,22 @@ export default function FindFriends({ user }) {
   const filteredProfiles = useMemo(() => {
     if (!search.trim()) return profiles;
     return profiles.filter((profile) =>
-      profile.username?.toLowerCase().includes(search.toLowerCase()) 
-    // ||
-    //   profile.city?.toLowerCase().includes(search.toLowerCase())
+      profile.username?.toLowerCase().includes(search.toLowerCase())
+      // ||
+      //   profile.city?.toLowerCase().includes(search.toLowerCase())
     );
   }, [profiles, search]);
 
   return (
     <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
+      <button
+        onClick={() => navigate(-1)}
+        type="button"
+        className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+      >
+        <ChevronRight size={14} className="rotate-180" />
+        Indietro
+      </button>
       <div className="mb-6">
         <h1 className="text-3xl font-black text-slate-900 mb-2">Trova amici</h1>
         <p className="text-sm text-slate-500">Cerca chi è già registrato all'app e visita il profilo per scoprire le partite in zona.</p>

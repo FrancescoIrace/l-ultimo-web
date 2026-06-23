@@ -153,6 +153,14 @@ export default function FriendRequests({ user }) {
 
   return (
     <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100 min-h-screen">
+     <button
+        onClick={() => navigate(-1)}
+        type="button"
+        className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+      >
+        <ChevronRight size={14} className="rotate-180" />
+        Indietro
+      </button>
       <div className="mb-6">
         <h1 className="text-3xl font-black text-slate-900 mb-1">Amici</h1>
         <p className="text-sm text-slate-500">Gestisci le richieste e i tuoi amici.</p>

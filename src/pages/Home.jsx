@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Plus } from 'lucide-react';
+import { Plus,ChevronRight } from 'lucide-react';
 import MatchCard from '../components/MatchCard';
 import MatchSkeleton from '../components/MatchSkeleton';
 import HomeFilters from '../components/HomeFilters';
@@ -50,7 +50,7 @@ export default function Home({ session, isPWA }) {
           .from('team_members')
           .select('team_id')
           .eq('user_id', session.user.id);
-        
+
         myTeamIds = userTeams?.map(t => t.team_id) || [];
       }
 
@@ -234,14 +234,14 @@ export default function Home({ session, isPWA }) {
     let filtered = distances
       .filter((match) => match.distance <= radiusKm)
       .sort((a, b) => a.distance - b.distance);
-    
+
     // Supabase restituisce datetime con spazio ("2026-05-11 17:00:00") che i browser
     // interpretano come UTC. Sostituendo lo spazio con "T" viene interpretato come orario locale (Italia).
     const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
     const now = new Date().getTime();
     const oneHourAgo = now - (60 * 60 * 1000);
     const oneHourFromNow = now + (60 * 60 * 1000);
-    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
 
     if (showTodayMatches) {
       // Mostra partite concluse oggi (iniziate da più di 1 ora ma nella giornata)
@@ -262,7 +262,7 @@ export default function Home({ session, isPWA }) {
         return matchTimestamp >= oneHourAgo;
       });
     }
-    
+
     return filtered;
   }, [distances, position, radiusKm, showOngoingMatches, showTodayMatches, matches]);
 
@@ -278,7 +278,7 @@ export default function Home({ session, isPWA }) {
     const now = new Date().getTime();
     const oneHourAgo = now - (60 * 60 * 1000);
     const oneHourFromNow = now + (60 * 60 * 1000);
-    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
 
     let filtered = baseList;
     if (showTodayMatches) {
@@ -326,9 +326,9 @@ export default function Home({ session, isPWA }) {
     const baseList = showNearby
       ? nearbyMatches
       : matches.map((match) => ({
-          ...match,
-          distance: distances.find((item) => item?.id === match.id)?.distance,
-        }));
+        ...match,
+        distance: distances.find((item) => item?.id === match.id)?.distance,
+      }));
 
     let filtered = baseList;
 
@@ -338,7 +338,7 @@ export default function Home({ session, isPWA }) {
     const now = new Date().getTime();
     const oneHourAgo = now - (60 * 60 * 1000);
     const oneHourFromNow = now + (60 * 60 * 1000);
-    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
 
     // Filtro giorno ha priorità sui filtri temporali
     if (selectedDay) {
@@ -392,6 +392,14 @@ export default function Home({ session, isPWA }) {
 
   return (
     <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100">
+      <button
+        onClick={() => navigate(-1)}
+        type="button"
+        className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+      >
+        <ChevronRight size={14} className="rotate-180" />
+        Indietro
+      </button>
       <HomeFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

@@ -1,4 +1,4 @@
-import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, ChevronRight, RefreshCw } from 'lucide-react';
+import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
@@ -29,8 +29,11 @@ export default function MatchDetail({ user }) {
     const [isMatchStarted, setIsMatchStarted] = useState(false);
     const [weatherData, setWeatherData] = useState(null);
     const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+    const [alertTemperatura, setAlertTemperatura] = useState("");
     const [localTeams, setLocalTeams] = useState(null);
     const [isSavingTeams, setIsSavingTeams] = useState(false);
+    const [tooltipActive, setTooltipActive] = useState(false);
+
 
     const checkMatchStatus = (matchDatetime) => {
         const oraInizio = new Date(matchDatetime).getTime(); // Timestamp inizio match
@@ -109,6 +112,8 @@ export default function MatchDetail({ user }) {
         setIsMatchStarted(isMatchStarted);
         setIsMatchFinished(isMatchFinished);
         // console.log('⏰ Stato partita aggiornato: ', { isMatchStarted, isMatchFinished });
+        // console.log('✅ Dati partita caricati:', fullMatchData);
+        // console.log('✅ Partecipanti caricati:', participants);
         setLoading(false);
     }, [id, user.id]);
 
@@ -205,6 +210,18 @@ export default function MatchDetail({ user }) {
             try {
                 const weather = await getWeather(match.location_lat, match.location_lng, date);
                 setWeatherData(weather);
+                if (weather.temperature > 30) {
+                    setAlertTemperatura("Attenzione: la temperatura è superiore a 30 gradi!");
+                }
+                if (weather.temperature < 0) {
+                    setAlertTemperatura("Attenzione: la temperatura è inferiore a 0 gradi!");
+                }
+                if (weather.temperature <= 25 && weather.temperature >= 20) {
+                    setAlertTemperatura("Temperatura ottimale per giocare!");
+                }
+                if (weather.temperature < 20 && weather.temperature >= 17) {
+                    setAlertTemperatura("Temperatura buona per giocare!");
+                }
             } catch (err) {
                 console.error('Errore nel fetch dei dati meteo:', err);
             } finally {
@@ -213,6 +230,7 @@ export default function MatchDetail({ user }) {
         };
 
         fetchWeather();
+        // console.log('⛅ dati meteo: ', weatherData)
     }, [match?.location_lat, match?.location_lng, match?.datetime]);
 
     const handleSetTeamLocal = (participantId, teamNumber) => {
@@ -230,10 +248,10 @@ export default function MatchDetail({ user }) {
 
     const generateRandomTeamsLocal = () => {
         if (!confirmedPlayers.length) return;
-        
+
         const shuffled = [...confirmedPlayers].sort(() => 0.5 - Math.random());
         const half = Math.ceil(shuffled.length / 2);
-        
+
         const currentTeams = localTeams || confirmedPlayers.reduce((acc, p) => {
             acc[p.id] = p.team_number;
             return acc;
@@ -250,7 +268,7 @@ export default function MatchDetail({ user }) {
     const handleSaveTeams = async () => {
         if (!localTeams) return;
         setIsSavingTeams(true);
-        
+
         const payload = confirmedPlayers.map(p => ({
             id: p.id,
             match_id: id,
@@ -523,9 +541,9 @@ Scopri di più qui: ${window.location.href}`;
         try {
             const { error: updateError } = await supabase
                 .from('matches')
-                .update({ 
+                .update({
                     reservation_status: 'requested',
-                    request_count: (match.request_count || 0) + 1 
+                    request_count: (match.request_count || 0) + 1
                 })
                 .eq('id', match.id);
 
@@ -659,307 +677,393 @@ Scopri di più qui: ${window.location.href}`;
 
     return (
         <>
-            <div className="max-w-md mx-auto p-4">
+            {/* <div className="px-4 py-3">
                 <button
-                    onClick={() => navigate("/partite")}
+                    onClick={() => navigate(-1)}
                     type="button"
                     className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
                 >
                     <ChevronRight size={14} className="rotate-180" />
                     Indietro
                 </button>
+            </div> */}
+            {/* HEADER FISSO SUPERIORE - Azioni Admin (Invio reminder, modifica, elimina) - azioni Utente ordinario (condividi) */}
+            <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all"
+                >
+                    ‹ Indietro
+                </button>
+                <span className="text-xs font-black uppercase tracking-widest px-3 py-1 bg-blue-50 text-blue-600 rounded-full">
+                    {match.sport}
+                </span>
 
-                {/* TITOLO DELLA PARTITA */}
-                <h2 className="text-3xl font-black uppercase mb-2 break-words">{match.title || match.sport}</h2>
-
-                {match.court_id && (
-                    <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-4 ${match.reservation_status === 'confirmed' ? 'bg-green-50 border-green-100' :
-                        match.reservation_status === 'rejected' ? 'bg-red-50 border-red-100' :
-                            'bg-amber-50 border-amber-100'
-                        }`}>
-                        {/* Icona dinamica in base allo stato */}
-                        <div className={`p-3 rounded-xl ${match.reservation_status === 'confirmed' ? 'bg-green-600 text-white' :
-                            match.reservation_status === 'rejected' ? 'bg-red-600 text-white' :
-                                'bg-amber-500 text-white'
-                            }`}>
-                            <Building2 size={24} />
-                        </div>
-
-
-                        <div className="flex-1">
-                            {/* Nome del Centro Sportivo */}
-                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">
-                                Prenotazione presso
-                            </p>
-                            <h3
-                                onClick={() => navigate(`/profile/${match.sports_courts.center_id}`)}
-                                className="font-bold text-slate-800 text-lg leading-tight cursor-pointer hover:text-blue-600 transition-colors"
-                            >
-                                {match.sports_courts?.profiles?.username}
-                            </h3>
-
-                            {/* Nome del Campo specifico */}
-                            <div className="flex items-center gap-2 mt-1 text-slate-600">
-                                <MapPin size={14} className="text-blue-500" />
-                                <span className="text-sm font-medium">{match.sports_courts?.name} ({match.sports_courts?.sport_type})</span>
-                            </div>
-                            
-                            {/* Prezzo per Persona */}
-                            {match.sports_courts?.price_p_p != null && (
-                                <div className="flex items-center gap-2 mt-1 text-slate-600">
-                                    <span className="font-black text-blue-600 text-sm">{match.sports_courts.price_p_p}€ <span className="text-[10px] font-bold text-slate-400 uppercase">/ persona</span></span>
-                                </div>
-                            )}
-
-                            {/* Badge di Stato */}
-                            <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${match.reservation_status === 'confirmed' ? 'bg-green-200 text-green-800' :
-                                match.reservation_status === 'rejected' ? 'bg-red-200 text-red-800' :
-                                    'bg-amber-200 text-amber-800'
-                                }`}>
-                                <div className={`w-1.5 h-1.5 rounded-full ${match.reservation_status === 'confirmed' ? 'bg-green-600' :
-                                    match.reservation_status === 'rejected' ? 'bg-red-600' :
-                                        'bg-amber-600 animate-pulse'
-                                    }`} />
-                                {match.reservation_status === 'confirmed' && "Campo Confermato"}
-                                {match.reservation_status === 'rejected' && "Prenotazione Rifiutata"}
-                                {match.reservation_status === 'requested' && "In attesa del centro..."}
-                                {match.reservation_status === 'draft' && "BOZZA - DA INVIARE"}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Team Info (se presente team_id) */}
-                {match.teams && (
-                    <div className="mb-6 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm relative overflow-hidden flex items-center gap-4 cursor-pointer hover:shadow-md transition-all active:scale-95" onClick={() => navigate(`/squadre/${match.teams.id}`)}>
-                        <div className="absolute top-0 left-0 w-2 h-full" style={{ backgroundColor: match.teams.primary_color || '#4f46e5' }}></div>
-                        <div className={`w-12 h-12 rounded-xl overflow-hidden ${match.teams.primary_color && match.teams.secondary_color ? `bg-gradient-to-br from-[${match.teams.primary_color}] to-[${match.teams.secondary_color}]` : 'bg-gradient-to-br from-blue-500 to-indigo-600'} flex-shrink-0 border border-slate-100 shadow-sm flex justify-center items-center`}>
-                            {match.teams.logo_url ? (
-                                <img src={match.teams.logo_url} alt={match.teams.name} className="w-full h-full object-cover" />
-                            ) : (
-                                <span className="font-bold text-xl text-white">{match.teams.name.charAt(0).toUpperCase()}</span>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-0.5 block flex items-center gap-1">
-                                🛡️ ORGANIZZATO DAL TEAM
-                            </span>
-                            <h3 className="font-bold text-slate-800 text-base truncate pr-2">
-                                {match.teams.name}
-                            </h3>
-                        </div>
-                        <ChevronRight size={18} className="text-slate-400 flex-shrink-0" />
-                    </div>
-                )}
-
-                {/* Box Meteo */}
-                {weatherData && !isLoadingWeather && (
-                    <div
-                        onClick={() => window.open(`https://www.meteoblue.com/it/weather/forecast/${match.location_lat},${match.location_lng}`, '_blank')}
-                        className={`mb-6 p-4 rounded-2xl ${weatherData.rainProbability < 30 ? 'bg-blue-50 border-blue-100' : weatherData.rainProbability < 60 ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'} bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 shadow-md cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all active:scale-95`}
-                    >
-                        <div className="flex items-start justify-between mb-2">
-                            <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
-                                ✨ Previsioni Meteo
-                            </h3>
-                            <RefreshCw size={14} className="text-blue-400 opacity-60" title="Dati in tempo reale da Open-Meteo" />
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-4xl">{weatherData.emoji}</span>
-                            <div className="flex-1">
-                                <div className="flex items-baseline gap-2 mb-1">
-                                    <span className="text-2xl font-black text-slate-800">{weatherData.temperature}°C</span>
-                                    <span className="text-sm text-slate-600 font-medium">{weatherData.description}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-sm text-blue-600 font-semibold">
-                                    <span>💧 Probabilità pioggia:</span>
-                                    <span className={weatherData.rainProbability > 60 ? 'text-red-500 font-black' : ''}>
-                                        {weatherData.rainProbability}%
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {isLoadingWeather && (
-                    <div className="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-center gap-2">
-                        <RefreshCw size={16} className="animate-spin text-blue-500" />
-                        <span className="text-sm text-blue-600 font-semibold">Caricamento meteo...</span>
-                    </div>
-                )}
-
-                <div className="bg-blue-50 p-4 rounded-2xl mb-6">
-                    <div className="relative location-menu-btn mb-3">
-                        <button
-                            onClick={() => setIsLocationMenuOpen(!isLocationMenuOpen)}
-                            className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
+                {/* AZIONI DI AMMINISTRAZIONE COMPATTE (Solo se admin) */}
+                {match?.creator_id === user.id ? (
+                    <div className="flex items-center gap-3">
+                        {/* <button
+                            disabled={isRemindersLoading || !canSendReminder}
+                            onClick={handleSendReminders}
+                            className={`p-2 rounded-xl transition-all ${canSendReminder ? 'text-amber-500 bg-amber-50 hover:bg-amber-100' : 'text-slate-300 bg-slate-50 cursor-not-allowed'}`}
+                            title="Invia Reminder"
                         >
-                            <span>📍 {match.location}</span>
-                            {(match.location_lat && match.location_lng) && <span className="text-xs text-blue-500">↗</span>}
-                            {match.sports_courts && (
-                                <p className="text-xs text-blue-600 font-bold uppercase tracking-tight">
-                                    {match.sports_courts.name}
-                                </p>
-                            )}
+                            <Bell size={18} />
+                        </button> */}
+                        <button
+                            onClick={() => navigate(`/modifica/${match.id}`)}
+                            className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
+                        >
+                            <Pencil size={18} />
                         </button>
+                        <button
+                            onClick={handleDeleteMatch}
+                            className="p-2 text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
+                ) : (
+                    // Tasto condividi standard se l'utente non è admin
+                    <button
+                        onClick={handleShare}
+                        className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
+                    >
+                        <Share2 size={18} />
+                    </button>
+                )}
+            </div>
 
-                        {isLocationMenuOpen && (match.location_lat && match.location_lng) && (
-                            <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg z-20 min-w-max location-menu">
-                                <button
-                                    onClick={() => {
-                                        window.open(generateGoogleMapsUrl(), '_blank');
-                                        setIsLocationMenuOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 first:rounded-t-2xl"
-                                >
-                                    🗺️ Apri su Google Maps
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        window.open(generateAppleMapsUrl(), '_blank');
-                                        setIsLocationMenuOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 border-t border-slate-100"
-                                >
-                                    🍎 Apri su Apple Maps
-                                </button>
-                                {generateGeoSchemeUrl() && (
+            {/* CONTENUTO DELLA PAGINA */}
+            <div className="max-w-md mx-auto px-4 pt-4 pb-32 bg-slate-50/50 min-h-screen">
+
+                {/* 1. BLOCCO TITOLO E DESCRIZIONE */}
+                <div className="mb-5">
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight uppercase">
+                        {match.title || match.sport}
+                    </h1>
+                    {!match.title && (
+                        <span className="text-sm text-slate-400">Titolo autogenerato</span>
+                    )}
+                    {match.description && (
+                        <p className="mt-2 text-sm text-slate-500 font-medium bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm italic break-words">
+                            "{match.description}"
+                        </p>
+                    )}
+                    {!match.description && (
+                        <p className="mt-2 text-sm text-slate-500 font-medium bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm italic break-words">Nessuna descrizione fornita</p>
+                    )}
+                </div>
+
+                {/* 2. SUPER-CARD INFORMATIVA (Info Match + Centro Affiliato + Meteo) */}
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm mb-5 space-y-4">
+
+                    {/* Data e Ora & Luogo Standard */}
+                    <div className="grid grid-cols-1 gap-3 pb-3 border-b border-slate-100">
+                        {/* TOOLTIP INFO */}
+                        <div className="flex items-center text-center gap-3 relative">
+                            <div className="text-blue-600 rounded-xl absolute -top-2 -right-2">
+                                <CircleQuestionMark
+                                    size={18}
+                                    onClick={() => setTooltipActive(!tooltipActive)}
+                                    className="cursor-pointer"
+                                />
+                            </div>
+                            {tooltipActive && (
+                                <div className="flex-1 min-w-0 absolute -top-10 right-0 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg opacity-90">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clicca sulle icone per salvare sul calendario o per visualizzare il luogo</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* CALENDARIO */}
+                        <div className="calendar-menu-btn relative mb-3 flex items-center">
+                            <button
+                                onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
+                                className=" text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
+                            >
+                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                    <Calendar size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quando</p>
+                                    <p className="text-sm font-bold text-slate-800">
+                                        {new Date(match.datetime).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' })} ore {new Date(match.datetime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
+                            </button>
+                            {isCalendarMenuOpen && (
+                                <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg z-20 min-w-max calendar-menu">
                                     <button
                                         onClick={() => {
-                                            window.location.href = generateGeoSchemeUrl();
-                                            setIsLocationMenuOpen(false);
+                                            window.open(generateGoogleCalendarUrl(), '_blank');
+                                            setIsCalendarMenuOpen(false);
+                                        }}
+                                        className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 first:rounded-t-2xl"
+                                    >
+                                        📅 Aggiungi a Google Calendar
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            downloadICalendar();
+                                            setIsCalendarMenuOpen(false);
                                         }}
                                         className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 last:rounded-b-2xl border-t border-slate-100"
                                     >
-                                        📍 Apri Navigatore
+                                        📥 Scarica file .ics
                                     </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* LUOGO */}
+                        <div className="flex items-center gap-3">
+                            {/* <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                    <MapPin size={18} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Indirizzo</p>
+                                <p className="text-sm font-bold text-slate-800 truncate">{match.location}</p>
+                            </div> */}
+
+                            <div className="relative location-menu-btn mb-3">
+                                <button
+                                    onClick={() => setIsLocationMenuOpen(!isLocationMenuOpen)}
+                                    className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
+                                >
+                                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                        <MapPin size={18} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Indirizzo</p>
+                                        <p className="text-sm font-bold text-slate-800">{match.location}</p>
+                                    </div>
+                                </button>
+
+
+                                {isLocationMenuOpen && (match.location_lat && match.location_lng) && (
+                                    <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg z-20 min-w-max location-menu">
+                                        <button
+                                            onClick={() => {
+                                                window.open(generateGoogleMapsUrl(), '_blank');
+                                                setIsLocationMenuOpen(false);
+                                            }}
+                                            className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 first:rounded-t-2xl"
+                                        >
+                                            🗺️ Apri su Google Maps
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                window.open(generateAppleMapsUrl(), '_blank');
+                                                setIsLocationMenuOpen(false);
+                                            }}
+                                            className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 border-t border-slate-100"
+                                        >
+                                            🍎 Apri su Apple Maps
+                                        </button>
+                                        {generateGeoSchemeUrl() && (
+                                            <button
+                                                onClick={() => {
+                                                    window.location.href = generateGeoSchemeUrl();
+                                                    setIsLocationMenuOpen(false);
+                                                }}
+                                                className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 last:rounded-b-2xl border-t border-slate-100"
+                                            >
+                                                📍 Apri Navigatore
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
-                        )}
-                    </div>
-                    <div className="relative calendar-menu-btn mb-3">
-                        <button
-                            onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
-                            className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
-                        >
-                            <span>⏰ {new Date(match.datetime).toLocaleString("it-IT", { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'long' })}</span>
-                            <Calendar size={16} className="text-blue-500" />
-                        </button>
+                        </div>
 
-                        {isCalendarMenuOpen && (
-                            <div className="absolute top-full left-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-lg z-20 min-w-max calendar-menu">
-                                <button
-                                    onClick={() => {
-                                        window.open(generateGoogleCalendarUrl(), '_blank');
-                                        setIsCalendarMenuOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 first:rounded-t-2xl"
-                                >
-                                    📅 Aggiungi a Google Calendar
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        downloadICalendar();
-                                        setIsCalendarMenuOpen(false);
-                                    }}
-                                    className="block w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors text-sm font-bold text-slate-700 last:rounded-b-2xl border-t border-slate-100"
-                                >
-                                    📥 Scarica file .ics
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                    <p className={`text-slate-600 mb-3 break-words ${!match.description ? 'opacity-50' : ''} `}>📝 {match.description || 'Nessuna descrizione disponibile'}</p>
-                </div>
+                        {/* INFO CENTRO SPORTIVO PER I PARTECIPANTI */}
+                        {match?.creator_id !== user.id && match?.court_id && (
+                            <>
+                                <div className="flex items-center gap-3">
 
-                {isMatchStarted && !isMatchFinished && (
-                    <div className='mb-4 text-center bg-green-500 border border-green-200 rounded-2xl italic text-2xl animate-pulse text-white font-black'>
-                        <label>
-                            PARTITA IN CORSO !!
-                        </label>
-                    </div>
-                )}
-
-                {/* Blocco Gestione Richiesta Campo per Organizzatore */}
-                {match?.creator_id === user.id && match?.court_id && (
-                    <div className={`mb-6 p-4 border rounded-3xl ${match.reservation_status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
-                        <h4 className={`text-sm font-black uppercase mb-3 flex items-center gap-2 ${match.reservation_status === 'rejected' ? 'text-red-700' : 'text-slate-700'}`}>
-                            <span>🏢</span> Stato Prenotazione Campo
-                        </h4>
-                        {(() => {
-                            // Soglia minima: metà dei giocatori totali arrotondata per eccesso
-                            const requiredPlayers = Math.ceil(match.max_players / 2);
-                            const requestCount = match.request_count || 0;
-                            const status = match.reservation_status;
-                            
-                            if (status === 'confirmed') {
-                                return (
-                                    <div className="w-full py-3 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold tracking-tight text-center flex items-center justify-center gap-2 shadow-sm">
-                                        ✅ Prenotazione Confermata dal Gestore
-                                    </div>
-                                );
-                            }
-
-                            if (confirmedPlayers.length < requiredPlayers) {
-                                return (
-                                    <button disabled className="w-full py-3 bg-slate-200 text-slate-400 rounded-xl font-bold shadow-sm cursor-not-allowed text-xs sm:text-sm transition-all">
-                                        Raccogli più giocatori per inviare la richiesta ({confirmedPlayers.length}/{requiredPlayers})
-                                    </button>
-                                );
-                            }
-                            
-                            if (status === 'requested') {
-                                return (
-                                    <button disabled className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
-                                        <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
-                                        In attesa del gestore...
-                                    </button>
-                                );
-                            }
-
-                            if (requestCount >= 3 && status === 'rejected') {
-                                return (
-                                    <>
-                                        <div className="mb-3 text-sm text-red-700 bg-white/50 p-3 rounded-xl border border-red-100 shadow-sm leading-tight">
-                                            <p className="font-bold mb-1">❌ Il centro sportivo ha rifiutato la richiesta per il seguente motivo:</p>
-                                            <p className="italic opacity-80">{match.rejection_reason || "Nessun motivo specificato."}</p>
-                                        </div>
-                                        <button disabled className="w-full py-3 bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold shadow-sm cursor-not-allowed transition-all">
-                                            Limite richieste esaurito (Hai superato i 3 tentativi)
+                                    <div className="relative location-menu-btn mb-3">
+                                        <button
+                                            onClick={() => navigate('//profile/:id'.replace(':id', match.sports_courts.center_id))}
+                                            className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
+                                        >
+                                            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                                <span>🏢</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Centro Sportivo</p>
+                                                <p className="text-sm font-bold text-slate-800">{match.sports_courts.profiles.username}</p>
+                                            </div>
                                         </button>
-                                    </>
-                                );
-                            }
 
-                            if (status === 'draft' || status === 'rejected') {
-                                return (
-                                    <>
-                                        {status === 'rejected' && (
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {weatherData && !isLoadingWeather && (
+                        <>
+                            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                                <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                    {/* <span>Previsioni Meteo:</span> */}
+                                    <span className=''> {weatherData.description} </span>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs font-black text-slate-800">
+                                    <span>{weatherData.emoji} {weatherData.temperature} °C</span>
+                                    <span className="text-slate-400 font-normal">|</span>
+                                    <span className="text-blue-600">🌧️ {weatherData.rainProbability}%</span>
+                                </div>
+                            </div>
+                            <div className="">
+                                {alertTemperatura !== "" && (
+                                    <div className={`mt-2 text-sm ${weatherData.temperature > 30 ? 'text-red-600 border-red-100' : weatherData.temperature < 20 ? 'text-blue-600 border-blue-100' : 'text-green-600 border-green-100'} bg-white/50 p-3 rounded-xl border shadow-sm leading-tight`}>
+                                        <p className="font-bold mb-1">{alertTemperatura}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+
+
+                    )
+                    }
+
+
+                    {match?.creator_id === user.id && match?.court_id && (
+                        <div className={`mb-6 p-4 border rounded-2xl relative ${match.reservation_status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+                            <Info
+                                size={22}
+                                onClick={() => navigate('//profile/:id'.replace(':id', match.sports_courts.center_id))}
+                                className="cursor-pointer text-slate-600 hover:text-slate-600 transition-colors absolute top-3 right-3"
+                            />
+                            <h4 className={`text-sm font-black uppercase mb-3 flex items-center gap-2 ${match.reservation_status === 'rejected' ? 'text-red-700' : 'text-slate-700'}`}>
+                                <span>🏢</span> Stato Prenotazione Campo
+                            </h4>
+                            <div className="mb-4 flex flex-col gap-1">
+                                <p className="text-sm font-medium text-slate-600 mb-1 tracking-tight">
+                                    Centro: <span className="font-bold text-slate-800">{match.sports_courts.profiles.username}</span>
+                                </p>
+                                <p className="text-sm font-medium text-slate-600 tracking-tight">
+                                    Campo: <span className="font-bold text-slate-800">{match.sports_courts.name}</span>
+                                </p>
+                            </div>
+
+                            {(() => {
+                                // Soglia minima: metà dei giocatori totali arrotondata per eccesso
+                                const requiredPlayers = Math.ceil(match.max_players / 2);
+                                const requestCount = match.request_count || 0;
+                                const status = match.reservation_status;
+
+                                if (status === 'confirmed') {
+                                    return (
+                                        <div className="w-full py-3 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold tracking-tight text-center flex items-center justify-center gap-2 shadow-sm">
+                                            ✅ Prenotazione Confermata dal Gestore
+                                        </div>
+                                    );
+                                }
+
+                                if (confirmedPlayers.length < requiredPlayers) {
+                                    return (
+                                        <button disabled className="w-full py-3 bg-slate-200 text-slate-400 rounded-xl font-bold shadow-sm cursor-not-allowed text-xs sm:text-sm transition-all">
+                                            Raccogli più giocatori per inviare la richiesta ({confirmedPlayers.length}/{requiredPlayers})
+                                        </button>
+                                    );
+                                }
+
+                                if (status === 'requested') {
+                                    return (
+                                        <button disabled className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
+                                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                            In attesa del gestore...
+                                        </button>
+                                    );
+                                }
+
+                                if (requestCount >= 3 && status === 'rejected') {
+                                    return (
+                                        <>
                                             <div className="mb-3 text-sm text-red-700 bg-white/50 p-3 rounded-xl border border-red-100 shadow-sm leading-tight">
                                                 <p className="font-bold mb-1">❌ Il centro sportivo ha rifiutato la richiesta per il seguente motivo:</p>
                                                 <p className="italic opacity-80">{match.rejection_reason || "Nessun motivo specificato."}</p>
                                             </div>
-                                        )}
-                                        <button 
-                                            onClick={handleSendRequest}
-                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-1"
-                                        >
-                                            <span className="flex items-center gap-2">🚀 {status === 'rejected' ? 'Riprova Invia Richiesta' : 'Invia Richiesta al Centro Sportivo'}</span>
-                                            <span className="text-[10px] uppercase tracking-wider font-black opacity-80">
-                                                {3 - requestCount} {3 - requestCount === 1 ? 'tentativo' : 'tentativi'} rimasti
-                                            </span>
+                                            <button disabled className="w-full py-3 bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold shadow-sm cursor-not-allowed transition-all">
+                                                Limite richieste esaurito (Hai superato i 3 tentativi)
+                                            </button>
+                                        </>
+                                    );
+                                }
+
+                                if (status === 'draft' || status === 'rejected') {
+                                    return (
+                                        <>
+                                            {status === 'rejected' && (
+                                                <div className="mb-3 text-sm text-red-700 bg-white/50 p-3 rounded-xl border border-red-100 shadow-sm leading-tight">
+                                                    <p className="font-bold mb-1">❌ Il centro sportivo ha rifiutato la richiesta per il seguente motivo:</p>
+                                                    <p className="italic opacity-80">{match.rejection_reason || "Nessun motivo specificato."}</p>
+                                                </div>
+                                            )}
+                                            <button
+                                                onClick={handleSendRequest}
+                                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-1"
+                                            >
+                                                <span className="flex items-center gap-2">🚀 {status === 'rejected' ? 'Riprova Invia Richiesta' : 'Invia Richiesta al Centro Sportivo'}</span>
+                                                <span className="text-[10px] uppercase tracking-wider font-black opacity-80">
+                                                    {3 - requestCount} {3 - requestCount === 1 ? 'tentativo' : 'tentativi'} rimasti
+                                                </span>
+                                            </button>
+                                        </>
+                                    );
+                                }
+
+                                return null;
+                            })()}
+                        </div>
+                    )}
+
+                    {match?.creator_id !== user.id && match?.court_id && (
+                        <>
+                            {(() => {
+
+                                const status = match.reservation_status;
+
+                                if (status === 'confirmed') {
+                                    return (
+                                        <div className="bg-green-100 text-green-700 text-sm font-bold p-3 rounded-xl border-2 border-green-200 shadow-sm leading-tight flex gap-2">
+                                            Prenotazione confermata dal centro sportivo
+                                        </div>
+                                    );
+                                }
+
+                                if (status === 'requested') {
+                                    return (
+                                        <button disabled className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
+                                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                            è stata inviata una richiesta al centro...
                                         </button>
-                                    </>
-                                );
-                            }
+                                    );
+                                }
 
-                            return null;
-                        })()}
-                    </div>
-                )}
+                                if (status === 'rejected') {
+                                    return (
+                                        <>
+                                            <div className="text-sm text-red-700 bg-red-100 p-3 rounded-xl border border-red-600 shadow-sm leading-tight">
+                                                <p className="font-bold mb-1">Il centro sportivo ha rifiutato la richiesta</p>
+                                            </div>
+                                        </>
+                                    );
+                                }
 
-                <MatchAttendanceManager match={match} user={user} onUpdate={getDetails} />
+                                return null;
+                            })()}
+                        </>
+                    )}
+
+
+                </div>
+
+
+
+
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>
 
@@ -972,7 +1076,7 @@ Scopri di più qui: ${window.location.href}`;
                         >
                             <RefreshCw size={18} /> Genera Squadre Casuali
                         </button>
-                        
+
                         {localTeams && (
                             <div className="flex gap-2">
                                 <button
@@ -1003,9 +1107,8 @@ Scopri di più qui: ${window.location.href}`;
                     const renderPlayer = (p) => (
                         <div
                             key={p.id}
-                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${
-                                p.user_id === user.id ? 'border-blue-200 bg-blue-50' : 'border-slate-100 bg-white'
-                            }`}
+                            className={`flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-95 cursor-pointer ${p.user_id === user.id ? 'border-blue-200 bg-blue-50' : 'border-slate-100 bg-white'
+                                }`}
                             onClick={() => { p.user_id !== user.id ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                         >
                             <div className="flex items-center gap-4">
@@ -1048,22 +1151,22 @@ Scopri di più qui: ${window.location.href}`;
                                 {p.user_id === match.creator_id && (
                                     <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Organizzatore</span>
                                 )}
-                                
+
                                 {user.id === match.creator_id && (
                                     <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                                        <button 
+                                        <button
                                             onClick={() => handleSetTeamLocal(p.id, 1)}
                                             className={`w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm ${p.team_number === 1 ? 'bg-blue-600 text-white shadow-blue-200 ring-2 ring-blue-300 ring-offset-1' : 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100'}`}
                                         >
                                             A
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleSetTeamLocal(p.id, 2)}
                                             className={`w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm ${p.team_number === 2 ? 'bg-slate-700 text-white shadow-slate-300 ring-2 ring-slate-400 ring-offset-1' : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'}`}
                                         >
                                             B
                                         </button>
-                                         <button 
+                                        <button
                                             onClick={() => handleSetTeamLocal(p.id, null)}
                                             className={`w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm ${!p.team_number ? 'bg-gray-400 text-white ring-2 ring-gray-300 ring-offset-1' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'}`}
                                             title="Rimuovi da squadra"
@@ -1094,10 +1197,10 @@ Scopri di più qui: ${window.location.href}`;
                                     </div>
                                 </div>
                             )}
-                            
+
                             {(team1Players.length > 0 && team2Players.length > 0) && (
                                 <div className="flex justify-center my-2">
-                                     <span className="font-black italic text-slate-300 text-2xl">VS</span>
+                                    <span className="font-black italic text-slate-300 text-2xl">VS</span>
                                 </div>
                             )}
 
@@ -1168,95 +1271,39 @@ Scopri di più qui: ${window.location.href}`;
                     </>
                 )}
 
-                {/* BOTTONI VARI */}
-                <div className="mt-10 pt-6 border-t border-slate-100">
-
-                    {isMatchFinished && (
-                        <div className='mb-2 text-center bg-yellow-50 border border-yellow-200 rounded-2xl italic text-sm'>
-                            <label>
-                                Questa partita è già avvenuta. Se hai partecipato, lascia un feedback agli altri giocatori!
-                            </label>
-                        </div>
-                    )}
 
 
-                    {/* Azione principale — full width */}
 
-                    {confirmedPlayers.some(p => p.user_id === user.id) ? (
+            </div>
+
+            {/* 4. BARRA AZIONE STICKY BOTTOM (Segue l'utente sullo schermo) */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 shadow-xl z-40 max-w-md mx-auto rounded-t-3xl">
+                {isJoined && match?.creator_id !== user.id ? (
+                    <button
+                        onClick={handleLeave}
+                        className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-red-600"
+                    >
+                        <UserMinus size={16} className="text-white" /> Abbandona Partita
+                    </button>
+                ) : !isJoined && match?.creator_id !== user.id ? (
+                    <button
+                        disabled={participants.length >= match.max_players}
+                        onClick={handleJoin}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        <UserPlus size={16} className="text-white" /> Unisciti alla Partita
+                    </button>
+                ) : (match?.creator_id === user.id) && (
+                    <>
                         <button
-                            onClick={handleLeave}
-                            disabled={isMatchFinished || (isMatchStarted && !isMatchFinished)}
-                            className="w-full cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
+                            disabled={isRemindersLoading || !canSendReminder}
+                            onClick={handleSendReminders}
+                            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-yellow-200"
                         >
-                            <UserMinus size={24} />
-                            Abbandona Partita
+                            <Bell size={16} className="text-white" /> Invia Notifica ai Giocatori
                         </button>
-                    ) : waitingPlayers.some(p => p.user_id === user.id) ? (
-                        <button
-                            onClick={handleLeave}
-                            disabled={isMatchFinished}
-                            className="w-full cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            <UserMinus size={24} />
-                            Esci dalla Lista d'Attesa
-                        </button>
-                    ) : (
-                        <button
-                            disabled={isMatchFinished}
-                            onClick={handleJoin}
-                            className={`w-full cursor-pointer p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50 ${confirmedPlayers.length >= match.max_players
-                                ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white'
-                                : 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-                                }`}
-                        >
-                            <UserPlus size={24} />
-                            {confirmedPlayers.length >= match.max_players ? "Unisciti alla Lista d'Attesa" : 'Unisciti Ora'}
-                        </button>
-                    )}
-
-                    {/* Azioni secondarie — griglia 2 colonne */}
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                        <button
-                            onClick={handleShare}
-                            className="cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 text-slate-800 p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 border border-slate-200 shadow-lg hover:shadow-xl transition-all active:scale-95"
-                        >
-                            <Share2 size={24} />
-                            Condividi
-                        </button>
-
-                        {user.id === match.creator_id && (
-                            <button
-                                onClick={handleSendReminders}
-                                disabled={isMatchFinished || isRemindersLoading}
-                                className="cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
-                            >
-                                <Bell size={24} />
-                                Invia Reminder
-                            </button>
-                        )}
-                    </div>
-
-                    {user.id === match.creator_id && (
-                        <div className="grid grid-cols-2 gap-3 mt-3">
-                            <button
-                                onClick={() => { navigate(`/modifica/${match.id}`) }}
-                                className="cursor-pointer bg-gradient-to-br from-yellow-400 to-yellow-500 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
-                                disabled={isMatchFinished || isMatchStarted}
-                            >
-                                <Pencil size={24} />
-                                Modifica
-                            </button>
-                            <button
-                                onClick={handleDeleteMatch}
-                                className="cursor-pointer bg-gradient-to-br from-red-500 to-red-600 text-white p-4 rounded-2xl font-bold text-sm flex flex-col items-center gap-2 shadow-lg hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
-                                disabled={isMatchFinished || isMatchStarted}
-                            >
-                                <Trash2 size={24} />
-                                Elimina Partita
-                            </button>
-                        </div>
-                    )}
-                </div>
+                    </>
+                )}
             </div>
 
             {isModalOpen && (

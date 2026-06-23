@@ -1,5 +1,30 @@
 [
   {
+    "date": "17 giugno 2026",
+    "title": "Aggiunta CORSA e PALESTRA",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "11 giugno 2026",
+    "title": "Domande sui mondiali",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "05 giugno 2026",
+    "title": "Restyling create match e profilo centro",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "05 giugno 2026",
+    "title": "Restyling Dashboard principale",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "05 giugno 2026",
+    "title": "Aggiunta option telecamera per i campi",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "05 giugno 2026",
     "title": "fix se utente ha giocato o no",
     "description": "Modifica all'app"
@@ -22,31 +47,6 @@
   {
     "date": "03 giugno 2026",
     "title": "json inserito come costante",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "mannac a miserij",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "fix domande?",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "console.log",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "v3",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "Fix import",
     "description": "Modifica all'app"
   }
 ]

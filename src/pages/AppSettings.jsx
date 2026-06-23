@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import UserLocationInput from '../components/UserLocationInput';
 import { AlertContext } from '../components/AlertComponent';
+import { Loader, ChevronRight } from 'lucide-react';
 
 export default function AppSettings({ session }) {
   const navigate = useNavigate();
@@ -135,9 +136,10 @@ export default function AppSettings({ session }) {
       <button
         onClick={() => navigate(-1)}
         type="button"
-        className="w-30 h-5 text-xs cursor-pointer flex items-center justify-center bg-red-600 text-white py-4 mb-4 rounded-2xl font-bold shadow-md shadow-red-200 hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
+        className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
       >
-        TORNA INDIETRO
+        <ChevronRight size={14} className="rotate-180" />
+        Indietro
       </button>
 
       <h1 className="text-3xl font-black text-slate-900 mb-6">Impostazioni app</h1>
@@ -208,7 +210,7 @@ export default function AppSettings({ session }) {
 
       <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
         <h2 className="text-xl font-bold mb-3 ">Notifiche</h2>
-        
+
         {/* Notifiche generiche */}
         <div className="mb-4 border-t pt-4 border-slate-200 ">
           <label className="flex items-center gap-3 text-slate-700 ">
@@ -267,7 +269,7 @@ export default function AppSettings({ session }) {
         )}
       </section>
 
-          <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
         <h2 className="text-xl font-bold mb-3 ">Privacy</h2>
         <p className="text-sm text-slate-500 mt-2">
           Visualizza l'informativa sulla privacy{' '}

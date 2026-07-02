@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -367,8 +367,9 @@ export default function MatchDetail({ user }) {
                         }
                     }
 
-                    // 3. Se la partita era piena, ripesca il primo della lista d'attesa
-                    // (se c'è) e notifica lui + tutti gli altri confermati dell'abbandono
+                    // 3. Se la partita era piena, gestisci il posto libero:
+                    // - se c'è qualcuno in lista d'attesa, ripescalo e notifica lui + l'organizzatore
+                    // - se la lista d'attesa è vuota, avvisa tutti i confermati rimasti
                     const wasFull = confirmedPlayers.length >= match.max_players;
                     if (wasFull) {
                         const nextInLine = waitingPlayers.length > 0
@@ -386,15 +387,22 @@ export default function MatchDetail({ user }) {
                                 console.error('❌ Errore ripescaggio lista d\'attesa:', promoteError);
                             } else {
                                 notifyWaitlistPromoted(id, match.title, nextInLine.user_id);
+                                notifyOrganizerSpotFilled(
+                                    id,
+                                    match.title,
+                                    username,
+                                    nextInLine.profiles?.username || 'Un giocatore',
+                                    match.creator_id
+                                );
                             }
-                        }
+                        } else {
+                            const otherConfirmedIds = confirmedPlayers
+                                .map(p => p.user_id)
+                                .filter(uid => uid !== user.id);
 
-                        const otherConfirmedIds = confirmedPlayers
-                            .map(p => p.user_id)
-                            .filter(uid => uid !== user.id && uid !== nextInLine?.user_id);
-
-                        if (otherConfirmedIds.length > 0) {
-                            notifyMatchSpotFreed(id, match.title, username, otherConfirmedIds);
+                            if (otherConfirmedIds.length > 0) {
+                                notifyMatchSpotFreed(id, match.title, username, otherConfirmedIds);
+                            }
                         }
                     }
 
@@ -1328,11 +1336,14 @@ Scopri di più qui: ${window.location.href}`;
                     </button>
                 ) : !isJoined && match?.creator_id !== user.id ? (
                     <button
-                        disabled={participants.length >= match.max_players}
                         onClick={handleJoin}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className={`w-full text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-[0.99] flex items-center justify-center gap-2 ${confirmedPlayers.length >= match.max_players
+                            ? 'bg-slate-800 hover:bg-slate-900 shadow-lg shadow-slate-500/20'
+                            : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20'
+                            }`}
                     >
-                        <UserPlus size={16} className="text-white" /> Unisciti alla Partita
+                        <UserPlus size={16} className="text-white" />
+                        {confirmedPlayers.length >= match.max_players ? "Unisciti alla Lista d'Attesa" : 'Unisciti alla Partita'}
                     </button>
                 ) : (match?.creator_id === user.id) && (
                     <>

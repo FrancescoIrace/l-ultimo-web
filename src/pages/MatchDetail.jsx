@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -349,8 +349,9 @@ export default function MatchDetail({ user }) {
                         }
                     }
 
-                    // 3. Se la partita era piena, ripesca il primo della lista d'attesa
-                    // (se c'è) e notifica lui + tutti gli altri confermati dell'abbandono
+                    // 3. Se la partita era piena, gestisci il posto libero:
+                    // - se c'è qualcuno in lista d'attesa, ripescalo e notifica lui + l'organizzatore
+                    // - se la lista d'attesa è vuota, avvisa tutti i confermati rimasti
                     const wasFull = confirmedPlayers.length >= match.max_players;
                     if (wasFull) {
                         const nextInLine = waitingPlayers.length > 0
@@ -368,15 +369,22 @@ export default function MatchDetail({ user }) {
                                 console.error('❌ Errore ripescaggio lista d\'attesa:', promoteError);
                             } else {
                                 notifyWaitlistPromoted(id, match.title, nextInLine.user_id);
+                                notifyOrganizerSpotFilled(
+                                    id,
+                                    match.title,
+                                    username,
+                                    nextInLine.profiles?.username || 'Un giocatore',
+                                    match.creator_id
+                                );
                             }
-                        }
+                        } else {
+                            const otherConfirmedIds = confirmedPlayers
+                                .map(p => p.user_id)
+                                .filter(uid => uid !== user.id);
 
-                        const otherConfirmedIds = confirmedPlayers
-                            .map(p => p.user_id)
-                            .filter(uid => uid !== user.id && uid !== nextInLine?.user_id);
-
-                        if (otherConfirmedIds.length > 0) {
-                            notifyMatchSpotFreed(id, match.title, username, otherConfirmedIds);
+                            if (otherConfirmedIds.length > 0) {
+                                notifyMatchSpotFreed(id, match.title, username, otherConfirmedIds);
+                            }
                         }
                     }
 

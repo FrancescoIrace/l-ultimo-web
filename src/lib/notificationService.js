@@ -151,6 +151,21 @@ export async function notifyWaitlistPromoted(matchId, matchTitle, promotedUserId
 }
 
 /**
+ * Notifica l'organizzatore quando un abbandono viene coperto da un ripescaggio
+ * automatico dalla lista d'attesa (partita ancora piena, cambio di giocatore)
+ */
+export async function notifyOrganizerSpotFilled(matchId, matchTitle, leaverName, promotedName, organizerId) {
+  return createNotification({
+    userId: organizerId,
+    type: 'match_leave',
+    title: '🔄 Cambio in Partita',
+    content: `${leaverName} ha abbandonato ${matchTitle ? `"${matchTitle}"` : 'la tua partita'}: ${promotedName} è entrato al suo posto dalla lista d'attesa`,
+    link: `/match/${matchId}`,
+    metadata: { matchId },
+  });
+}
+
+/**
  * Notifica quando un match viene aggiornato
  */
 export async function notifyMatchUpdate(matchId, matchTitle, updateMessage, participantIds) {

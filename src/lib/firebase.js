@@ -62,7 +62,7 @@ export async function getFCMToken() {
     console.log('📱 Ottenendo token FCM con SW:', registration.scope);
 
     const token = await getToken(msg, {
-      vapidPublicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
+      vapidKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
       serviceWorkerRegistration: registration, // Usa il SW già registrato
     });
 

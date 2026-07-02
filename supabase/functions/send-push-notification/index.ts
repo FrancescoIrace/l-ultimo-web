@@ -190,8 +190,8 @@ function buildPushMessage(notification: any): PushMessage {
   return {
     title: notification.title || "Nuovo aggiornamento",
     body: notification.content || notification.message || "Tocca per vedere i dettagli", // Prova anche .message
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+    icon: '/logo-192.png',
+    badge: '/logo-192.png',
     data: {
       notificationId: notification.id,
       link: notification.link || '/',
@@ -286,23 +286,23 @@ async function sendToFCM(deviceToken: string, message: PushMessage) {
           notificationId: String(message.data?.notificationId || ""),
           link: String(message.data?.link || "/"),
         },
-        // 3. Configurazione Apple (iOS la legge qui)
-        apns: {
-          payload: {
-            aps: {
-              alert: {
-                title: String(message.title).trim(),
-                body: String(message.body).trim(),
-              },
-              sound: "default",
-              badge: 1,
-              "mutable-content": 1,
-            },
-          },
+        // 3. Configurazione Web Push (letta da FCM per i token registrati da browser,
+        // incluso Safari su iOS 16.4+ in modalità standalone). Il blocco "apns" NON si
+        // applica qui: quel campo viene usato solo per token registrati da un'app iOS
+        // nativa tramite l'SDK Firebase per iOS, che non esiste in questo progetto (è una PWA).
+        webpush: {
           headers: {
-            "apns-priority": "10",
-            "apns-push-type": "alert",
-          }
+            Urgency: "high",
+            TTL: "86400",
+          },
+          notification: {
+            title: String(message.title).trim(),
+            body: String(message.body).trim(),
+            icon: message.icon || '/logo-192.png',
+          },
+          fcm_options: {
+            link: String(message.data?.link || "/"),
+          },
         }
       }
     };

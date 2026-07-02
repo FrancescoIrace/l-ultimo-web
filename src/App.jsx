@@ -189,6 +189,7 @@ function App() {
                   isSupported={isSupported}
                   isSubscribed={isSubscribed}
                   subscribeToPushNotifications={subscribeToPushNotifications}
+                  isPWA={isPWA}
                 />
               )
             }

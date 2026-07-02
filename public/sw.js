@@ -32,8 +32,8 @@ self.addEventListener('push', (event) => {
   const {
     title = 'L\'ULTIMO',
     body = 'Nuova notifica',
-    icon = '/icon-192x192.png',
-    badge = '/badge-72x72.png',
+    icon = '/logo-192.png',
+    badge = '/logo-192.png',
     tag = 'notification',
     requireInteraction = false,
     data = {},

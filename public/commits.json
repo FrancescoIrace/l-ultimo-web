@@ -1,5 +1,10 @@
 [
   {
+    "date": "23 giugno 2026",
+    "title": "Aggiunte \"indietro\" più nuovo layout per matchDetails",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "17 giugno 2026",
     "title": "Aggiunta CORSA e PALESTRA",
     "description": "Modifica all'app"
@@ -42,11 +47,6 @@
   {
     "date": "04 giugno 2026",
     "title": "Fix domande sfida giornaliera",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "03 giugno 2026",
-    "title": "json inserito come costante",
     "description": "Modifica all'app"
   }
 ]

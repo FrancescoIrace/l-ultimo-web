@@ -7,12 +7,16 @@ import { motion } from 'framer-motion';
 import { AlertContext } from '../components/AlertComponent';
 import { InstagramEmbed } from './PagesUtils/utils';
 
-export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications }) {
+export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState('LOADING'); // LOADING, ALREADY_PLAYED, PLAYING, RESULTS, ERROR
   const { showAlert } = useContext(AlertContext);
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
+  // Su iOS le notifiche push funzionano solo se l'app è stata aggiunta alla Home
+  // (standalone mode, iOS 16.4+): chiedere il permesso da una tab Safari normale fallisce sempre.
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const needsInstallForNotifications = isIOS && !isPWA;
 
 
   const handleLogout = async () => {
@@ -83,23 +87,35 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
       <div className="max-w-md mx-auto p-4 space-y-4 pb-20">
         {/* Notification Activation Box */}
         {isSupported && !isSubscribed && (
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg border border-blue-300">
-            <div className="flex items-center justify-between">
+          needsInstallForNotifications ? (
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg border border-blue-300">
               <div className="flex items-center gap-3">
                 <div className="text-2xl">🔔</div>
                 <div>
                   <h3 className="font-bold text-sm">Attiva Notifiche Push</h3>
-                  <p className="text-xs opacity-90">Ricevi aggiornamenti sui tuoi match in tempo reale</p>
+                  <p className="text-xs opacity-90">Su iPhone funzionano solo se aggiungi L'Ultimo alla schermata Home (Condividi → Aggiungi alla Home)</p>
                 </div>
               </div>
-              <button
-                onClick={handleActivateNotifications}
-                className="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition-colors active:scale-95"
-              >
-                Attiva
-              </button>
             </div>
-          </div>
+          ) : (
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg border border-blue-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">🔔</div>
+                  <div>
+                    <h3 className="font-bold text-sm">Attiva Notifiche Push</h3>
+                    <p className="text-xs opacity-90">Ricevi aggiornamenti sui tuoi match in tempo reale</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleActivateNotifications}
+                  className="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition-colors active:scale-95"
+                >
+                  Attiva
+                </button>
+              </div>
+            </div>
+          )
         )}
 
         {/* Quick Actions */}

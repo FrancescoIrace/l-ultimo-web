@@ -96,7 +96,7 @@ export default function MatchCard({ match, user }) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [match.id, user.id]);
 

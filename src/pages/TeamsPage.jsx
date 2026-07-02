@@ -1,9 +1,51 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, ArrowLeft, Lock, Globe, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
 import { useNavigate } from 'react-router-dom';
+
+// Card squadra riutilizzata da "Le mie Squadre" ed "Esplora": altezza fissa, info minime
+function TeamCard({ team, onClick, trailing }) {
+    const meta = [
+        team.is_private ? 'Privata' : 'Pubblica',
+        team.citta,
+        team.sport?.[0]
+    ].filter(Boolean).join(' · ');
+
+    return (
+        <motion.div
+            whileHover={{ scale: 1.01 }}
+            onClick={onClick}
+            className="flex items-center gap-3 h-20 bg-white border border-gray-100 rounded-2xl px-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
+        >
+            {/* Avatar */}
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-blue-50">
+                {team.logo_url ? (
+                    <img src={team.logo_url} alt={team.name} className="w-full h-full object-cover" />
+                ) : (
+                    <span className="text-lg text-blue-600 font-bold">
+                        {team.name ? team.name.charAt(0).toUpperCase() : 'T'}
+                    </span>
+                )}
+            </div>
+
+            {/* Nome + info essenziali */}
+            <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-slate-800 text-sm truncate">{team.name}</h3>
+                <p className="text-xs text-slate-400 truncate mt-0.5 flex items-center gap-1">
+                    {team.is_private ? <Lock size={11} className="flex-shrink-0" /> : <Globe size={11} className="flex-shrink-0" />}
+                    <span className="truncate">{meta}</span>
+                </p>
+            </div>
+
+            {/* Azione/indicatore a destra */}
+            <div className="flex-shrink-0 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                {trailing}
+            </div>
+        </motion.div>
+    );
+}
 
 export default function TeamsPage({ session }) {
     const navigate = useNavigate();
@@ -56,6 +98,7 @@ export default function TeamsPage({ session }) {
             logo_url,
             invite_code,
             created_by,
+            is_private,
             sport,
             citta,
             primary_color,
@@ -328,84 +371,31 @@ export default function TeamsPage({ session }) {
         >
             {myTeams.length === 0 ? (
                 <div className="text-center py-12">
-                    <div className="text-4xl mb-4">👥</div>
+                    <Users size={40} className="mx-auto mb-4 text-slate-300" />
                     <p className="text-slate-600 text-sm font-medium">
                         Non hai ancora squadre. Scoprine una o creane una!
                     </p>
                 </div>
             ) : (
                 myTeams.map(team => (
-                    <motion.div
+                    <TeamCard
                         key={team.id}
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => { navigate(`/squadre/${team.id}`) }}
-                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer relative"
-                    >
-                        {/* Codice Invito - Spostato in basso o in alto se necessario, ma con flex */}
-                        <div className="flex items-start gap-4 mt-1">
-                            {/* Logo o Avatar - Cerchio con Gradiente */}
-                            <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-100 shadow-sm overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 relative">
-                                {team.logo_url ? (
-                                    <img
-                                        src={team.logo_url}
-                                        alt={team.name}
-                                        className="w-full h-full object-cover"
-                                    />
+                        team={team}
+                        onClick={() => navigate(`/squadre/${team.id}`)}
+                        trailing={
+                            <button
+                                onClick={() => handleCopyCode(team.invite_code)}
+                                className="flex items-center gap-1 text-[10px] font-mono bg-slate-50 border border-slate-200 px-2 py-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-all"
+                            >
+                                {copiedCode === team.invite_code ? (
+                                    <Check size={12} className="text-green-600" />
                                 ) : (
-                                    <span className="text-2xl text-white font-bold">
-                                        {team.name ? team.name.charAt(0).toUpperCase() : 'T'}
-                                    </span>
+                                    <Copy size={12} />
                                 )}
-                            </div>
-
-                            {/* Info */}
-                            <div className="flex-1 min-w-0 pr-0">
-                                <div className="flex items-start justify-between gap-2 mb-1.5 flex-col md:flex-row">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <h3 className="font-bold text-slate-800 text-lg sm:text-base truncate">{team.name}</h3>
-                                        <span className="inline-flex items-center gap-1 bg-green-50 text-green-600 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 border border-green-100">
-                                            🌐 Pubblica
-                                        </span>
-                                    </div>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => { e.stopPropagation(); handleCopyCode(team.invite_code); }}
-                                        className="flex-shrink-0 flex items-center gap-1.5 text-[10px] md:text-xs bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-full font-medium text-slate-600 hover:bg-slate-100 transition-all shadow-sm"
-                                    >
-                                        {copiedCode === team.invite_code ? (
-                                            <>
-                                                <Check size={12} className="text-green-600" />
-                                                <span className="text-green-600">Copiato!</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy size={12} />
-                                                {team.invite_code}
-                                            </>
-                                        )}
-                                    </motion.button>
-                                </div>
-                                <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed">
-                                    {team.description || 'Nessuna descrizione'}
-                                </p>
-
-                                {/* Sport e Città */}
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    {team.citta && (
-                                        <span className="inline-flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium">
-                                            📍 {team.citta}
-                                        </span>
-                                    )}
-                                    {team.sport && team.sport.length > 0 && (
-                                        <span className="inline-flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-medium">
-                                            ⚽ {team.sport.slice(0, 2).join(', ')}{team.sport.length > 2 ? '...' : ''}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
+                                {team.invite_code}
+                            </button>
+                        }
+                    />
                 ))
             )}
         </motion.div>
@@ -419,31 +409,6 @@ export default function TeamsPage({ session }) {
             exit={{ opacity: 0 }}
             className="space-y-4"
         >
-            {/* Barra di ricerca */}
-            <div className="sticky top-[58px] z-30 pb-4">
-                <div className="relative">
-                    <Search
-                        size={18}
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Cerca per nome o codice..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                    {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                        >
-                            ✕
-                        </button>
-                    )}
-                </div>
-            </div>
-
             {/* Lista risultati */}
             {loading && searchQuery ? (
                 <div className="text-center py-8">
@@ -454,93 +419,34 @@ export default function TeamsPage({ session }) {
                     <p className="text-slate-500 text-sm">Nessuna squadra trovata</p>
                 </div>
             ) : (
-                allTeams.map(team => (
-                    <motion.div
-                        key={team.id}
-                        whileHover={{ scale: 1.02 }}
-                        onClick={() => navigate(`/squadre/${team.id}`)}
-                        className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-95 relative"
-                    >
-                        <div className="flex items-start gap-4 mt-1">
-                            {/* Logo o Avatar - Cerchio con Gradiente */}
-                            <div className="w-16 h-16 rounded-full flex items-center justify-center flex-shrink-0 border border-slate-100 shadow-sm overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
-                                {team.logo_url ? (
-                                    <img
-                                        src={team.logo_url}
-                                        alt={team.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <span className="text-2xl text-white font-bold">
-                                        {team.name ? team.name.charAt(0).toUpperCase() : 'T'}
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Info e Bottone */}
-                            <div className="flex-1 min-w-0 pr-0">
-                                <div className="flex items-start justify-between gap-2 mb-1.5 flex-col lg:flex-row lg:items-center">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <h3 className="font-bold text-slate-800 text-lg sm:text-base truncate">{team.name}</h3>
-                                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 border ${team.is_private
-                                                ? 'bg-red-50 text-red-600 border-red-100'
-                                                : 'bg-green-50 text-green-600 border-green-100'
-                                            }`}>
-                                            {team.is_private ? (
-                                                <>
-                                                    <Lock size={10} />
-                                                    Privata
-                                                </>
-                                            ) : (
-                                                <>🌐 Pubblica</>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => { e.stopPropagation(); handleJoinTeam(team); }}
-                                        disabled={
-                                            processingTeam === team.id ||
-                                            myTeams.some(t => t.id === team.id)
-                                        }
-                                        className={`px-3 py-1.5 rounded-full font-semibold text-[11px] md:text-xs transition-all active:scale-95 whitespace-nowrap flex-shrink-0 mt-2 lg:mt-0 ${myTeams.some(t => t.id === team.id)
-                                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                                            : processingTeam === team.id
-                                                ? 'bg-blue-300 text-white'
-                                                : 'bg-blue-600 text-white hover:shadow-md'
-                                            }`}
-                                    >
-                                        {processingTeam === team.id
-                                            ? 'Caricamento...'
-                                            : myTeams.some(t => t.id === team.id)
-                                                ? '✓ Iscritto'
-                                                : 'Unisciti'}
-                                    </motion.button>
-                                </div>
-
-                                {/* Descrizione - max 2 righe */}
-                                <p className="text-sm text-slate-500 mb-3 line-clamp-2 leading-relaxed mt-2 sm:mt-0">
-                                    {team.description || 'Nessuna descrizione'}
-                                </p>
-
-                                {/* Sport e Città */}
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    {team.citta && (
-                                        <span className="inline-flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium">
-                                            📍 {team.citta}
-                                        </span>
-                                    )}
-                                    {team.sport && team.sport.length > 0 && (
-                                        <span className="inline-flex items-center gap-1.5 text-xs bg-blue-50 border border-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-medium">
-                                            ⚽ {team.sport.slice(0, 3).join(', ')}{team.sport.length > 3 ? '...' : ''}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                ))
+                allTeams.map(team => {
+                    const alreadyMember = myTeams.some(t => t.id === team.id);
+                    return (
+                        <TeamCard
+                            key={team.id}
+                            team={team}
+                            onClick={() => navigate(`/squadre/${team.id}`)}
+                            trailing={
+                                <button
+                                    onClick={() => handleJoinTeam(team)}
+                                    disabled={processingTeam === team.id || alreadyMember}
+                                    className={`px-3 py-1.5 rounded-lg font-semibold text-[11px] transition-all active:scale-95 whitespace-nowrap ${alreadyMember
+                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        : processingTeam === team.id
+                                            ? 'bg-blue-300 text-white'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        }`}
+                                >
+                                    {processingTeam === team.id
+                                        ? '...'
+                                        : alreadyMember
+                                            ? 'Iscritto'
+                                            : 'Unisciti'}
+                                </button>
+                            }
+                        />
+                    );
+                })
             )}
         </motion.div>
     );
@@ -555,7 +461,7 @@ export default function TeamsPage({ session }) {
         >
             <form onSubmit={handleCreateTeam} className="space-y-5">
                 {/* Info squadre create dall'utente */}
-                <div className={`border rounded-xl shadow p-3 text-xl text-md ${countCreatedTeams >= 3 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gradient-to-r from-blue-200 to-yellow-300 border-blue-300 text-blue-800'}`}>
+                <div className={`border rounded-xl shadow-md p-3 text-sm ${countCreatedTeams >= 3 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-300 text-white'}`}>
                     <div className="flex items-center justify-between">
                         <p>
                             Squadre create: <span className="font-black">{countCreatedTeams}</span>/3
@@ -566,7 +472,7 @@ export default function TeamsPage({ session }) {
                                 onClick={() => setTooltipActive(!tooltipActive)}
                                 className="p-1 hover:opacity-70 transition-opacity"
                             >
-                                <Info size={22} className="inline" />
+                                <Info size={20} className="inline" />
                             </button>
                             {tooltipActive && (
                                 <div className="absolute bottom-full right-0 mb-2 bg-slate-900 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 animate-fade-in">
@@ -840,7 +746,7 @@ export default function TeamsPage({ session }) {
                     <button
                         type="button"
                         onClick={() => {
-                            setFormData({ name: '', description: '', logo_url: '', is_private: false, password: '', sport: [], citta: '' });
+                            setFormData({ name: '', description: '', logo_url: '', is_private: false, password: '', sport: [], citta: '', primary_color: '#3b82f6', secondary_color: '#1e40af' });
                             setActiveTab('myTeams');
                         }}
                         className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
@@ -874,48 +780,82 @@ export default function TeamsPage({ session }) {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 max-w-md mx-auto p-4">
-            {/* TASTO INDIETRO */}
-            <button
-                onClick={() => navigate("/")}
-                type="button"
-                className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
-            >
-                <ChevronRight size={14} className="rotate-180" />
-                Indietro
-            </button>
-            {/* TITOLO COMPONENTE */}
-            <h1 className="text-4xl font-black text-slate-800 text-center">Squadre</h1>
-            <p className="text-sm text-slate-400 text-center mt-2">
-                Gestisci le tue squadre o unisciti a quelle degli amici!
-            </p>
-
-            {/* Main Content */}
-            <div className="mt-3">
-                {/* Tab Navigation */}
-                <div className="sticky top-[58px] z-20 bg-slate-50 py-3 mb-6 flex gap-3">
-                    {[
-                        { id: 'myTeams', label: '👥 Le mie Squadre' },
-                        { id: 'discover', label: '🔍 Esplora' },
-                        { id: 'create', label: '➕ Nuovo Team' }
-                    ].map(tab => (
-                        <motion.button
-                            key={tab.id}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 py-3 px-3 rounded-full font-bold text-xs transition-all ${activeTab === tab.id
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-150'
-                                }`}
-                        >
-                            {tab.label}
-                        </motion.button>
-                    ))}
+        <div className="h-[calc(100vh-58px)] bg-gradient-to-b from-blue-50 to-white flex flex-col overflow-hidden">
+            {/* Blocco fisso: torna indietro, titolo, tabs e ricerca */}
+            <div className="flex-shrink-0">
+                <div className="max-w-md mx-auto p-4 pb-0">
+                    {/* TASTO INDIETRO */}
+                    <button
+                        onClick={() => navigate("/")}
+                        type="button"
+                        className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+                    >
+                        <ArrowLeft size={14} />
+                        Indietro
+                    </button>
+                    {/* TITOLO COMPONENTE */}
+                    <h1 className="text-4xl font-black text-slate-800 text-center">Squadre</h1>
+                    <p className="text-sm text-slate-400 text-center mt-2">
+                        Gestisci le tue squadre o unisciti a quelle degli amici!
+                    </p>
                 </div>
 
-                {/* Tab Content */}
-                <div className="max-h-[calc(100vh-360px)] overflow-y-auto pr-2 space-y-4 pb-20">
+                {/* Tab Navigation + (se Esplora) barra di ricerca, un unico blocco fisso a piena larghezza */}
+                <div className="bg-white/80 backdrop-blur-md border-b border-slate-100 py-3 mt-3">
+                    <div className="max-w-md mx-auto px-4 space-y-3">
+                        <div className="flex gap-3">
+                            {[
+                                { id: 'myTeams', label: 'Le mie Squadre', icon: Users },
+                                { id: 'discover', label: 'Esplora', icon: Search },
+                                { id: 'create', label: 'Nuovo Team', icon: Plus }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex-1 flex flex-col items-center justify-center h-16 rounded-2xl shadow-md active:scale-95 transition-transform cursor-pointer ${activeTab === tab.id
+                                        ? 'bg-blue-600'
+                                        : 'bg-white border border-gray-100'
+                                        }`}
+                                >
+                                    <tab.icon size={18} className={activeTab === tab.id ? 'text-white' : 'text-blue-600'} />
+                                    <span className={`text-[11px] mt-1 ${activeTab === tab.id ? 'text-white font-bold' : 'text-slate-800 font-semibold'}`}>
+                                        {tab.label}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {activeTab === 'discover' && (
+                            <div className="relative">
+                                <Search
+                                    size={18}
+                                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Cerca per nome o codice..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Lista scrollabile: riempie esattamente lo spazio tra tabs e fondo schermo */}
+            <div className="flex-1 overflow-y-auto">
+                <div className="max-w-md mx-auto p-4 space-y-4 pb-20">
                     {activeTab === 'myTeams' && renderMyTeamsTab()}
                     {activeTab === 'discover' && renderDiscoverTab()}
                     {activeTab === 'create' && renderCreateTeamTab()}

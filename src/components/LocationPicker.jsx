@@ -29,14 +29,39 @@ export default function LocationPicker({ value, onChange }) {
       return;
     }
 
+    let attachedScript = null;
+
+    const initAutocomplete = () => {
+      if (!inputRef.current) return;
+
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+        types: ['establishment', 'geocode'],
+        componentRestrictions: { country: 'it' },
+      });
+
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current.getPlace();
+
+        if (place.geometry && place.geometry.location) {
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          const name = place.formatted_address || place.name;
+
+          updateLocation(lat, lng, name);
+          setSearchQuery(name);
+        }
+      });
+    };
+
     const loadGoogleMapsScript = () => {
       if (window.google?.maps?.places) {
         initAutocomplete();
         return;
       }
-      
+
       const existingScript = document.getElementById('google-maps-script');
       if (existingScript) {
+        attachedScript = existingScript;
         existingScript.addEventListener('load', initAutocomplete);
         return;
       }
@@ -47,35 +72,16 @@ export default function LocationPicker({ value, onChange }) {
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);
-
+      attachedScript = script;
       script.addEventListener('load', initAutocomplete);
-    };
-
-    const initAutocomplete = () => {
-      if (!inputRef.current) return;
-      
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-        types: ['establishment', 'geocode'],
-        componentRestrictions: { country: 'it' },
-      });
-
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current.getPlace();
-        
-        if (place.geometry && place.geometry.location) {
-          const lat = place.geometry.location.lat();
-          const lng = place.geometry.location.lng();
-          const name = place.formatted_address || place.name;
-          
-          updateLocation(lat, lng, name);
-          setSearchQuery(name);
-        }
-      });
     };
 
     loadGoogleMapsScript();
 
     return () => {
+      if (attachedScript) {
+        attachedScript.removeEventListener('load', initAutocomplete);
+      }
       if (autocompleteRef.current && window.google) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }

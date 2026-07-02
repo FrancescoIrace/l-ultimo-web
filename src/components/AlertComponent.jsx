@@ -1,4 +1,4 @@
-import { useState, createContext, useContext } from 'react';
+import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { X, AlertCircle } from 'lucide-react';
 
 const AlertContext = createContext();
@@ -7,11 +7,15 @@ export { AlertContext };
 
 export function AlertProvider({ children }) {
   const [alert, setAlert] = useState(null);
+  const timerRef = useRef(null);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const showAlert = (message, type = 'info', duration = 3000) => {
+    clearTimeout(timerRef.current);
     setAlert({ message, type, id: Date.now() });
     if (duration) {
-      setTimeout(() => setAlert(null), duration);
+      timerRef.current = setTimeout(() => setAlert(null), duration);
     }
   };
 

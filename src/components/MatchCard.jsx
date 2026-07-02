@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from './AlertComponent';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
+import { notifyMatchJoin } from '../lib/notificationService';
 
 
 export default function MatchCard({ match, user }) {
@@ -125,10 +126,12 @@ export default function MatchCard({ match, user }) {
   // }, [match.location_lat, match.location_lng, match.datetime]);
 
   const handleJoin = async () => {
+    const playerName = user.user_metadata?.username || 'Un giocatore';
+
     const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
       p_match_id: match.id,
       p_user_id: user.id,
-      p_username: user.user_metadata?.username || 'Un giocatore'
+      p_username: playerName
     });
 
     if (rpcError) {
@@ -149,6 +152,12 @@ export default function MatchCard({ match, user }) {
         break;
       default:
         success("Richiesta elaborata.");
+    }
+
+    // Notifica push all'organizzatore: join_match_v2 NON lo fa più (l'INSERT
+    // in notifications è commentato lato DB), quindi la mandiamo da qui.
+    if ((status === 'confirmed' || status === 'waiting') && !isCreator) {
+      notifyMatchJoin(match.id, match.title, playerName, match.creator_id, user.id);
     }
   };
 

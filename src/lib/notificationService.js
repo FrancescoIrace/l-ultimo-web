@@ -94,7 +94,7 @@ export async function notifyMatchJoin(
     senderId: joinedUserId,
     type: 'match_join',
     title: '🎯 Nuovo Giocatore!',
-    content: `${playerName} si è unito a "${matchTitle}"`,
+    content: `${playerName} si è unito ${matchTitle ? `a "${matchTitle}"` : 'alla tua partita'}`,
     link: `/match/${matchId}`,
     metadata: {
       matchId,

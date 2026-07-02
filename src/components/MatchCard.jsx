@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from './AlertComponent';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
-import { notifyMatchJoin } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchFull } from '../lib/notificationService';
 
 
 export default function MatchCard({ match, user }) {
@@ -158,6 +158,11 @@ export default function MatchCard({ match, user }) {
     // in notifications è commentato lato DB), quindi la mandiamo da qui.
     if ((status === 'confirmed' || status === 'waiting') && !isCreator) {
       notifyMatchJoin(match.id, match.title, playerName, match.creator_id, user.id);
+    }
+
+    // Se questa iscrizione ha riempito l'ultimo posto, avvisa l'organizzatore
+    if (status === 'confirmed' && confirmedPlayers.length + 1 >= match.max_players && !isCreator) {
+      notifyMatchFull(match.id, match.title, match.creator_id);
     }
   };
 

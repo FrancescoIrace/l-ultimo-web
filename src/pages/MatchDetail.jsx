@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -349,6 +349,37 @@ export default function MatchDetail({ user }) {
                         }
                     }
 
+                    // 3. Se la partita era piena, ripesca il primo della lista d'attesa
+                    // (se c'è) e notifica lui + tutti gli altri confermati dell'abbandono
+                    const wasFull = confirmedPlayers.length >= match.max_players;
+                    if (wasFull) {
+                        const nextInLine = waitingPlayers.length > 0
+                            ? [...waitingPlayers].sort((a, b) => a.waitlist_order - b.waitlist_order)[0]
+                            : null;
+
+                        if (nextInLine) {
+                            const { error: promoteError } = await supabase
+                                .from('participants')
+                                .update({ status: 'confirmed', waitlist_order: null })
+                                .eq('match_id', id)
+                                .eq('user_id', nextInLine.user_id);
+
+                            if (promoteError) {
+                                console.error('❌ Errore ripescaggio lista d\'attesa:', promoteError);
+                            } else {
+                                notifyWaitlistPromoted(id, match.title, nextInLine.user_id);
+                            }
+                        }
+
+                        const otherConfirmedIds = confirmedPlayers
+                            .map(p => p.user_id)
+                            .filter(uid => uid !== user.id && uid !== nextInLine?.user_id);
+
+                        if (otherConfirmedIds.length > 0) {
+                            notifyMatchSpotFreed(id, match.title, username, otherConfirmedIds);
+                        }
+                    }
+
                     success('Hai abbandonato la partita!');
                 } catch (err) {
                     console.error('❌ Errore generale:', err);
@@ -519,6 +550,11 @@ Scopri di più qui: ${window.location.href}`;
         // in notifications è commentato lato DB), quindi la mandiamo da qui.
         if ((status === 'confirmed' || status === 'waiting') && match.creator_id !== user.id) {
             notifyMatchJoin(match.id, match.title, playerName, match.creator_id, user.id);
+        }
+
+        // Se questa iscrizione ha riempito l'ultimo posto, avvisa l'organizzatore
+        if (status === 'confirmed' && confirmedPlayers.length + 1 >= match.max_players && match.creator_id !== user.id) {
+            notifyMatchFull(match.id, match.title, match.creator_id);
         }
     };
 

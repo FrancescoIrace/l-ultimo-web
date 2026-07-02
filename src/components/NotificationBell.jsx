@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, Calendar, AlertTriangle,Handshake } from 'lucide-react';
+import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle,Handshake } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getNotificationStyles(type) {
@@ -20,6 +20,11 @@ function getNotificationStyles(type) {
       bg: 'bg-red-50',
       dot: 'bg-red-500',
       hover: 'hover:bg-red-100',
+    },
+    match_full: {
+      bg: 'bg-indigo-50',
+      dot: 'bg-indigo-500',
+      hover: 'hover:bg-indigo-100',
     },
     match_update: {
       bg: 'bg-blue-50',
@@ -173,6 +178,10 @@ export function NotificationBell({ userId }) {
                             return <RefreshCw size={18} className="text-amber-600" />; // Icona per il ripescaggio
                           case 'match_join':
                             return <UserPlus size={18} className="text-green-600" />;
+                          case 'match_leave':
+                            return <UserMinus size={18} className="text-red-500" />;
+                          case 'match_full':
+                            return <Users size={18} className="text-indigo-600" />;
                           case 'match_reminder':
                             return <Calendar size={18} className="text-yellow-600" />;
                           case 'match_cancelled':

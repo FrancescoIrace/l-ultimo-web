@@ -105,6 +105,52 @@ export async function notifyMatchJoin(
 }
 
 /**
+ * Notifica l'organizzatore quando la partita raggiunge il numero massimo di giocatori
+ */
+export async function notifyMatchFull(matchId, matchTitle, organizerId) {
+  return createNotification({
+    userId: organizerId,
+    type: 'match_full',
+    title: '✅ Partita al completo!',
+    content: `${matchTitle ? `"${matchTitle}"` : 'La tua partita'} ha raggiunto il numero massimo di giocatori`,
+    link: `/match/${matchId}`,
+    metadata: { matchId },
+  });
+}
+
+/**
+ * Notifica gli altri partecipanti confermati quando qualcuno abbandona una partita piena
+ */
+export async function notifyMatchSpotFreed(matchId, matchTitle, leaverName, participantIds) {
+  const notifications = participantIds.map(userId =>
+    createNotification({
+      userId,
+      type: 'match_leave',
+      title: '👋 Un giocatore ha abbandonato',
+      content: `${leaverName} ha lasciato ${matchTitle ? `"${matchTitle}"` : 'la partita'}: si è liberato un posto`,
+      link: `/match/${matchId}`,
+      metadata: { matchId },
+    })
+  );
+
+  return Promise.all(notifications);
+}
+
+/**
+ * Notifica chi viene ripescato dalla lista d'attesa perché si è liberato un posto
+ */
+export async function notifyWaitlistPromoted(matchId, matchTitle, promotedUserId) {
+  return createNotification({
+    userId: promotedUserId,
+    type: 'match_promotion',
+    title: '🎉 Sei entrato in partita!',
+    content: `Si è liberato un posto in ${matchTitle ? `"${matchTitle}"` : 'una partita'}: sei passato dalla lista d'attesa ai confermati!`,
+    link: `/match/${matchId}`,
+    metadata: { matchId },
+  });
+}
+
+/**
  * Notifica quando un match viene aggiornato
  */
 export async function notifyMatchUpdate(matchId, matchTitle, updateMessage, participantIds) {

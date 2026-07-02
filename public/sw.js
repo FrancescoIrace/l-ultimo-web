@@ -18,26 +18,28 @@ self.addEventListener('push', (event) => {
     return;
   }
 
-  let notificationData;
+  let payload;
   try {
-    notificationData = event.data.json();
+    payload = event.data.json();
   } catch (e) {
     // Se non è JSON, usa il testo
-    notificationData = {
-      title: 'L\'ULTIMO',
-      body: event.data.text(),
+    payload = {
+      notification: { title: 'L\'ULTIMO', body: event.data.text() },
     };
   }
 
-  const {
-    title = 'L\'ULTIMO',
-    body = 'Nuova notifica',
-    icon = '/logo-192.png',
-    badge = '/logo-192.png',
-    tag = 'notification',
-    requireInteraction = false,
-    data = {},
-  } = notificationData;
+  // FCM consegna il payload come { notification: {...}, data: {...} } annidati,
+  // non come campi piatti: title/body vanno letti da notification.*, con
+  // data.* come fallback per eventuali invii non passati da FCM.
+  const notification = payload.notification || {};
+  const data = payload.data || {};
+
+  const title = notification.title || data.title || 'L\'ULTIMO';
+  const body = notification.body || data.body || 'Nuova notifica';
+  const icon = notification.icon || data.icon || '/logo-192.png';
+  const badge = data.badge || '/logo-192.png';
+  const tag = data.tag || 'notification';
+  const requireInteraction = data.requireInteraction === 'true' || data.requireInteraction === true;
 
   const options = {
     body,
@@ -51,7 +53,6 @@ self.addEventListener('push', (event) => {
       ...data,
     },
     vibrate: [200, 100, 200],
-    sound: '/notification-sound.mp3',
   };
 
   event.waitUntil(

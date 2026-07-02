@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchReminder } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -504,11 +504,13 @@ Scopri di più qui: ${window.location.href}`;
     };
 
     const handleJoin = async () => {
-        // Chiamiamo la RPC che gestisce tutto: controllo posti, inserimento, incremento e notifiche
+        const playerName = user.user_metadata?.username || 'Un giocatore';
+
+        // Chiamiamo la RPC che gestisce tutto: controllo posti, inserimento e incremento
         const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
             p_match_id: match.id,
             p_user_id: user.id,
-            p_username: user.user_metadata?.username || 'Un giocatore'
+            p_username: playerName
         });
 
         if (rpcError) {
@@ -531,8 +533,11 @@ Scopri di più qui: ${window.location.href}`;
                 success("Richiesta elaborata.");
         }
 
-        // Non serve chiamare manualmente increment_match_players o notifyMatchJoin
-        // perché lo fa già la funzione SQL join_match_v2!
+        // Notifica push all'organizzatore: join_match_v2 NON lo fa più (l'INSERT
+        // in notifications è commentato lato DB), quindi la mandiamo da qui.
+        if ((status === 'confirmed' || status === 'waiting') && match.creator_id !== user.id) {
+            notifyMatchJoin(match.id, match.title, playerName, match.creator_id, user.id);
+        }
     };
 
     const handleSendRequest = async () => {

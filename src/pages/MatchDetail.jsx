@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 
@@ -415,12 +415,21 @@ export default function MatchDetail({ user }) {
 
     const handleDeleteMatch = async () => {
         confirmDangerous(isMatchFinished ? "Sicuro di voler eliminare la partita? non apparirà nel tuo storico" : "Sei l'organizzatore. Vuoi annullare definitivamente la partita?", async () => {
+            // Raccogliamo i destinatari prima di cancellare la riga: il cascade
+            // rimuove anche i relativi participants, dopo non potremmo più leggerli.
+            const recipientIds = [...confirmedPlayers, ...waitingPlayers]
+                .map(p => p.user_id)
+                .filter(uid => uid !== user.id);
+
             const { error: deleteError } = await supabase
                 .from('matches')
                 .delete()
                 .eq('id', id);
 
             if (!deleteError) {
+                if (!isMatchFinished && recipientIds.length > 0) {
+                    notifyMatchCancelled(id, match.title, recipientIds);
+                }
                 success('Partita annullata!');
                 setTimeout(() => navigate('/'), 1000);
             } else {

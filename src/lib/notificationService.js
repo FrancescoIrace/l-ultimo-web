@@ -174,7 +174,7 @@ export async function notifyMatchUpdate(matchId, matchTitle, updateMessage, part
       userId,
       type: 'match_update',
       title: '📝 Aggiornamento Partita',
-      content: `"${matchTitle}": ${updateMessage}`,
+      content: `${matchTitle ? `"${matchTitle}"` : 'La tua partita'}: ${updateMessage}`,
       link: `/match/${matchId}`,
       metadata: { matchId },
     })
@@ -192,7 +192,7 @@ export async function notifyMatchCancelled(matchId, matchTitle, participantIds) 
       userId,
       type: 'match_cancelled',
       title: '❌ Partita Cancellata',
-      content: `La partita "${matchTitle}" è stata cancellata`,
+      content: `${matchTitle ? `La partita "${matchTitle}"` : 'La partita'} è stata cancellata`,
       link: null,
       metadata: { matchId },
     })

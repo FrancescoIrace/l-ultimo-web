@@ -8,6 +8,7 @@ import { useAlert } from '../components/AlertComponent';
 import { Info, ChevronRight, Loader } from 'lucide-react';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
+import { notifyMatchUpdate } from '../lib/notificationService';
 
 
 // Converti da datetime-local string (YYYY-MM-DDTHH:mm) a formato timestamp locale
@@ -41,6 +42,7 @@ export default function CreateMatch() {
     const [selectedCenter, setSelectedCenter] = useState(null);
     const [availableCourts, setAvailableCourts] = useState([]);
     const [myTeams, setMyTeams] = useState([]);
+    const [originalMatch, setOriginalMatch] = useState(null); // Snapshot pre-modifica, per capire cosa notificare
 
     const SPORT_MAX_PLAYERS = {
         'Calcetto': 10,
@@ -201,6 +203,12 @@ export default function CreateMatch() {
 
                     // 1. Popoliamo il form con la data formattata
                     setFormData({
+                        ...matchData,
+                        datetime: datetimeForInput,
+                    });
+                    // Teniamo uno snapshot dei valori originali per capire cosa
+                    // è cambiato quando l'utente salva (per il testo della notifica)
+                    setOriginalMatch({
                         ...matchData,
                         datetime: datetimeForInput,
                     });
@@ -399,6 +407,29 @@ export default function CreateMatch() {
             alert("Errore aggiornamento partita: " + matchError.message);
             setLoading(false);
             return;
+        }
+
+        // 2. Notifica i partecipanti confermati di cosa è cambiato
+        const changes = [];
+        if (originalMatch?.datetime !== formData.datetime) changes.push('orario');
+        if (originalMatch?.location !== formData.location) changes.push('luogo');
+        if (originalMatch?.title !== formData.title) changes.push('titolo');
+        if (originalMatch?.description !== formData.description) changes.push('descrizione');
+
+        if (changes.length > 0) {
+            const { data: participantsData } = await supabase
+                .from('participants')
+                .select('user_id')
+                .eq('match_id', id)
+                .eq('status', 'confirmed');
+
+            const recipientIds = (participantsData || [])
+                .map(p => p.user_id)
+                .filter(uid => uid !== updatedMatch.creator_id);
+
+            if (recipientIds.length > 0) {
+                notifyMatchUpdate(id, updatedMatch.title, `Sono stati modificati: ${changes.join(', ')}`, recipientIds);
+            }
         }
 
         alert("Partita aggiornata con successo!");

@@ -1,5 +1,45 @@
 [
   {
+    "date": "02 luglio 2026",
+    "title": "Notifica partita annullata e partita modificata ai partecipanti",
+    "description": "- handleDeleteMatch (MatchDetail/V2): quando l'organizzatore annulla\n  una partita futura, tutti i confermati e chi era in lista d'attesa\n  ricevono notifyMatchCancelled (prima nessuno veniva avvisato, la\n  funzione esisteva ma non era mai stata agganciata). Nessuna notifica\n  per l'eliminazione di partite già concluse (pulizia storico, non\n  un vero annullamento).\n- CreateMatch.jsx (handleUpdate, il form di modifica realmente usato\n  dalla route /modifica/:id): confronta i valori originali con quelli\n  salvati e notifica i confermati con notifyMatchUpdate, elencando\n  cosa è cambiato (orario/luogo/titolo/descrizione)\n- notifyMatchCancelled/notifyMatchUpdate: stesso fix già fatto per\n  notifyMatchJoin per il titolo partita facoltativo (niente più\n  virgolette vuote se il titolo manca)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Fix bottone Unisciti quando piena, notifiche differenziate su abbandono",
+    "description": "- MatchDetailV2.jsx: il bottone \"Unisciti alla Partita\" restava\n  disabilitato a partita piena invece di trasformarsi in \"Unisciti\n  alla Lista d'Attesa\" come già faceva la card nella ricerca partite\n  e la vecchia MatchDetail.jsx; ora resta cliccabile e cambia label,\n  join_match_v2 gestisce già lato server la lista d'attesa\n- Abbandono da partita piena: se c'è qualcuno in lista d'attesa,\n  l'organizzatore riceve una notifica dedicata sul cambio\n  (notifyOrganizerSpotFilled) invece che tutti i confermati; se la\n  lista d'attesa è vuota, notifica generica a tutti i confermati\n  rimasti che si è liberato un posto\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Notifica partita piena e ripescaggio automatico dalla lista d'attesa",
+    "description": "- notifyMatchFull: avvisa l'organizzatore quando l'ultimo posto si\n  riempie (agganciato in tutti e 3 i punti di iscrizione: MatchDetail,\n  MatchDetailV2, MatchCard)\n- Quando un confermato abbandona una partita piena: il primo in lista\n  d'attesa viene promosso automaticamente a confermato (non succedeva\n  prima, non c'era nessun meccanismo di ripescaggio) e riceve una\n  notifica dedicata (notifyWaitlistPromoted, tipo match_promotion);\n  gli altri confermati ricevono notifyMatchSpotFreed per essere\n  informati dell'abbandono\n- NotificationBell: aggiunte icone/colori per match_full e match_leave\n  (prima mancavano, ricadevano sullo stile generico)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Notifica join anche dal bottone nella ricerca partite, fallback per titolo assente",
+    "description": "- MatchCard.jsx (usato nella lista/ricerca partite) ora chiama\n  notifyMatchJoin come già fatto in MatchDetail/MatchDetailV2, invece\n  di lasciare l'organizzatore senza notifica quando ci si iscrive da lì\n- notifyMatchJoin: se la partita non ha un titolo (campo facoltativo),\n  il messaggio usa \"alla tua partita\" invece di mostrare virgolette vuote\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Notifica push all'organizzatore quando un utente si iscrive alla partita",
+    "description": "join_match_v2 non invia più notifiche lato DB (l'INSERT è commentato),\nquindi ora handleJoin chiama notifyMatchJoin (già pronta ma mai usata)\ndopo un'iscrizione riuscita, sia da posto confermato che da lista\nd'attesa. Skippa l'organizzatore se si iscrive alla propria partita.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Fix notifiche push mostrate con testo generico invece del contenuto reale",
+    "description": "FCM consegna il payload al service worker come { notification: {...},\ndata: {...} } annidati, ma sw.js leggeva title/body come campi piatti\nalla radice dell'oggetto: risultavano sempre undefined e scattava il\nfallback \"Nuova notifica\" invece del contenuto vero della notifica.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Aggiorna VITE_VAPID_PUBLIC_KEY di esempio con la chiave generata da Firebase Console",
+    "description": "La vecchia chiave in .env.example non era mai stata registrata come\ncertificato web push nel progetto Firebase, causando l'errore\n\"missing required authentication credential\" durante la sottoscrizione\nFCM su iOS.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "02 luglio 2026",
+    "title": "Fix push notifications su iOS e restyling sezione Squadre",
+    "description": "- Corregge il typo vapidKey/vapidPublicKey e registra esplicitamente il\n  service worker, senza il quale navigator.serviceWorker.ready non si\n  risolveva mai su iPhone; il banner \"Attiva Notifiche\" ora avvisa di\n  aggiungere l'app alla Home su iOS non-standalone invece di fallire\n  silenziosamente\n- Sostituisce il blocco apns (inerte per token web) con webpush nella\n  edge function send-push-notification e corregge i path icona rotti\n- Refactor completo di TeamsPage in stile PWADashboard: layout fisso\n  con lista scrollabile, card squadra uniformate, fix badge privacy\n  mai aggiornato per mancanza di is_private nella query\n- Include fix minori pendenti su AlertComponent, LocationPicker e\n  MatchCard (cleanup di timer/listener/subscription)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
     "date": "23 giugno 2026",
     "title": "Aggiunte \"indietro\" più nuovo layout per matchDetails",
     "description": "Modifica all'app"
@@ -7,46 +47,6 @@
   {
     "date": "17 giugno 2026",
     "title": "Aggiunta CORSA e PALESTRA",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "11 giugno 2026",
-    "title": "Domande sui mondiali",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "05 giugno 2026",
-    "title": "Restyling create match e profilo centro",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "05 giugno 2026",
-    "title": "Restyling Dashboard principale",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "05 giugno 2026",
-    "title": "Aggiunta option telecamera per i campi",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "05 giugno 2026",
-    "title": "fix se utente ha giocato o no",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "04 giugno 2026",
-    "title": "Inserimento nuovi banner",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "04 giugno 2026",
-    "title": "fix vari + nuova icona",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "04 giugno 2026",
-    "title": "Fix domande sfida giornaliera",
     "description": "Modifica all'app"
   }
 ]

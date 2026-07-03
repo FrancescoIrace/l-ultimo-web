@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationService';
-import { UserPlus, UserCheck, Clock, UserX, ChevronRight, Loader, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, UserX, ChevronRight, Loader, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical } from 'lucide-react';
+import { useAlert } from '../components/AlertComponent';
 
 export default function PublicProfile() {
     const { id } = useParams(); // Prende l'ID dall'URL
     const navigate = useNavigate();
+    const { success, error: showError, confirmDangerous } = useAlert();
     const [profile, setProfile] = useState(null);
     const [courts, setCourts] = useState([]);
     const [businessHours, setBusinessHours] = useState([]);
@@ -21,6 +23,10 @@ export default function PublicProfile() {
     const [friendCount, setFriendCount] = useState(0);
     const [squads, setSquads] = useState([]);
     const [expandedSquads, setExpandedSquads] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
+    const [blockActionLoading, setBlockActionLoading] = useState(false);
+    const [blockMenuOpen, setBlockMenuOpen] = useState(false);
+    const blockMenuRef = useRef(null);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -138,9 +144,29 @@ export default function PublicProfile() {
                     setFriendshipStatus(data.user_id === user.id ? 'pending_sent' : 'pending_received');
                 }
             }
+
+            const { data: blockData } = await supabase
+                .from('user_blocks')
+                .select('id')
+                .eq('blocker_id', user.id)
+                .eq('blocked_id', id)
+                .maybeSingle();
+
+            setIsBlocked(!!blockData);
         }
         if (id) loadCurrentUserAndFriendship();
     }, [id]);
+
+    // Chiude il menu contestuale al click fuori
+    useEffect(() => {
+        function handleClickOutside(e) {
+            if (blockMenuRef.current && !blockMenuRef.current.contains(e.target)) {
+                setBlockMenuOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
 
@@ -185,6 +211,53 @@ export default function PublicProfile() {
         await notifyFriendAccepted(id, myProfile?.username || 'Un utente', currentUser.id);
         setFriendshipStatus('accepted');
         setFriendActionLoading(false);
+    };
+
+    const handleBlockUser = async () => {
+        setBlockMenuOpen(false);
+        if (!currentUser) return;
+
+        const confirmed = await confirmDangerous(
+            `Bloccare ${profile?.username}? Non vedrai più le sue recensioni e non potrete più interagire.`
+        );
+        if (!confirmed) return;
+
+        setBlockActionLoading(true);
+        const { error } = await supabase
+            .from('user_blocks')
+            .insert({ blocker_id: currentUser.id, blocked_id: id });
+        setBlockActionLoading(false);
+
+        if (error) {
+            console.error('Errore blocco utente:', error.message);
+            showError('Impossibile bloccare l\'utente');
+            return;
+        }
+
+        setIsBlocked(true);
+        success(`${profile?.username} è stato bloccato`);
+    };
+
+    const handleUnblockUser = async () => {
+        setBlockMenuOpen(false);
+        if (!currentUser) return;
+
+        setBlockActionLoading(true);
+        const { error } = await supabase
+            .from('user_blocks')
+            .delete()
+            .eq('blocker_id', currentUser.id)
+            .eq('blocked_id', id);
+        setBlockActionLoading(false);
+
+        if (error) {
+            console.error('Errore sblocco utente:', error.message);
+            showError('Impossibile sbloccare l\'utente');
+            return;
+        }
+
+        setIsBlocked(false);
+        success(`${profile?.username} è stato sbloccato`);
     };
 
     if (profile.role === 'center') {
@@ -379,15 +452,55 @@ export default function PublicProfile() {
     if (profile.role === 'player') {
         return (
             <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
-                {/* Tasto Indietro */}
-                <button
-                    onClick={() => navigate(-1)}
-                    type="button"
-                    className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
-                >
-                    <ChevronRight size={14} className="rotate-180" />
-                    Indietro
-                </button>
+                {/* Tasto Indietro + menu contestuale */}
+                <div className="mb-4 flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        type="button"
+                        className="flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+                    >
+                        <ChevronRight size={14} className="rotate-180" />
+                        Indietro
+                    </button>
+
+                    {currentUser && currentUser.id !== id && (
+                        <div className="relative" ref={blockMenuRef}>
+                            <button
+                                type="button"
+                                onClick={() => setBlockMenuOpen(!blockMenuOpen)}
+                                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                                aria-label="Altre opzioni"
+                                disabled={blockActionLoading}
+                            >
+                                <MoreVertical size={18} />
+                            </button>
+
+                            {blockMenuOpen && (
+                                <div className="absolute right-0 top-8 z-10 w-48 bg-white border border-slate-100 rounded-2xl shadow-lg overflow-hidden">
+                                    {isBlocked ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleUnblockUser}
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <UserX size={14} />
+                                            Sblocca Utente
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={handleBlockUser}
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50 transition-colors"
+                                        >
+                                            <UserX size={14} />
+                                            Blocca Utente
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-blue-50 shadow-xl overflow-hidden">

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import UserLocationInput from '../components/UserLocationInput';
 import { AlertContext } from '../components/AlertComponent';
-import { Loader, ChevronRight } from 'lucide-react';
+import { Loader, ChevronRight, ShieldCheck } from 'lucide-react';
 
 export default function AppSettings({ session }) {
   const navigate = useNavigate();
@@ -278,6 +278,45 @@ export default function AppSettings({ session }) {
           </Link>.
         </p>
       </section>
+
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
+        <h2 className="text-xl font-bold mb-3 ">Community</h2>
+        <p className="text-sm text-slate-500 mt-2">
+          Consulta le linee guida della community{' '}
+          <Link to="/community-guidelines?from=settings" className="text-blue-600 underline">
+            qui
+          </Link>.
+        </p>
+      </section>
+
+      <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 ">
+        <h2 className="text-xl font-bold mb-3 ">Termini</h2>
+        <p className="text-sm text-slate-500 mt-2">
+          Consulta i termini di servizio{' '}
+          <Link to="/terms-of-service?from=settings" className="text-blue-600 underline">
+            qui
+          </Link>.
+        </p>
+      </section>
+
+      {session?.user?.email === 'admin@admin.it' && (
+        <section className="mb-6 rounded-3xl border border-indigo-200 bg-indigo-50 p-5">
+          <h2 className="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-700">
+            <ShieldCheck size={20} />
+            Pannello Admin
+          </h2>
+          <p className="text-sm text-slate-500 mt-2 mb-4">
+            Gestisci segnalazioni recensioni e ban utenti.
+          </p>
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-indigo-700 transition-colors"
+          >
+            Apri pannello
+            <ChevronRight size={14} />
+          </Link>
+        </section>
+      )}
 
       <section className="rounded-3xl border border-red-200 bg-red-50 p-5 ">
         <h2 className="text-xl font-bold text-red-700 mb-3">Elimina profilo</h2>

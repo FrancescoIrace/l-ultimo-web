@@ -1,39 +1,53 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Loader } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { usePushNotifications } from './hooks/usePushNotifications';
-import Auth from './pages/Auth';
-import CreateMatch from './pages/CreateMatch';
-import FindFriends from './pages/FindFriends';
-import FriendRequests from './pages/FriendRequests';
-import MyMatches from './pages/MyMatches';
-import UserReviews from './pages/UserReviews';
-import Home from './pages/Home';
-import NotFound from './pages/404';
-import MatchDetail from './pages/MatchDetail';
-import MatchDetailV2 from './pages/MatchDetailV2';
-import Profile from './pages/Profile';
-import PublicProfile from './pages/PublicProfile';
-import AppSettings from './pages/AppSettings';
-import InstallGuide from './pages/InstallGuide';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import PublicMatchLanding from './pages/PublicMatchLanding';
-import WelcomeModal from './components/WelcomeModal';
-import PWADashboard from './pages/PWADashboard';
-import CentersList from './pages/CentersList';
 import PWAInstallBanner from './components/PWAInstallBanner';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import { NotificationBell } from './components/NotificationBell';
 import { AlertProvider } from './components/AlertComponent';
 import { usePWAMode } from './hooks/usePWAMode';
-import BusinessDashboard from './pages/business/BusinessDashboard';
-import GestisciCampi from './pages/business/GestisciCampi';
-import TeamsPage from './pages/TeamsPage';
-import TeamDetail from './pages/TeamDetail';
-import SfidaGiornaliera from './components/SfidaGiornaliera';
-import ClassificaMinigame from './components/ClassificaMinigame';
+
+// Ogni pagina viene scaricata solo quando l'utente ci naviga davvero,
+// invece di finire tutta nel bundle iniziale (erano 33 pagine in un
+// unico chunk da 1MB+ anche solo per vedere la schermata di login).
+const Auth = lazy(() => import('./pages/Auth'));
+const CreateMatch = lazy(() => import('./pages/CreateMatch'));
+const FindFriends = lazy(() => import('./pages/FindFriends'));
+const FriendRequests = lazy(() => import('./pages/FriendRequests'));
+const MyMatches = lazy(() => import('./pages/MyMatches'));
+const UserReviews = lazy(() => import('./pages/UserReviews'));
+const Home = lazy(() => import('./pages/Home'));
+const NotFound = lazy(() => import('./pages/404'));
+const MatchDetailV2 = lazy(() => import('./pages/MatchDetailV2'));
+const Profile = lazy(() => import('./pages/Profile'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile'));
+const AppSettings = lazy(() => import('./pages/AppSettings'));
+const InstallGuide = lazy(() => import('./pages/InstallGuide'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const CommunityGuidelines = lazy(() => import('./pages/CommunityGuidelines'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const PublicMatchLanding = lazy(() => import('./pages/PublicMatchLanding'));
+const PWADashboard = lazy(() => import('./pages/PWADashboard'));
+const CentersList = lazy(() => import('./pages/CentersList'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const BusinessDashboard = lazy(() => import('./pages/business/BusinessDashboard'));
+const GestisciCampi = lazy(() => import('./pages/business/GestisciCampi'));
+const TeamsPage = lazy(() => import('./pages/TeamsPage'));
+const TeamDetail = lazy(() => import('./pages/TeamDetail'));
+const SfidaGiornaliera = lazy(() => import('./components/SfidaGiornaliera'));
+const ClassificaMinigame = lazy(() => import('./components/ClassificaMinigame'));
+
+function RouteLoader() {
+  return (
+    <div className="p-10 flex flex-col items-center text-center uppercase font-black">
+      <Loader size={40} strokeWidth={1.75} color="blue" className="loader-spin" />
+    </div>
+  );
+}
 
 function App() {
   const [session, setSession] = useState(null);
@@ -124,14 +138,18 @@ function App() {
   if (!session) {
     return (
       <AlertProvider>
-        <Routes>
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/install-guide" element={<InstallGuide />} />
-          <Route path="/match/:id" element={<PublicMatchLanding />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="*" element={<Auth />} />
-        </Routes>
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/install-guide" element={<InstallGuide />} />
+            <Route path="/match/:id" element={<PublicMatchLanding />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<Auth />} />
+          </Routes>
+        </Suspense>
       </AlertProvider>
     );
   }
@@ -175,66 +193,70 @@ function App() {
           </div>
         </header>
 
-        <Routes>
-          {/* 1. Rotta Home: Carica la dashboard corretta in base al ruolo */}
-          <Route
-            path="/"
-            element={
-              userRole === 'center' ? (
-                <BusinessDashboard user={session.user} name={session.user.user_metadata.username} />
-              ) : (
-                <PWADashboard
-                  user={session.user}
-                  onLogout={() => setSession(null)}
-                  isSupported={isSupported}
-                  isSubscribed={isSubscribed}
-                  subscribeToPushNotifications={subscribeToPushNotifications}
-                  isPWA={isPWA}
-                />
-              )
-            }
-          />
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            {/* 1. Rotta Home: Carica la dashboard corretta in base al ruolo */}
+            <Route
+              path="/"
+              element={
+                userRole === 'center' ? (
+                  <BusinessDashboard user={session.user} name={session.user.user_metadata.username} />
+                ) : (
+                  <PWADashboard
+                    user={session.user}
+                    onLogout={() => setSession(null)}
+                    isSupported={isSupported}
+                    isSubscribed={isSubscribed}
+                    subscribeToPushNotifications={subscribeToPushNotifications}
+                    isPWA={isPWA}
+                  />
+                )
+              }
+            />
 
-          {/* 2. Rotte specifiche per il Centro Sportivo (Center) */}
-          {userRole === 'center' && (
-            <>
-              <Route path="/gestisci-campi" element={<GestisciCampi centerId={session.user.id} />} />
-              {/* Qui potrai aggiungere /gestisci-orari, /calendario-business, ecc. */}
-            </>
-          )}
+            {/* 2. Rotte specifiche per il Centro Sportivo (Center) */}
+            {userRole === 'center' && (
+              <>
+                <Route path="/gestisci-campi" element={<GestisciCampi centerId={session.user.id} />} />
+                {/* Qui potrai aggiungere /gestisci-orari, /calendario-business, ecc. */}
+              </>
+            )}
 
-          {/* 3. Rotte specifiche per il Giocatore (Player) */}
-          {userRole === 'player' && (
-            <>
-              <Route path="/partite" element={<Home session={session} isPWA={false} />} />
-              <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
-              <Route path="/richieste-amici" element={<FriendRequests user={session.user} />} />
-              <Route path="/le-mie-partite" element={<MyMatches session={session} />} />
-              <Route path="/recensioni" element={<UserReviews session={session} />} />
-              <Route path="/recensioni/:id" element={<UserReviews session={session} />} />
-              <Route path="/organizza" element={<CreateMatch />} />
-              <Route path="/modifica/:id" element={<CreateMatch />} />
-              <Route path="/squadre" element={<TeamsPage session={session} />} />
-              <Route path="/squadre/:id" element={<TeamDetail session={session} />} />
-              <Route path="/centri" element={<CentersList />} />
-              <Route path="/sfida" element={<SfidaGiornaliera />} />
-              <Route path="/leaderboard" element={<ClassificaMinigame />} />
+            {/* 3. Rotte specifiche per il Giocatore (Player) */}
+            {userRole === 'player' && (
+              <>
+                <Route path="/partite" element={<Home session={session} isPWA={false} />} />
+                <Route path="/trova-amici" element={<FindFriends user={session.user} />} />
+                <Route path="/richieste-amici" element={<FriendRequests user={session.user} />} />
+                <Route path="/le-mie-partite" element={<MyMatches session={session} />} />
+                <Route path="/recensioni" element={<UserReviews session={session} />} />
+                <Route path="/recensioni/:id" element={<UserReviews session={session} />} />
+                <Route path="/organizza" element={<CreateMatch />} />
+                <Route path="/modifica/:id" element={<CreateMatch />} />
+                <Route path="/squadre" element={<TeamsPage session={session} />} />
+                <Route path="/squadre/:id" element={<TeamDetail session={session} />} />
+                <Route path="/centri" element={<CentersList />} />
+                <Route path="/sfida" element={<SfidaGiornaliera />} />
+                <Route path="/leaderboard" element={<ClassificaMinigame />} />
 
-            </>
-          )}
+              </>
+            )}
 
-          {/* 4. Rotte comuni sempre accessibili */}
-          {/* <Route path="/match/:id" element={<MatchDetail user={session.user} />} /> */}
-          <Route path="/match/:id" element={<MatchDetailV2 user={session.user} />} />
-          <Route path="/profile" element={<Profile session={session} />} />
-          <Route path="/settings" element={<AppSettings session={session} />} />
-          <Route path="/profile/:id" element={<PublicProfile />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/install-guide" element={<InstallGuide />} />
+            {/* 4. Rotte comuni sempre accessibili */}
+            <Route path="/match/:id" element={<MatchDetailV2 user={session.user} />} />
+            <Route path="/profile" element={<Profile session={session} />} />
+            <Route path="/settings" element={<AppSettings session={session} />} />
+            <Route path="/admin" element={<AdminDashboard session={session} />} />
+            <Route path="/profile/:id" element={<PublicProfile />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/install-guide" element={<InstallGuide />} />
 
-          {/* 5. Fallback per pagine non trovate */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* 5. Fallback per pagine non trovate */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </div>
     </AlertProvider>
   );

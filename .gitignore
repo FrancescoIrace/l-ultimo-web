@@ -23,3 +23,5 @@ build/
 
 # Cache locale della Supabase CLI (link/status), specifica per macchina
 supabase/.temp/
+.vercel
+.env*

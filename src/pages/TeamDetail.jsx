@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
 import { useNavigate, useParams } from 'react-router-dom';
+import { notifyTeamInvite, notifyTeamMemberJoined } from '../lib/notificationService';
 
 // Funzione helper per determinare il colore del testo in base all'esadecimale di sfondo
 const getTextColorClass = (hexColor) => {
@@ -262,22 +263,15 @@ export default function TeamDetail({ session }) {
         try {
             setIsSendingInvites(true);
 
-            // Invia notifiche di invito
-            const notifications = Array.from(selectedFriends).map(friendId => ({
-                user_id: friendId,
-                sender_id: userId,
-                type: 'team_invite',
-                title: `Sei stato convocato!`,
-                content: `Hai ricevuto un invito a unirti alla squadra "${teamDetails.name}"`,
-                link: `/squadre/${teamId}`,
-                created_at: new Date().toISOString()
-            }));
+            // Nome di chi invita (l'utente corrente è membro del team)
+            const inviterName = teamMembers.find(m => m.user_id === userId)?.profiles?.username || 'Un giocatore';
 
-            const { error: notifError } = await supabase
-                .from('notifications')
-                .insert(notifications);
-
-            if (notifError) throw notifError;
+            // Invia le notifiche di invito tramite il service (in-app + push)
+            await Promise.all(
+                Array.from(selectedFriends).map(friendId =>
+                    notifyTeamInvite(friendId, inviterName, teamDetails.name, teamId, userId)
+                )
+            );
 
             success(`Inviti inviati a ${selectedFriends.size} amico/i!`);
             setShowInviteModal(false);
@@ -320,6 +314,8 @@ export default function TeamDetail({ session }) {
 
             if (joinError) throw joinError;
             success('Ti sei unito alla squadra!');
+            // Avvisa il creatore del team (in-app + push)
+            notifyTeamMemberJoined(teamDetails, userId);
             setIsUserMember(true);
             loadTeamDetails();
         } catch (err) {

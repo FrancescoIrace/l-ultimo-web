@@ -8,6 +8,7 @@ import { Loader, Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, Penci
 import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
+import { SPORT_ROLES } from '../lib/sportRoles';
 
 export default function Profile({ session }) {
     const { success, error: showAlertError } = useAlert();
@@ -50,6 +51,53 @@ export default function Profile({ session }) {
             ...editData,
             favorite_sport: selectedSport
         });
+    };
+
+    // Ruoli preferiti per sport (es. Portiere/Attaccante per il calcio)
+    const [myRoles, setMyRoles] = useState([]); // [{ sport, role }]
+    const [roleToggling, setRoleToggling] = useState(null); // "sport-role" in corso di toggle
+
+    useEffect(() => {
+        async function fetchRoles() {
+            if (!session?.user?.id) return;
+            const { data, error } = await supabase
+                .from('user_sport_roles')
+                .select('sport, role')
+                .eq('user_id', session.user.id);
+
+            if (error) {
+                console.error('Errore caricamento ruoli preferiti:', error.message);
+            } else {
+                setMyRoles(data || []);
+            }
+        }
+        fetchRoles();
+    }, [session?.user?.id]);
+
+    const hasRole = (sport, role) => myRoles.some(r => r.sport === sport && r.role === role);
+
+    const toggleRole = async (sport, role) => {
+        if (!session?.user?.id) return;
+        const key = `${sport}-${role}`;
+        setRoleToggling(key);
+
+        if (hasRole(sport, role)) {
+            const { error } = await supabase
+                .from('user_sport_roles')
+                .delete()
+                .eq('user_id', session.user.id)
+                .eq('sport', sport)
+                .eq('role', role);
+
+            if (!error) setMyRoles(prev => prev.filter(r => !(r.sport === sport && r.role === role)));
+        } else {
+            const { error } = await supabase
+                .from('user_sport_roles')
+                .insert({ user_id: session.user.id, sport, role });
+
+            if (!error) setMyRoles(prev => [...prev, { sport, role }]);
+        }
+        setRoleToggling(null);
     };
 
     async function fetchAllData() {
@@ -894,6 +942,42 @@ export default function Profile({ session }) {
                                         <option>Corsa</option>
                                         <option>Palestra</option>
                                     </select>
+                                </div>
+
+                                {/* Ruoli preferiti */}
+                                <div>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Ruoli preferiti</label>
+                                    <p className="text-xs text-slate-500 ml-2 mb-3">
+                                        Compariranno accanto al tuo nome nelle partite dello sport corrispondente.
+                                    </p>
+                                    <div className="space-y-3 p-4 bg-slate-50 rounded-2xl">
+                                        {Object.entries(SPORT_ROLES).map(([sport, roles]) => (
+                                            <div key={sport}>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">{sport}</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {roles.map((role) => {
+                                                        const active = hasRole(sport, role);
+                                                        const toggling = roleToggling === `${sport}-${role}`;
+                                                        return (
+                                                            <button
+                                                                key={role}
+                                                                type="button"
+                                                                disabled={toggling}
+                                                                onClick={() => toggleRole(sport, role)}
+                                                                className={`px-3 py-1.5 rounded-full text-sm font-bold border transition-all disabled:opacity-50 ${
+                                                                    active
+                                                                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                                                }`}
+                                                            >
+                                                                {role}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="flex gap-3 pt-4">

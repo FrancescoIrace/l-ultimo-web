@@ -1,12 +1,13 @@
-import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info } from 'lucide-react';
+import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
+import { getSportFamily } from '../lib/sportRoles';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -27,6 +28,7 @@ export default function MatchDetail({ user }) {
     const [waitingPlayers, setWaitingPlayers] = useState([]);
     const [isMatchFinished, setIsMatchFinished] = useState(false);
     const [isMatchStarted, setIsMatchStarted] = useState(false);
+    const [participantRoles, setParticipantRoles] = useState({}); // { user_id: [role, ...] }
     const [weatherData, setWeatherData] = useState(null);
     const [isLoadingWeather, setIsLoadingWeather] = useState(false);
     const [alertTemperatura, setAlertTemperatura] = useState("");
@@ -108,6 +110,26 @@ export default function MatchDetail({ user }) {
         setConfirmedPlayers(partData.filter(p => p.status === 'confirmed'));
         setWaitingPlayers(partData.filter(p => p.status === 'waiting').sort((a, b) => a.waitlist_order - b.waitlist_order));
         setIsJoined(!!partData.find(p => p.user_id === user.id));
+
+        // Ruoli preferiti dei partecipanti per lo sport di questa partita
+        // (es. Portiere/Attaccante solo se la partita è di calcio)
+        const sportFamily = getSportFamily(matchData.sport);
+        const participantIds = (partData || []).map(p => p.user_id);
+        if (sportFamily && participantIds.length > 0) {
+            const { data: rolesData } = await supabase
+                .from('user_sport_roles')
+                .select('user_id, role')
+                .eq('sport', sportFamily)
+                .in('user_id', participantIds);
+
+            const rolesMap = {};
+            (rolesData || []).forEach(r => {
+                (rolesMap[r.user_id] ||= []).push(r.role);
+            });
+            setParticipantRoles(rolesMap);
+        } else {
+            setParticipantRoles({});
+        }
         const { isMatchStarted, isMatchFinished } = checkMatchStatus(fullMatchData.datetime);
         setIsMatchStarted(isMatchStarted);
         setIsMatchFinished(isMatchFinished);
@@ -300,6 +322,14 @@ export default function MatchDetail({ user }) {
     const handleLeave = async () => {
         if (match.creator_id === user.id) {
             error("Sei l'organizzatore, Non puoi uscire dalla partita. Per annullare la partita usa il pulsante dedicato.");
+            return;
+        }
+
+        // Ricalcola lo stato al momento del click (non fidarsi dello stato in
+        // React, che si aggiorna solo al fetch e potrebbe essere "vecchio" se
+        // la pagina è rimasta aperta a cavallo dell'orario di inizio).
+        if (checkMatchStatus(match.datetime).isMatchStarted) {
+            error('La partita è già iniziata: non puoi più abbandonarla.');
             return;
         }
 
@@ -515,6 +545,11 @@ Scopri di più qui: ${window.location.href}`;
     };
 
     const handleSendReminders = async () => {
+        if (checkMatchStatus(match.datetime).isMatchFinished) {
+            error('La partita è terminata: non puoi più inviare reminder.');
+            return;
+        }
+
         const { canSend, nextResetIn } = canSendReminder();
 
         // if (!canSend) {
@@ -552,6 +587,11 @@ Scopri di più qui: ${window.location.href}`;
     };
 
     const handleJoin = async () => {
+        if (checkMatchStatus(match.datetime).isMatchStarted) {
+            error('La partita è già iniziata: non puoi più iscriverti.');
+            return;
+        }
+
         const playerName = user.user_metadata?.username || 'Un giocatore';
 
         // Chiamiamo la RPC che gestisce tutto: controllo posti, inserimento e incremento
@@ -634,6 +674,11 @@ Scopri di più qui: ${window.location.href}`;
             }
         } else {
             success("Recensione inviata!");
+            // Notifica il giocatore recensito (in-app + push)
+            if (targetId !== user.id) {
+                const reviewerName = user.user_metadata?.username || 'Un giocatore';
+                notifyReviewReceived(targetId, reviewerName, rating, match.id, user.id);
+            }
         }
     };
 
@@ -1183,9 +1228,15 @@ Scopri di più qui: ${window.location.href}`;
                                         {p.profiles?.username || 'Utente anonimo'}
                                         {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
                                     </p>
-                                    <div className="flex items-center gap-2 mt-0.5">
+                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
                                             {p.profiles?.gender === 'M' ? 'Uomo' : p.profiles?.gender === 'F' ? 'Donna' : 'Player'}
+                                            {(participantRoles[p.user_id] || []).length > 0 && (
+                                                <>
+                                                    <span className="text-slate-300"> · </span>
+                                                    <span className="text-blue-600">{participantRoles[p.user_id].join(', ')}</span>
+                                                </>
+                                            )}
                                         </p>
                                         {p.final_attendance && (
                                             <span className="text-[10px] font-black uppercase tracking-wide text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
@@ -1207,7 +1258,10 @@ Scopri di più qui: ${window.location.href}`;
 
                             <div className="flex flex-col items-end gap-2">
                                 {p.user_id === match.creator_id && (
-                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded font-bold">👑 Organizzatore</span>
+                                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-amber-600">
+                                        <Crown size={12} className="fill-amber-400" />
+                                        Organizzatore
+                                    </span>
                                 )}
 
                                 {user.id === match.creator_id && (
@@ -1318,9 +1372,17 @@ Scopri di più qui: ${window.location.href}`;
                                                 {p.profiles?.username || 'Utente anonimo'}
                                                 {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
                                             </p>
-                                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-                                                {p.profiles?.gender === 'M' ? 'Uomo' : p.profiles?.gender === 'F' ? 'Donna' : 'Player'}
-                                            </p>
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                                                    {p.profiles?.gender === 'M' ? 'Uomo' : p.profiles?.gender === 'F' ? 'Donna' : 'Player'}
+                                                    {(participantRoles[p.user_id] || []).length > 0 && (
+                                                        <>
+                                                            <span className="text-slate-300"> · </span>
+                                                            <span className="text-blue-600">{participantRoles[p.user_id].join(', ')}</span>
+                                                        </>
+                                                    )}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1336,7 +1398,11 @@ Scopri di più qui: ${window.location.href}`;
 
             {/* 4. BARRA AZIONE STICKY BOTTOM (Segue l'utente sullo schermo) */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 shadow-xl z-40 max-w-md mx-auto rounded-t-3xl">
-                {isJoined && match?.creator_id !== user.id ? (
+                {isMatchStarted && match?.creator_id !== user.id ? (
+                    <div className="w-full bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-center border border-slate-200">
+                        {isMatchFinished ? 'Partita terminata' : 'Partita in corso'}
+                    </div>
+                ) : isJoined && match?.creator_id !== user.id ? (
                     <button
                         onClick={handleLeave}
                         className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-red-600"
@@ -1354,6 +1420,10 @@ Scopri di più qui: ${window.location.href}`;
                         <UserPlus size={16} className="text-white" />
                         {confirmedPlayers.length >= match.max_players ? "Unisciti alla Lista d'Attesa" : 'Unisciti alla Partita'}
                     </button>
+                ) : (match?.creator_id === user.id) && isMatchFinished ? (
+                    <div className="w-full bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-center border border-slate-200">
+                        Partita terminata
+                    </div>
                 ) : (match?.creator_id === user.id) && (
                     <>
                         <button

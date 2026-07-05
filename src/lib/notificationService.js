@@ -223,16 +223,21 @@ export async function notifyMatchReminder(matchId, matchTitle, hoursLeft, partic
 
 /**
  * Notifica per invito nel team
+ * @param {string} invitedUserId - ID dell'utente invitato
+ * @param {string} inviterName - Nome di chi invita
+ * @param {string} teamName - Nome della squadra
+ * @param {string} teamId - ID della squadra (per il link)
+ * @param {string} invitedByUserId - ID di chi invita
  */
-export async function notifyTeamInvite(invitedUserId, inviterName, teamName, invitedByUserId) {
+export async function notifyTeamInvite(invitedUserId, inviterName, teamName, teamId, invitedByUserId) {
   return createNotification({
     userId: invitedUserId,
     senderId: invitedByUserId,
     type: 'team_invite',
     title: '👥 Invito al Team',
     content: `${inviterName} ti ha invitato a unirti a "${teamName}"`,
-    link: `/find-friends`, // O il link che preferisci
-    metadata: { teamName, inviterName },
+    link: `/squadre/${teamId}`,
+    metadata: { teamId, teamName, inviterName },
   });
 }
 
@@ -322,4 +327,58 @@ export async function notifyFriendAccepted(targetUserId, accepterName, accepterI
     link: `/profile/${accepterId}`,
     metadata: { accepterId, accepterName },
   });
+}
+
+/**
+ * Notifica un giocatore quando riceve una recensione dopo una partita
+ * @param {string} targetUserId - ID di chi riceve la recensione
+ * @param {string} reviewerName - Nome di chi ha recensito
+ * @param {number} rating - Voto (1-5)
+ * @param {string} matchId - ID della partita
+ * @param {string} reviewerId - ID di chi ha recensito
+ */
+export async function notifyReviewReceived(targetUserId, reviewerName, rating, matchId, reviewerId) {
+  const stars = '⭐'.repeat(Math.max(1, Math.min(5, Number(rating) || 0)));
+  return createNotification({
+    userId: targetUserId,
+    senderId: reviewerId,
+    type: 'review_received',
+    title: '⭐ Nuova recensione!',
+    content: `${reviewerName} ti ha lasciato una recensione ${stars}`,
+    link: `/recensioni/${targetUserId}`,
+    metadata: { matchId, rating, reviewerName },
+  });
+}
+
+/**
+ * Notifica il creatore di un team quando un nuovo membro si unisce.
+ * Non fa nulla se chi si unisce è il creatore stesso.
+ * @param {object} team - Oggetto team { id, name, created_by }
+ * @param {string} newMemberId - ID di chi si è appena unito
+ */
+export async function notifyTeamMemberJoined(team, newMemberId) {
+  try {
+    if (!team?.created_by || team.created_by === newMemberId) return;
+
+    // Recupera il nome del nuovo membro
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', newMemberId)
+      .single();
+
+    const memberName = profile?.username || 'Un giocatore';
+
+    return createNotification({
+      userId: team.created_by,
+      senderId: newMemberId,
+      type: 'team_member_joined',
+      title: '🎉 Nuovo membro nella squadra!',
+      content: `${memberName} si è unito a "${team.name}"`,
+      link: `/squadre/${team.id}`,
+      metadata: { teamId: team.id, teamName: team.name, memberName },
+    });
+  } catch (err) {
+    console.error('Errore nella notifica nuovo membro team:', err);
+  }
 }

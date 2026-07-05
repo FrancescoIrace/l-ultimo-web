@@ -191,6 +191,14 @@ export default function Auth() {
                   <Link to="/privacy-policy" className="text-blue-600 underline">
                     Leggi l'informativa sul trattamento dei dati
                   </Link>
+                  {' '}&middot;{' '}
+                  <Link to="/community-guidelines" className="text-blue-600 underline">
+                    Linee guida della community
+                  </Link>
+                  {' '}&middot;{' '}
+                  <Link to="/terms-of-service" className="text-blue-600 underline">
+                    Termini di servizio
+                  </Link>
                 </p>
               </div>
             </>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
 import { useNavigate } from 'react-router-dom';
+import { notifyTeamMemberJoined } from '../lib/notificationService';
 
 // Card squadra riutilizzata da "Le mie Squadre" ed "Esplora": altezza fissa, info minime
 function TeamCard({ team, onClick, trailing }) {
@@ -251,6 +252,8 @@ export default function TeamsPage({ session }) {
             if (err) throw err;
 
             success('Ti sei unito al team!');
+            // Avvisa il creatore del team (in-app + push)
+            notifyTeamMemberJoined(team, userId);
 
             // Ricarica i dati
             fetchMyTeams();

@@ -255,7 +255,13 @@ export default function UserReviews({ session }) {
                     <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6">
                         <h2 className="text-lg font-black text-slate-800 uppercase mb-1">Segnala Recensione</h2>
                         <p className="text-sm text-slate-500 mb-4">
-                            Spiegaci perché la recensione di <span className="font-bold">{reportTarget.reviewer.username}</span> non rispetta le regole.
+                            Spiegaci perché la recensione di <span className="font-bold">{reportTarget.reviewer.username}</span> non rispetta{' '}
+                            <span
+                                onClick={() => navigate('/community-guidelines')}
+                                className="text-blue-600 underline cursor-pointer"
+                            >
+                                le linee guida della community
+                            </span>.
                         </p>
                         <textarea
                             value={reportReason}

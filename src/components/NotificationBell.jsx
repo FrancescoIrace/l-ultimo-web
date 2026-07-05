@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle,Handshake } from 'lucide-react';
+import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle, Handshake, Star, CloudRain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getNotificationStyles(type) {
@@ -61,10 +61,20 @@ function getNotificationStyles(type) {
       dot: 'bg-red-400',
       hover: 'hover:bg-red-100',
     },
-    team_invite: {
+    review_received: {
+      bg: 'bg-amber-50',
+      dot: 'bg-amber-500',
+      hover: 'hover:bg-amber-100',
+    },
+    team_member_joined: {
       bg: 'bg-purple-50',
       dot: 'bg-purple-500',
       hover: 'hover:bg-purple-100',
+    },
+    weather_alert: {
+      bg: 'bg-sky-50',
+      dot: 'bg-sky-500',
+      hover: 'hover:bg-sky-100',
     }
   };
   return styles[type] || styles.match_update;
@@ -194,6 +204,12 @@ export function NotificationBell({ userId }) {
                             return <UserX size={18} className="text-red-500" />;
                           case 'team_invite':
                             return <Handshake size={18} className="text-purple-600" />;
+                          case 'review_received':
+                            return <Star size={18} className="text-amber-600" />;
+                          case 'team_member_joined':
+                            return <Users size={18} className="text-purple-600" />;
+                          case 'weather_alert':
+                            return <CloudRain size={18} className="text-sky-600" />;
                           default:
                             return <Bell size={18} className="text-blue-600" />;
                         }

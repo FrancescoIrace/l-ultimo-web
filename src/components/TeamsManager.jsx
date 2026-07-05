@@ -3,6 +3,7 @@ import { Plus, Users, Search, Copy, Check, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from './AlertComponent';
+import { notifyTeamMemberJoined } from '../lib/notificationService';
 
 export default function TeamsManager({ userId }) {
   const [activeTab, setActiveTab] = useState('myTeams');
@@ -125,6 +126,8 @@ export default function TeamsManager({ userId }) {
       if (err) throw err;
 
       success('Ti sei unito al team!');
+      // Avvisa il creatore del team (in-app + push)
+      notifyTeamMemberJoined(team, userId);
 
       // Ricarica i dati
       fetchMyTeams();

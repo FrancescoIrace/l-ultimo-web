@@ -53,7 +53,9 @@ export default function MyMatches({ session }) {
         .sort((a, b) => new Date(a.matches.datetime) - new Date(b.matches.datetime))
         .map(item => ({ ...item, isCreator: item.matches.creator_id === session.user.id }));
 
-    const pastJoined = myMatches.filter(item => new Date(item.matches.datetime) < new Date());
+    const pastJoined = myMatches
+        .filter(item => new Date(item.matches.datetime) < new Date())
+        .sort((a, b) => new Date(b.matches.datetime) - new Date(a.matches.datetime));
 
     return (
         <main className="max-w-md mx-auto p-4 pb-24 bg-slate-100 min-h-screen">

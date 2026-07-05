@@ -1,5 +1,10 @@
 [
   {
+    "date": "03 luglio 2026",
+    "title": "fix block",
+    "description": "Modifica all'app"
+  },
+  {
     "date": "02 luglio 2026",
     "title": "Notifica partita annullata e partita modificata ai partecipanti",
     "description": "- handleDeleteMatch (MatchDetail/V2): quando l'organizzatore annulla\n  una partita futura, tutti i confermati e chi era in lista d'attesa\n  ricevono notifyMatchCancelled (prima nessuno veniva avvisato, la\n  funzione esisteva ma non era mai stata agganciata). Nessuna notifica\n  per l'eliminazione di partite già concluse (pulizia storico, non\n  un vero annullamento).\n- CreateMatch.jsx (handleUpdate, il form di modifica realmente usato\n  dalla route /modifica/:id): confronta i valori originali con quelli\n  salvati e notifica i confermati con notifyMatchUpdate, elencando\n  cosa è cambiato (orario/luogo/titolo/descrizione)\n- notifyMatchCancelled/notifyMatchUpdate: stesso fix già fatto per\n  notifyMatchJoin per il titolo partita facoltativo (niente più\n  virgolette vuote se il titolo manca)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
@@ -42,11 +47,6 @@
   {
     "date": "23 giugno 2026",
     "title": "Aggiunte \"indietro\" più nuovo layout per matchDetails",
-    "description": "Modifica all'app"
-  },
-  {
-    "date": "17 giugno 2026",
-    "title": "Aggiunta CORSA e PALESTRA",
     "description": "Modifica all'app"
   }
 ]

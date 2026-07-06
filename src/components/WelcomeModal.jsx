@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import Loader from './Loader';
 
 // ─── SWITCH: true = aggiornamenti manuali, false = prende dai commit ──────────
 const USE_MANUAL_UPDATES = true;
@@ -93,7 +94,7 @@ export default function WelcomeModal({ onClose, username }) {
         <div className="space-y-4">
           {loading ? (
             <div className="py-8 text-center">
-              <div className="inline-block w-8 h-8 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+              <Loader variant="inline" size={32} className="inline-block" />
               <p className="text-sm text-slate-500 mt-3">Caricamento aggiornamenti...</p>
             </div>
           ) : (

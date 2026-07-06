@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
-import { Loader, Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck, Users } from 'lucide-react';
+import { Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck, Users } from 'lucide-react';
+import Loader from '../components/Loader';
 import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
@@ -339,7 +340,7 @@ export default function Profile({ session }) {
     };
 
     // if (loading) return <div className="p-10 text-center uppercase font-black">Caricamento...</div>;
-    if (loading && !isEditing) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+    if (loading && !isEditing) return <Loader variant="page" />;
 
     // Se è un centro sportivo, mostriamo una dashboard semplificata con accesso alla gestione del centro
     if (profile?.role === 'center') {

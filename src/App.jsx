@@ -1,8 +1,8 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Loader } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import Loader from './components/Loader';
 import { usePushNotifications } from './hooks/usePushNotifications';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import { NotificationBell } from './components/NotificationBell';
@@ -42,11 +42,7 @@ const SfidaGiornaliera = lazy(() => import('./components/SfidaGiornaliera'));
 const ClassificaMinigame = lazy(() => import('./components/ClassificaMinigame'));
 
 function RouteLoader() {
-  return (
-    <div className="p-10 flex flex-col items-center text-center uppercase font-black">
-      <Loader size={40} strokeWidth={1.75} color="blue" className="loader-spin" />
-    </div>
-  );
+  return <Loader variant="page" label={null} />;
 }
 
 function App() {

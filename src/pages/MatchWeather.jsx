@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
-import { ChevronRight, Loader, Calendar, MapPin, Droplets, Wind, Eye } from 'lucide-react';
+import { ChevronRight, Calendar, MapPin, Droplets, Wind, Eye } from 'lucide-react';
+import Loader from '../components/Loader';
 
 export default function MatchWeather() {
   const { id } = useParams();
@@ -63,7 +64,7 @@ export default function MatchWeather() {
   if (loading) {
     return (
       <div className="max-w-md mx-auto p-4 flex flex-col items-center justify-center min-h-screen">
-        <Loader size={48} strokeWidth={1.5} className="loader-spin text-blue-500 mb-4" />
+        <Loader variant="inline" size={48} className="mb-4" />
         <p className="text-slate-600 font-semibold">Caricamento meteo...</p>
       </div>
     );

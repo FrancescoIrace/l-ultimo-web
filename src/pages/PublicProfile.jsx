@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationService';
-import { UserPlus, UserCheck, Clock, UserX, ChevronRight, Loader, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical } from 'lucide-react';
+import Loader from '../components/Loader';
 import { useAlert } from '../components/AlertComponent';
 
 export default function PublicProfile() {
@@ -168,7 +169,7 @@ export default function PublicProfile() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+    if (loading) return <Loader variant="page" />;
 
     const handleSendRequest = async () => {
         if (!currentUser) return;
@@ -543,7 +544,7 @@ export default function PublicProfile() {
                     {currentUser && currentUser.id !== id && (
                         <div className="mt-4 w-full p-4">
                             {friendActionLoading ? (
-                                <div className="w-8 h-8 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin mx-auto" />
+                                <Loader variant="inline" size={32} className="mx-auto" />
                             ) : friendshipStatus === 'accepted' ? (
                                 <span className="w-full inline-flex items-center justify-center gap-1.5 text-sm font-bold text-green-600 bg-green-50 px-4 py-2.5 rounded-2xl border border-green-200 shadow-sm">
                                     <UserCheck size={15} />

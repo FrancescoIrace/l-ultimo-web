@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit, Loader } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit } from 'lucide-react';
+import Loader from '../components/Loader';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
@@ -334,7 +335,7 @@ export default function TeamDetail({ session }) {
         //         </div>
         //     </div>
         // );
-        return <div className="p-10 flex flex-col items-center text-center uppercase  font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+        return <Loader variant="page" />;
     }
 
     if (!teamDetails) {
@@ -701,7 +702,7 @@ export default function TeamDetail({ session }) {
                                 >
                                     {isSavingEdit ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <Loader variant="inline" size={16} color="white" />
                                             Salvataggio...
                                         </>
                                     ) : (
@@ -862,7 +863,7 @@ export default function TeamDetail({ session }) {
                                 >
                                     {isSendingInvites ? (
                                         <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <Loader variant="inline" size={16} color="white" />
                                             Invio...
                                         </>
                                     ) : (

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Loader, ChevronLeft, MoreVertical, Flag, UserX } from 'lucide-react';
+import { ChevronLeft, MoreVertical, Flag, UserX, MapPin } from 'lucide-react';
 import { useAlert } from '../components/AlertComponent';
+import { teamLabel } from './PagesUtils/utils';
+import Loader from '../components/Loader';
 
 export default function UserReviews({ session }) {
     const navigate = useNavigate();
@@ -51,7 +53,9 @@ export default function UserReviews({ session }) {
                     rating,
                     comment,
                     created_at,
-                    reviewer:reviewer_id ( username, avatar_url, id )
+                    reviewer_team_number,
+                    reviewer:reviewer_id ( username, avatar_url, id ),
+                    match:match_id ( title, team1_name, team2_name )
                 `)
                 .eq('target_id', targetId)
                 .order('created_at', { ascending: false });
@@ -156,10 +160,7 @@ export default function UserReviews({ session }) {
 
     if (loading) {
         return (
-            <div className="p-10 flex flex-col items-center text-center uppercase font-black">
-                <Loader size={48} strokeWidth={1.75} color="blue" className="loader-spin" />
-                <span>attendi...</span>
-            </div>
+            <Loader variant="page" />
         );
     }
 
@@ -234,6 +235,18 @@ export default function UserReviews({ session }) {
                             <p className="text-sm text-slate-700 mb-3 leading-relaxed">
                                 {rev.comment ? `"${rev.comment}"` : <span className="italic text-slate-400">Nessun commento</span>}
                             </p>
+                            {rev.match?.title && (
+                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                                        <MapPin size={12} /> {rev.match.title}
+                                    </span>
+                                    {teamLabel(rev.reviewer_team_number, rev.match) && (
+                                        <span className="inline-flex items-center text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                            {teamLabel(rev.reviewer_team_number, rev.match)}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                             <span className="text-[10px] uppercase font-bold text-slate-300">
                                 {new Date(rev.created_at).toLocaleDateString('it-IT', {
                                     day: 'numeric', month: 'short', year: 'numeric',

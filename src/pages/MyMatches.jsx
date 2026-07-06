@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { AccordionItem, AccordionCreatedMatches } from '../components/MatchesAccordion';
-import { Loader, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
+import Loader from '../components/Loader';
 
 export default function MyMatches({ session }) {
     const navigate = useNavigate();
@@ -41,10 +42,7 @@ export default function MyMatches({ session }) {
 
     if (loading) {
         return (
-            <div className="p-10 flex flex-col items-center text-center uppercase font-black">
-                <Loader size={48} strokeWidth={1.75} color="blue" className="loader-spin" />
-                <span>attendi...</span>
-            </div>
+            <Loader variant="page" />
         );
     }
 

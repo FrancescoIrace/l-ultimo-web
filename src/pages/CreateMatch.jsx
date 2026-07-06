@@ -5,7 +5,8 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
-import { Info, ChevronRight, Loader } from 'lucide-react';
+import { Info, ChevronRight } from 'lucide-react';
+import Loader from '../components/Loader';
 import { validateBookingTime } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { notifyMatchUpdate } from '../lib/notificationService';
@@ -437,7 +438,7 @@ export default function CreateMatch() {
         setLoading(false);
     };
 
-    if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+    if (loading) return <Loader variant="page" />;
 
 
     // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA

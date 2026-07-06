@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import Loader from '../components/Loader';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -104,7 +105,7 @@ export default function ResetPassword() {
       <div className="max-w-md mx-auto p-6 bg-white min-h-screen flex flex-col items-center justify-center">
         <div className="text-center">
           <p className="text-slate-500 mb-4">Validazione in corso...</p>
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+          <Loader variant="inline" size={32} className="mx-auto" />
         </div>
       </div>
     );

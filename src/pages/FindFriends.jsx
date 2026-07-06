@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest } from '../lib/notificationService';
 import { Search, UserPlus, UserCheck, Clock, Users, ChevronRight } from 'lucide-react';
+import Loader from '../components/Loader';
 
 export default function FindFriends({ user }) {
   const [profiles, setProfiles] = useState([]);
@@ -187,7 +188,7 @@ export default function FindFriends({ user }) {
 
 function FriendshipButton({ status, loading, onSend, onCancel }) {
   if (loading) {
-    return <div className="w-8 h-8 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin" />;
+    return <Loader variant="inline" size={32} />;
   }
   if (status === 'accepted') {
     return (

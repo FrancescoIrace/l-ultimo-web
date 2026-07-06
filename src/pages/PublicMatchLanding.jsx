@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Calendar, MapPin, Users, LogIn, Smartphone, Link2, SportShoe } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import Loader from '../components/Loader';
 
 export default function PublicMatchLanding() {
   const { id } = useParams();
@@ -36,7 +37,7 @@ export default function PublicMatchLanding() {
   if (loading) {
     return (
       <div className="max-w-md mx-auto p-6 min-h-screen flex flex-col items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <Loader variant="inline" size={48} />
         <p className="mt-4 text-slate-600">Caricamento partita...</p>
       </div>
     );

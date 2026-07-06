@@ -669,7 +669,7 @@ export default function BusinessDashboard({ user, name }) {
                             );
                         })()}
 
-                        <div className="flex-1 overflow-y-auto mb-4 scrollbar-hide border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative ">
+                        <div className="flex-1 min-h-[30vh] max-h-[45vh] overflow-y-auto mb-4 border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative ">
                             {appointmentParticipants.length === 0 ? (
                                 <div className="text-center p-6 text-sm font-bold text-slate-400 ">Nessun partecipante caricato.</div>
                             ) : (

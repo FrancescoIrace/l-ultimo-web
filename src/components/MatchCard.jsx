@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAlert } from './AlertComponent';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
+import Loader from './Loader';
 import { notifyMatchJoin, notifyMatchFull } from '../lib/notificationService';
 
 
@@ -254,7 +255,7 @@ export default function MatchCard({ match, user }) {
           )}
           {isLoadingWeather && (
             <div className="text-xs text-slate-400 flex items-center gap-1">
-              <RefreshCw size={12} className="animate-spin" />
+              <Loader variant="inline" size={12} />
               <span>Caricamento meteo...</span>
             </div>
           )}

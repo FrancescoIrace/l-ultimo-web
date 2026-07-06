@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { MapPin, Loader } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import Loader from './Loader';
 
 const NominatimAgent = 'L-Ultimo-App (user-location-input)';
 
@@ -199,7 +200,7 @@ export default function UserLocationInput({ value, onChange }) {
           disabled={loading}
           className="px-4 py-3 rounded-xl bg-blue-600 text-white text-xs uppercase font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
-          {loading ? <Loader size={16} className="animate-spin" /> : 'Cerca città'}
+          {loading ? <Loader variant="inline" size={16} color="white" /> : 'Cerca città'}
         </button>
       </div>
       <button

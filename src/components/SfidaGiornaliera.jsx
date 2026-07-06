@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader, Lock, CheckCircle2, XCircle, Trophy, Brain, ChevronLeft, Clock } from 'lucide-react';
+import { Lock, CheckCircle2, XCircle, Trophy, Brain, ChevronLeft, Clock } from 'lucide-react';
+import Loader from './Loader';
 import { supabase } from '../lib/supabase';
 
 export default function SfidaGiornaliera() {
@@ -148,7 +149,7 @@ export default function SfidaGiornaliera() {
     if (status === 'LOADING') {
         return (
             <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-                <Loader className="animate-spin text-emerald-500 mb-4" size={48} />
+                <Loader variant="inline" size={48} className="mb-4" />
                 <p className="text-slate-500 font-medium animate-pulse">Preparazione della sfida...</p>
             </div>
         );

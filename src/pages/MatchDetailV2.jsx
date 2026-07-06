@@ -1,4 +1,4 @@
-import { Bell, Building2, Calendar, Loader, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown } from 'lucide-react';
+import { Bell, Building2, Calendar, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
@@ -8,6 +8,8 @@ import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotF
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { getSportFamily } from '../lib/sportRoles';
+import { teamLabel } from './PagesUtils/utils';
+import Loader from '../components/Loader';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -35,6 +37,8 @@ export default function MatchDetail({ user }) {
     const [localTeams, setLocalTeams] = useState(null);
     const [isSavingTeams, setIsSavingTeams] = useState(false);
     const [tooltipActive, setTooltipActive] = useState(false);
+    const [team1NameLocal, setTeam1NameLocal] = useState('');
+    const [team2NameLocal, setTeam2NameLocal] = useState('');
 
 
     const checkMatchStatus = (matchDatetime) => {
@@ -106,6 +110,8 @@ export default function MatchDetail({ user }) {
         };
 
         setMatch(fullMatchData);
+        setTeam1NameLocal(fullMatchData.team1_name || '');
+        setTeam2NameLocal(fullMatchData.team2_name || '');
         setParticipants(partData || []);
         setConfirmedPlayers(partData.filter(p => p.status === 'confirmed'));
         setWaitingPlayers(partData.filter(p => p.status === 'waiting').sort((a, b) => a.waitlist_order - b.waitlist_order));
@@ -288,23 +294,38 @@ export default function MatchDetail({ user }) {
     };
 
     const handleSaveTeams = async () => {
-        if (!localTeams) return;
         setIsSavingTeams(true);
 
-        const payload = confirmedPlayers.map(p => ({
-            id: p.id,
-            match_id: id,
-            user_id: p.user_id,
-            team_number: localTeams[p.id] !== undefined ? localTeams[p.id] : p.team_number,
-            status: p.status
-        }));
+        const newTeam1Name = team1NameLocal.trim() || null;
+        const newTeam2Name = team2NameLocal.trim() || null;
 
         try {
-            const { error: bulkError } = await supabase
-                .from('participants')
-                .upsert(payload, { onConflict: 'id' });
+            // Salva le assegnazioni dei giocatori solo se sono state modificate
+            if (localTeams) {
+                const payload = confirmedPlayers.map(p => ({
+                    id: p.id,
+                    match_id: id,
+                    user_id: p.user_id,
+                    team_number: localTeams[p.id] !== undefined ? localTeams[p.id] : p.team_number,
+                    status: p.status
+                }));
 
-            if (bulkError) throw bulkError;
+                const { error: bulkError } = await supabase
+                    .from('participants')
+                    .upsert(payload, { onConflict: 'id' });
+
+                if (bulkError) throw bulkError;
+            }
+
+            // Salva i nomi personalizzati delle squadre sulla partita
+            const { error: nameError } = await supabase
+                .from('matches')
+                .update({ team1_name: newTeam1Name, team2_name: newTeam2Name })
+                .eq('id', id);
+
+            if (nameError) throw nameError;
+
+            setMatch(prev => (prev ? { ...prev, team1_name: newTeam1Name, team2_name: newTeam2Name } : prev));
             success("Squadre salvate con successo!");
             setLocalTeams(null);
         } catch (err) {
@@ -317,6 +338,8 @@ export default function MatchDetail({ user }) {
 
     const handleCancelEditTeams = () => {
         setLocalTeams(null);
+        setTeam1NameLocal(match?.team1_name || '');
+        setTeam2NameLocal(match?.team2_name || '');
     };
 
     const handleLeave = async () => {
@@ -656,6 +679,9 @@ Scopri di più qui: ${window.location.href}`;
     };
 
     const submitReview = async (targetId, rating, comment) => {
+        // Squadra (A/B) in cui giocava il recensore in questa partita, snapshot
+        const reviewerTeamNumber = participants.find(p => p.user_id === user.id)?.team_number ?? null;
+
         const { error: reviewError } = await supabase
             .from('reviews')
             .insert({
@@ -663,7 +689,8 @@ Scopri di più qui: ${window.location.href}`;
                 target_id: targetId,
                 match_id: match.id,
                 rating: rating,
-                comment: comment
+                comment: comment,
+                reviewer_team_number: reviewerTeamNumber
             });
 
         if (reviewError) {
@@ -775,7 +802,7 @@ Scopri di più qui: ${window.location.href}`;
         return `geo:${match.location_lat},${match.location_lng}?q=${encodeURIComponent(match.location)}`;
     };
 
-    if (loading) return <div className="p-10 flex flex-col items-center text-center uppercase font-black"><Loader size={56} strokeWidth={1.75} color="blue" className='loader-spin' /><span>attendi...</span></div>;
+    if (loading) return <Loader variant="page" />;
     if (!match) return <div className="p-10 text-center">Partita non trovata <button onClick={() => navigate('/')} className="text-blue-500 underline">Torna alla Home</button></div>;
 
     return (
@@ -1076,7 +1103,7 @@ Scopri di più qui: ${window.location.href}`;
                                 if (status === 'requested') {
                                     return (
                                         <button disabled className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
-                                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                            <Loader variant="inline" size={20} color="white" />
                                             In attesa del gestore...
                                         </button>
                                     );
@@ -1140,7 +1167,7 @@ Scopri di più qui: ${window.location.href}`;
                                 if (status === 'requested') {
                                     return (
                                         <button disabled className="w-full py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
-                                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                            <Loader variant="inline" size={20} color="white" />
                                             è stata inviata una richiesta al centro...
                                         </button>
                                     );
@@ -1173,6 +1200,26 @@ Scopri di più qui: ${window.location.href}`;
                 {/* Controlli Organizzatore per Random e Salvataggio */}
                 {user.id === match?.creator_id && confirmedPlayers.length > 0 && (
                     <div className="flex flex-col gap-2 mb-4">
+                        {/* Nomi personalizzati delle squadre */}
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={team1NameLocal}
+                                onChange={(e) => setTeam1NameLocal(e.target.value)}
+                                maxLength={30}
+                                placeholder="Squadra A (Colorati)"
+                                className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 text-sm font-bold text-blue-700 placeholder:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                            />
+                            <input
+                                type="text"
+                                value={team2NameLocal}
+                                onChange={(e) => setTeam2NameLocal(e.target.value)}
+                                maxLength={30}
+                                placeholder="Squadra B (Bianchi)"
+                                className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                            />
+                        </div>
+
                         <button
                             onClick={generateRandomTeamsLocal}
                             className={`w-full py-3 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 ${localTeams ? 'bg-indigo-500 shadow-indigo-200' : 'bg-indigo-600 shadow-indigo-300'}`}
@@ -1180,7 +1227,7 @@ Scopri di più qui: ${window.location.href}`;
                             <RefreshCw size={18} /> Genera Squadre Casuali
                         </button>
 
-                        {localTeams && (
+                        {(localTeams || (team1NameLocal.trim() || null) !== (match?.team1_name || null) || (team2NameLocal.trim() || null) !== (match?.team2_name || null)) && (
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleCancelEditTeams}
@@ -1193,7 +1240,7 @@ Scopri di più qui: ${window.location.href}`;
                                     disabled={isSavingTeams}
                                     className="flex-[2] py-3 bg-green-500 hover:bg-green-600 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-green-200 flex justify-center items-center gap-2"
                                 >
-                                    {isSavingTeams ? <Loader className="animate-spin" size={18} /> : 'Salva Modifiche Squadre'}
+                                    {isSavingTeams ? <Loader variant="inline" color="white" /> : 'Salva Modifiche Squadre'}
                                 </button>
                             </div>
                         )}
@@ -1301,7 +1348,7 @@ Scopri di più qui: ${window.location.href}`;
                             {team1Players.length > 0 && (
                                 <div className="bg-white rounded-2xl shadow-sm p-4 border border-blue-200">
                                     <h4 className="font-bold text-md text-blue-600 mb-3 flex justify-between items-center">
-                                        <span>Squadra A (Colorati)</span>
+                                        <span>{teamLabel(1, match)}</span>
                                         <span className="text-sm bg-blue-100 px-2 py-1 rounded-full">{team1Players.length}/{Math.ceil(match.max_players / 2)}</span>
                                     </h4>
                                     <div className="space-y-3">
@@ -1320,7 +1367,7 @@ Scopri di più qui: ${window.location.href}`;
                             {team2Players.length > 0 && (
                                 <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-200">
                                     <h4 className="font-bold text-md text-slate-600 mb-3 flex justify-between items-center">
-                                        <span>Squadra B (Bianchi)</span>
+                                        <span>{teamLabel(2, match)}</span>
                                         <span className="text-sm bg-slate-100 px-2 py-1 rounded-full">{team2Players.length}/{Math.floor(match.max_players / 2)}</span>
                                     </h4>
                                     <div className="space-y-3">

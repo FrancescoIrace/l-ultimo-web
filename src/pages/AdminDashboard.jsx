@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
-import { Loader, ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search } from 'lucide-react';
+import { ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search } from 'lucide-react';
+import Loader from '../components/Loader';
 
 const ADMIN_EMAIL = 'admin@admin.it';
 
@@ -174,10 +175,7 @@ export default function AdminDashboard({ session }) {
 
     if (loading) {
         return (
-            <div className="p-10 flex flex-col items-center text-center uppercase font-black">
-                <Loader size={48} strokeWidth={1.75} color="blue" className="loader-spin" />
-                <span>attendi...</span>
-            </div>
+            <Loader variant="page" />
         );
     }
 

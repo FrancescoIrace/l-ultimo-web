@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
 import { useNavigate } from 'react-router-dom';
 import { notifyTeamMemberJoined } from '../lib/notificationService';
+import Loader from '../components/Loader';
 
 // Card squadra riutilizzata da "Le mie Squadre" ed "Esplora": altezza fissa, info minime
 function TeamCard({ team, onClick, trailing }) {
@@ -767,7 +768,7 @@ export default function TeamsPage({ session }) {
                     >
                         {creatingTeam ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <Loader variant="inline" size={16} color="white" />
                                 Creazione...
                             </>
                         ) : (
@@ -920,7 +921,7 @@ export default function TeamsPage({ session }) {
                             >
                                 {verifyingPassword ? (
                                     <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <Loader variant="inline" size={16} color="white" />
                                         Verifica...
                                     </>
                                 ) : (

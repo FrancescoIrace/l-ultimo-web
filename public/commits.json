@@ -1,5 +1,10 @@
 [
   {
+    "date": "05 luglio 2026",
+    "title": "feat: nuove notifiche (recensione, nuovo membro team, allerta meteo)",
+    "description": "Notifiche aggiunte in questa sessione:\n- Recensione ricevuta a fine partita -> notifica al giocatore recensito\n- Nuovo membro entrato in squadra -> notifica al creatore del team\n- Reminder 24h \"meteo-aware\": diventa allerta meteo se e' previsto brutto\n  tempo (edge function send-24h-reminders, ancora da deployare/wire su Supabase)\n\nAggiunte icone/stili in NotificationBell per i nuovi tipi e rimossa\nla chiave duplicata team_invite.\n\nInclude inoltre lavoro in corso preesistente nel working tree\n(admin dashboard, terms of service, community guidelines, sport roles,\nreview reporting, error fallback, migration correlate).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+  },
+  {
     "date": "03 luglio 2026",
     "title": "fix block",
     "description": "Modifica all'app"
@@ -43,10 +48,5 @@
     "date": "02 luglio 2026",
     "title": "Fix push notifications su iOS e restyling sezione Squadre",
     "description": "- Corregge il typo vapidKey/vapidPublicKey e registra esplicitamente il\n  service worker, senza il quale navigator.serviceWorker.ready non si\n  risolveva mai su iPhone; il banner \"Attiva Notifiche\" ora avvisa di\n  aggiungere l'app alla Home su iOS non-standalone invece di fallire\n  silenziosamente\n- Sostituisce il blocco apns (inerte per token web) con webpush nella\n  edge function send-push-notification e corregge i path icona rotti\n- Refactor completo di TeamsPage in stile PWADashboard: layout fisso\n  con lista scrollabile, card squadra uniformate, fix badge privacy\n  mai aggiornato per mancanza di is_private nella query\n- Include fix minori pendenti su AlertComponent, LocationPicker e\n  MatchCard (cleanup di timer/listener/subscription)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "23 giugno 2026",
-    "title": "Aggiunte \"indietro\" più nuovo layout per matchDetails",
-    "description": "Modifica all'app"
   }
 ]

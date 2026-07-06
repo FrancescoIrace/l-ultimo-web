@@ -98,4 +98,16 @@ const InstagramEmbed = () => {
   );
 };
 
-export { normalizeProfileData, InstagramEmbed };
+/**
+ * Etichetta della squadra A/B di una partita.
+ * @param {number|null} teamNumber - 1 = Squadra A, 2 = Squadra B, altro = non assegnato
+ * @param {object} [match] - partita, per leggere gli eventuali nomi custom team1_name/team2_name
+ * @returns {string|null} nome squadra (custom o fallback) o null se non assegnato
+ */
+function teamLabel(teamNumber, match) {
+  if (teamNumber === 1) return match?.team1_name || 'Squadra A (Colorati)';
+  if (teamNumber === 2) return match?.team2_name || 'Squadra B (Bianchi)';
+  return null;
+}
+
+export { normalizeProfileData, InstagramEmbed, teamLabel };

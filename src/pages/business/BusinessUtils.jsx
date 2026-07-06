@@ -36,6 +36,34 @@ export default function GetSportStyle(sport) {
 }
 
 /**
+ * Mappa lo sport scelto in partita (13 valori, es. "Basket (3vs3)") a una
+ * categoria grossolana compatibile con GetSportStyle(court.sport_type).type
+ * (che invece bucketizza i soli 4 valori reali di sports_courts.sport_type:
+ * "Calcio a 5"/"Padel"/"Basket"/"Tennis"). I due elenchi non coincidono 1:1,
+ * quindi qui NON si filtra mai un campo per sport — si usa solo per ordinare
+ * mettendo prima i campi della categoria corrispondente.
+ */
+function getSportCategoryForMatch(sport) {
+    switch (sport) {
+        case 'Calcetto':
+        case 'Calcio a 7':
+        case 'Calcio a 11':
+            return 'soccer';
+        case 'Padel':
+            return 'padel';
+        case 'Basket (allenamento)':
+        case 'Basket (3vs3)':
+        case 'Basket (5vs5)':
+            return 'basket';
+        case 'Tennis singolo':
+        case 'Tennis doppio':
+            return 'tennis';
+        default:
+            return null; // Volley, Corsa, Palestra, Personalizzato: nessun bucket
+    }
+}
+
+/**
  * Verifica se un orario è valido per un determinato centro sportivo
  */
 export const validateBookingTime = async (supabase, dateTimeString, centerId) => {
@@ -78,4 +106,4 @@ export const validateBookingTime = async (supabase, dateTimeString, centerId) =>
     return { isValid: true, isClosed: false };
 };
 
-export { GetSportStyle };
+export { GetSportStyle, getSportCategoryForMatch };

@@ -1,6 +1,11 @@
 [
   {
     "date": "06 luglio 2026",
+    "title": "feat: nuovo logo dell'app (favicon, icone PWA, icona push)",
+    "description": "Sostituito il vecchio logo con il nuovo design (porta da calcetto a U\nbianca, pallino verde, cerchio di centrocampo) in:\n- favicon.svg (tab del browser)\n- android-chrome-192x192.png / 512x512.png (icona PWA \"any\")\n- logo-192.png / logo-512.png (icona notifiche push)\n\nAggiunte varianti dedicate android-chrome-*-maskable.png (safe-zone\n72%, sfondo pieno senza angoli arrotondati, come richiede lo standard\nmaskable) al posto di riusare i file \"any\": prima manifest.json\nriusava lo stesso file sia per purpose \"any\" che \"maskable\", perdendo\ncontenuto ai bordi quando l'OS applica la sua maschera. Aggiunta anche\nla entry maskable 512x512 mancante.\n\nPNG generati via sharp da sorgente SVG vettoriale (dipendenza usata\nsolo localmente per la generazione, non aggiunta al progetto).\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "06 luglio 2026",
     "title": "feat: stati visivi \"in corso\" + banner prossima partita in home",
     "description": "- Card campo e modale \"Dettagli Prenotazione\" (dashboard business):\n  evidenziazione verde pulsante quando c'e' una partita confermata\n  in corso in quel momento. Logica di finestra oraria unificata in\n  isMatchLiveNow(), riusata sia per il campo che per la modale.\n\n- Dettaglio partita (lato giocatore): badge \"In corso\" accanto al\n  titolo quando la partita e' iniziata ma non ancora finita.\n\n- Nuovo banner in home (PWADashboard): compare quando manca meno di\n  1 ora a una partita confermata dell'utente e resta visibile fino\n  alla fine. Mostra il countdown prima dell'inizio e \"Partita in\n  corso\" durante, con il nome partita come sottotitolo troncato\n  (evita che titoli lunghi rompano il layout). Il click porta al\n  dettaglio della partita. Si aggiorna da solo ogni 30s.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   },
@@ -43,10 +48,5 @@
     "date": "02 luglio 2026",
     "title": "Notifica partita annullata e partita modificata ai partecipanti",
     "description": "- handleDeleteMatch (MatchDetail/V2): quando l'organizzatore annulla\n  una partita futura, tutti i confermati e chi era in lista d'attesa\n  ricevono notifyMatchCancelled (prima nessuno veniva avvisato, la\n  funzione esisteva ma non era mai stata agganciata). Nessuna notifica\n  per l'eliminazione di partite già concluse (pulizia storico, non\n  un vero annullamento).\n- CreateMatch.jsx (handleUpdate, il form di modifica realmente usato\n  dalla route /modifica/:id): confronta i valori originali con quelli\n  salvati e notifica i confermati con notifyMatchUpdate, elencando\n  cosa è cambiato (orario/luogo/titolo/descrizione)\n- notifyMatchCancelled/notifyMatchUpdate: stesso fix già fatto per\n  notifyMatchJoin per il titolo partita facoltativo (niente più\n  virgolette vuote se il titolo manca)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "02 luglio 2026",
-    "title": "Fix bottone Unisciti quando piena, notifiche differenziate su abbandono",
-    "description": "- MatchDetailV2.jsx: il bottone \"Unisciti alla Partita\" restava\n  disabilitato a partita piena invece di trasformarsi in \"Unisciti\n  alla Lista d'Attesa\" come già faceva la card nella ricerca partite\n  e la vecchia MatchDetail.jsx; ora resta cliccabile e cambia label,\n  join_match_v2 gestisce già lato server la lista d'attesa\n- Abbandono da partita piena: se c'è qualcuno in lista d'attesa,\n  l'organizzatore riceve una notifica dedicata sul cambio\n  (notifyOrganizerSpotFilled) invece che tutti i confermati; se la\n  lista d'attesa è vuota, notifica generica a tutti i confermati\n  rimasti che si è liberato un posto\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

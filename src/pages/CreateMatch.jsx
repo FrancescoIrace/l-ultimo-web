@@ -5,9 +5,10 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
-import { Info, ChevronRight } from 'lucide-react';
+import { Info, ChevronRight, Building2 } from 'lucide-react';
 import Loader from '../components/Loader';
-import { validateBookingTime } from '../pages/business/BusinessUtils';
+import CenterCourtPicker from '../components/CenterCourtPicker';
+import GetSportStyle, { validateBookingTime, getSportCategoryForMatch } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { notifyMatchUpdate } from '../lib/notificationService';
 
@@ -40,8 +41,9 @@ export default function CreateMatch() {
         team_id: null
     });
     const [centers, setCenters] = useState([]);
-    const [selectedCenter, setSelectedCenter] = useState(null);
-    const [availableCourts, setAvailableCourts] = useState([]);
+    const [selectedCenter, setSelectedCenter] = useState(null); // sempre l'id (stringa) del centro, mai l'oggetto
+    const [selectedCourtInfo, setSelectedCourtInfo] = useState(null); // {id, name, sport_type} solo per la label del bottone
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [myTeams, setMyTeams] = useState([]);
     const [originalMatch, setOriginalMatch] = useState(null); // Snapshot pre-modifica, per capire cosa notificare
 
@@ -67,33 +69,6 @@ export default function CreateMatch() {
         // console.log("Centri affiliati:", data);
     }
 
-    async function handleCenterChange(centerId) {
-        setSelectedCenter(centerId);
-        if (!centerId) {
-            setAvailableCourts([]);
-            setFormData(prev => ({ ...prev, court_id: null })); // Resetta il campo se togli il centro
-            return;
-        }
-
-        const center = centers.find(c => c.id === centerId);
-
-        if (center && center.business_address) {
-            setFormData(prev => ({
-                ...prev,
-                location: center.business_address,
-                location_lat: center.lat,
-                location_lng: center.lng
-            }));
-        }
-
-        const { data } = await supabase
-            .from('sports_courts')
-            .select('*')
-            .eq('center_id', centerId)
-            .eq('is_active', true);
-        setAvailableCourts(data || []);
-    }
-
     const handleSportChange = (e) => {
         const selectedSport = e.target.value;
         setFormData({
@@ -102,6 +77,33 @@ export default function CreateMatch() {
             max_players: SPORT_MAX_PLAYERS[selectedSport]
         });
     };
+
+    // Gestisce la selezione fatta dalla modale centro/campo
+    function handlePickerSelect(center, court) {
+        setSelectedCenter(center.id);
+        setSelectedCourtInfo({ id: court.id, name: court.name, sport_type: court.sport_type });
+        setFormData(prev => ({
+            ...prev,
+            court_id: court.id,
+            location: center.business_address || prev.location,
+            location_lat: center.lat != null ? parseFloat(center.lat) : prev.location_lat,
+            location_lng: center.lng != null ? parseFloat(center.lng) : prev.location_lng,
+        }));
+        setIsPickerOpen(false);
+    }
+
+    // Solo in creazione (in modifica lo sport è bloccato): se cambia lo sport dopo
+    // aver già scelto un campo, azzera la selezione se la categoria non corrisponde più.
+    useEffect(() => {
+        if (id || !selectedCourtInfo) return;
+        const category = getSportCategoryForMatch(formData.sport);
+        if (category && category !== GetSportStyle(selectedCourtInfo.sport_type).type) {
+            setSelectedCenter(null);
+            setSelectedCourtInfo(null);
+            setFormData(prev => ({ ...prev, court_id: null }));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.sport]);
 
     // Rileva se la descrizione contiene link
     const containsLinks = (text) => {
@@ -214,17 +216,15 @@ export default function CreateMatch() {
                         datetime: datetimeForInput,
                     });
 
-                    // 2. IMPOSTIAMO IL CENTRO (Questo farà apparire il centro selezionato)
+                    // 2. IMPOSTIAMO IL CENTRO E IL CAMPO (già joinati nella query sopra)
                     if (matchData.sports_courts?.profiles) {
                         const center = matchData.sports_courts.profiles;
-                        setSelectedCenter(center);
-
-                        // 3. CARICHIAMO I CAMPI DI QUEL CENTRO (Questo farà apparire la lista campi)
-                        const { data: courts } = await supabase
-                            .from('sports_courts')
-                            .select('*')
-                            .eq('center_id', center.id);
-                        setAvailableCourts(courts || []);
+                        setSelectedCenter(center.id);
+                        setSelectedCourtInfo({
+                            id: matchData.sports_courts.id,
+                            name: matchData.sports_courts.name,
+                            sport_type: matchData.sports_courts.sport_type,
+                        });
                     }
                 }
                 setLoading(false);
@@ -258,15 +258,12 @@ export default function CreateMatch() {
 
             // 3. VALIDAZIONE ORARI (CORRETTA PER FUSO ORARIO)
             if (selectedCenter) {
-                const targetCenterId = typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter;
                 // Passiamo formData.datetime così com'è (stringa locale dal picker)
-                const { isValid, isClosed, message } = await validateBookingTime(supabase, formData.datetime, targetCenterId);
+                const { isValid, isClosed, message } = await validateBookingTime(supabase, formData.datetime, selectedCenter);
 
                 if (!isValid) {
                     if (isClosed) {
-                        const targetCenterObj = typeof selectedCenter === 'object'
-                            ? selectedCenter
-                            : centers.find(c => c.id === targetCenterId);
+                        const targetCenterObj = centers.find(c => c.id === selectedCenter);
                         const nomeCampo = targetCenterObj ? (targetCenterObj.full_name || targetCenterObj.username) : "Il centro";
                         error(`impossibile creare partita, ${nomeCampo} chiuso in questo giorno`);
                     } else {
@@ -552,7 +549,6 @@ export default function CreateMatch() {
                         />
                     </div>
 
-                    {/* SELEZIONE CENTRO AFFILIATO - WIP ELEGANTE */}
                     {/* SELEZIONE CENTRO AFFILIATO */}
                     <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
                         <div className="flex items-center justify-between mb-3">
@@ -560,32 +556,32 @@ export default function CreateMatch() {
                                 Centro affiliato <span className="lowercase italic normal-case font-normal text-slate-400">(opzionale)</span>
                             </label>
                         </div>
-                        <select
-                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
-                            // Estrae l'ID se selectedCenter è un oggetto (caricato da DB) o usa direttamente la stringa
-                            value={selectedCenter ? (typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter) : ""}
-                            onChange={(e) => {
-                                const centerId = e.target.value;
-                                handleCenterChange(centerId);
-                            }}
+                        <button
+                            type="button"
+                            onClick={() => setIsPickerOpen(true)}
+                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-sm flex items-center justify-between gap-2 hover:bg-slate-100 transition-colors"
                         >
-                            <option value="">Seleziona un centro...</option>
-                            {centers.map(c => <option key={c.id} value={c.id}>{c.full_name || c.username}</option>)}
-                        </select>
-
-                        {availableCourts.length > 0 && (
-                            <select
-                                className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
-                                value={formData.court_id || ""}
-                                onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'draft' })}
-                            >
-                                <option value="">Scegli il campo...</option>
-                                {availableCourts.map(court => (
-                                    <option key={court.id} value={court.id}>{court.name} ({court.sport_type})</option>
-                                ))}
-                            </select>
-                        )}
+                            <span className="flex items-center gap-2 min-w-0">
+                                <Building2 size={16} className="text-slate-400 flex-shrink-0" />
+                                <span className="truncate text-slate-800 font-medium">
+                                    {selectedCourtInfo
+                                        ? `${centers.find(c => c.id === selectedCenter)?.full_name || centers.find(c => c.id === selectedCenter)?.username || 'Centro'} — ${selectedCourtInfo.name}`
+                                        : 'Scegli un centro sportivo...'}
+                                </span>
+                            </span>
+                            <ChevronRight size={16} className="text-slate-400 flex-shrink-0" />
+                        </button>
                     </div>
+
+                    <CenterCourtPicker
+                        isOpen={isPickerOpen}
+                        onClose={() => setIsPickerOpen(false)}
+                        sport={formData.sport}
+                        centers={centers}
+                        userId={userId}
+                        initialCenterId={selectedCenter}
+                        onSelect={handlePickerSelect}
+                    />
 
                     {/* LUOGO E DESCRIZIONE */}
                     <LocationPicker
@@ -786,7 +782,6 @@ export default function CreateMatch() {
                     />
                 </div>
 
-                {/* SELEZIONE CENTRO AFFILIATO - WIP ELEGANTE */}
                 {/* SELEZIONE CENTRO AFFILIATO */}
                 <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
                     <div className="flex items-center justify-between mb-3">
@@ -794,32 +789,32 @@ export default function CreateMatch() {
                             Centro affiliato <span className="lowercase italic normal-case font-normal text-slate-400">(opzionale)</span>
                         </label>
                     </div>
-                    <select
-                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
-                        // Estrae l'ID se selectedCenter è un oggetto (caricato da DB) o usa direttamente la stringa
-                        value={selectedCenter ? (typeof selectedCenter === 'object' ? selectedCenter.id : selectedCenter) : ""}
-                        onChange={(e) => {
-                            const centerId = e.target.value;
-                            handleCenterChange(centerId);
-                        }}
+                    <button
+                        type="button"
+                        onClick={() => setIsPickerOpen(true)}
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-sm flex items-center justify-between gap-2 hover:bg-slate-100 transition-colors"
                     >
-                        <option value="">Seleziona un centro...</option>
-                        {centers.map(c => <option key={c.id} value={c.id}>{c.full_name || c.username}</option>)}
-                    </select>
-
-                    {availableCourts.length > 0 && (
-                        <select
-                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-slate-800 text-sm mb-2 opacity-70"
-                            value={formData.court_id || ""}
-                            onChange={(e) => setFormData({ ...formData, court_id: e.target.value, reservation_status: 'draft' })}
-                        >
-                            <option value="">Scegli il campo...</option>
-                            {availableCourts.map(court => (
-                                <option key={court.id} value={court.id}>{court.name} ({court.sport_type})</option>
-                            ))}
-                        </select>
-                    )}
+                        <span className="flex items-center gap-2 min-w-0">
+                            <Building2 size={16} className="text-slate-400 flex-shrink-0" />
+                            <span className="truncate text-slate-800 font-medium">
+                                {selectedCourtInfo
+                                    ? `${centers.find(c => c.id === selectedCenter)?.full_name || centers.find(c => c.id === selectedCenter)?.username || 'Centro'} — ${selectedCourtInfo.name}`
+                                    : 'Scegli un centro sportivo...'}
+                            </span>
+                        </span>
+                        <ChevronRight size={16} className="text-slate-400 flex-shrink-0" />
+                    </button>
                 </div>
+
+                <CenterCourtPicker
+                    isOpen={isPickerOpen}
+                    onClose={() => setIsPickerOpen(false)}
+                    sport={formData.sport}
+                    centers={centers}
+                    userId={userId}
+                    initialCenterId={selectedCenter}
+                    onSelect={handlePickerSelect}
+                />
 
                 {/* LUOGO E DESCRIZIONE */}
                 <LocationPicker

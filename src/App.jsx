@@ -196,7 +196,14 @@ function App() {
               path="/"
               element={
                 userRole === 'center' ? (
-                  <BusinessDashboard user={session.user} name={session.user.user_metadata.username} />
+                  <BusinessDashboard
+                    user={session.user}
+                    name={session.user.user_metadata.username}
+                    isSupported={isSupported}
+                    isSubscribed={isSubscribed}
+                    subscribeToPushNotifications={subscribeToPushNotifications}
+                    isPWA={isPWA}
+                  />
                 ) : (
                   <PWADashboard
                     user={session.user}

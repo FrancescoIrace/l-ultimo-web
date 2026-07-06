@@ -8,8 +8,13 @@ import { useAlert } from '../../components/AlertComponent';
 import { notifyReservationConfirmed, notifyReservationRejected } from '../../lib/notificationService';
 
 
-export default function BusinessDashboard({ user, name }) {
+export default function BusinessDashboard({ user, name, isSupported, isSubscribed, subscribeToPushNotifications, isPWA }) {
     const navigate = useNavigate();
+    // Su iOS le notifiche push funzionano solo se l'app è stata aggiunta alla Home
+    // (standalone mode, iOS 16.4+): chiedere il permesso da una tab Safari normale fallisce sempre.
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const needsInstallForNotifications = isIOS && !isPWA;
+
     const [campi, setCampi] = useState([]);
     const [orari, setOrari] = useState([]);
     const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
@@ -25,15 +30,16 @@ export default function BusinessDashboard({ user, name }) {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [appointmentParticipants, setAppointmentParticipants] = useState([]);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+    const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
 
     // Blocca lo scroll della pagina sotto la modale: senza questo, su mobile lo
     // scroll "buca" oltre la lista dei giocatori fino al contenuto sottostante.
     useEffect(() => {
-        if (!isAppointmentModalOpen) return;
+        if (!isAppointmentModalOpen && !isParticipantsModalOpen) return;
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = previousOverflow; };
-    }, [isAppointmentModalOpen]);
+    }, [isAppointmentModalOpen, isParticipantsModalOpen]);
 
     // Nuovi stati per il Day Modal (multi-partite)
     const [selectedDayAppointments, setSelectedDayAppointments] = useState(null);
@@ -41,6 +47,19 @@ export default function BusinessDashboard({ user, name }) {
 
     const [isSavingParticipants, setIsSavingParticipants] = useState(false);
     const { success, error, alert, confirm } = useAlert();
+
+    const handleActivateNotifications = async () => {
+        try {
+            const result = await subscribeToPushNotifications();
+            if (result.success) {
+                success('✅ Notifiche push attivate!');
+            } else {
+                error('❌ Errore: ' + result.error);
+            }
+        } catch (err) {
+            error('❌ Errore: ' + err.message);
+        }
+    };
 
     const handleSendOrganizerNotification = async (appointment) => {
         if (!appointment?.profiles?.id) return;
@@ -269,6 +288,7 @@ export default function BusinessDashboard({ user, name }) {
                 if (isAppointmentModalOpen && selectedAppointment?.id === matchId) {
                     setIsAppointmentModalOpen(false);
                     setSelectedAppointment(null);
+                    setIsParticipantsModalOpen(false);
                 }
             }
             success(isConfirming ? "Confermata e notifica inviata!" : "Annullata con successo e notifiche inviate.");
@@ -284,6 +304,7 @@ export default function BusinessDashboard({ user, name }) {
     const handleOpenAppointmentModal = async (app) => {
         setSelectedAppointment(app);
         setIsAppointmentModalOpen(true);
+        setIsParticipantsModalOpen(false);
         setAppointmentParticipants([]); // Reset inside modal
 
         let { data: partData, error } = await supabase
@@ -611,14 +632,14 @@ export default function BusinessDashboard({ user, name }) {
 
             {/* Modal Dettaglio Partita Prenotata */}
             {isAppointmentModalOpen && selectedAppointment && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /50" onClick={() => setIsAppointmentModalOpen(false)}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /50" onClick={() => { setIsAppointmentModalOpen(false); setIsParticipantsModalOpen(false); }}>
                     <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
 
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter ">
                                 Dettagli Prenotazione
                             </h3>
-                            <button onClick={() => setIsAppointmentModalOpen(false)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
+                            <button onClick={() => { setIsAppointmentModalOpen(false); setIsParticipantsModalOpen(false); }} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
                                 <X size={20} />
                             </button>
                         </div>
@@ -667,44 +688,19 @@ export default function BusinessDashboard({ user, name }) {
                             );
                         })()}
 
-                        <div className="flex-1 min-h-0 max-h-[45vh] overflow-y-auto overscroll-contain mb-4 border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative ">
-                            {appointmentParticipants.length === 0 ? (
-                                <div className="text-center p-6 text-sm font-bold text-slate-400 ">Nessun partecipante caricato.</div>
-                            ) : (
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr>
-                                            <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 border-b">Nome</th>
-                                            <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 border-b text-center">Pagato?</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {appointmentParticipants.map(part => {
-                                            const isConfirmed = part.status === 'confirmed';
-                                            return (
-                                                <tr key={part.id} className="border-b last:border-0 border-slate-100 hover:bg-slate-100/50 /50 transition-colors">
-                                                    <td className="p-2 md:p-4 text-sm md:text-base lg:text-lg font-bold text-slate-700 ">
-                                                        {part.profiles?.full_name || part.profiles?.username || "Utente Sconosciuto"}
-                                                    </td>
-
-                                                    <td className="p-2 md:p-4 align-middle">
-                                                        <div className="flex justify-center">
-                                                            <button
-                                                                onClick={() => toggleHasPaid(part.id, part.isPagato)}
-                                                                className={`flex items-center gap-1 md:gap-2 px-3 py-1 md:px-4 md:py-2 rounded-xl active:scale-95 text-xs md:text-sm lg:text-base font-bold transition-all ${part.isPagato ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 text-slate-500 hover:bg-slate-300 '}`}
-                                                            >
-                                                                {part.isPagato ? <CheckCircle size={16} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> : <XCircle size={16} className="md:w-5 md:h-5 lg:w-6 lg:h-6" />}
-                                                                {part.isPagato ? 'Sì' : 'No'}
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
+                        <button
+                            onClick={() => setIsParticipantsModalOpen(true)}
+                            disabled={appointmentParticipants.length === 0}
+                            className="w-full mb-4 flex-shrink-0 flex items-center justify-between gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span className="flex items-center gap-2 font-bold text-slate-700 text-sm md:text-base">
+                                <UserPlus size={20} className="text-slate-400" />
+                                {appointmentParticipants.length === 0
+                                    ? 'Nessun partecipante caricato'
+                                    : `Vedi Lista Giocatori (${appointmentParticipants.length})`}
+                            </span>
+                            {appointmentParticipants.length > 0 && <ChevronRight size={20} className="text-slate-400" />}
+                        </button>
 
                         <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full mt-2 flex-shrink-0">
                             <button
@@ -728,6 +724,53 @@ export default function BusinessDashboard({ user, name }) {
                             >
                                 <Download size={18} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> STAMPA LISTA
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Lista Giocatori (dedicata, per non comprimere la modale dettaglio) */}
+            {isParticipantsModalOpen && selectedAppointment && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in" onClick={() => setIsParticipantsModalOpen(false)}>
+                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                            <h3 className="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tighter">
+                                Lista Giocatori ({appointmentParticipants.length})
+                            </h3>
+                            <button onClick={() => setIsParticipantsModalOpen(false)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr>
+                                        <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 border-b">Nome</th>
+                                        <th className="p-2 md:p-4 text-[10px] md:text-sm lg:text-base uppercase font-black tracking-wider text-slate-400 border-b text-center">Pagato?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {appointmentParticipants.map(part => (
+                                        <tr key={part.id} className="border-b last:border-0 border-slate-100 hover:bg-slate-100/50 transition-colors">
+                                            <td className="p-2 md:p-4 text-sm md:text-base lg:text-lg font-bold text-slate-700 ">
+                                                {part.profiles?.full_name || part.profiles?.username || "Utente Sconosciuto"}
+                                            </td>
+                                            <td className="p-2 md:p-4 align-middle">
+                                                <div className="flex justify-center">
+                                                    <button
+                                                        onClick={() => toggleHasPaid(part.id, part.isPagato)}
+                                                        className={`flex items-center gap-1 md:gap-2 px-3 py-1 md:px-4 md:py-2 rounded-xl active:scale-95 text-xs md:text-sm lg:text-base font-bold transition-all ${part.isPagato ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 text-slate-500 hover:bg-slate-300 '}`}
+                                                    >
+                                                        {part.isPagato ? <CheckCircle size={16} className="md:w-5 md:h-5 lg:w-6 lg:h-6" /> : <XCircle size={16} className="md:w-5 md:h-5 lg:w-6 lg:h-6" />}
+                                                        {part.isPagato ? 'Sì' : 'No'}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -781,6 +824,40 @@ export default function BusinessDashboard({ user, name }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Banner attivazione notifiche push: senza questo il centro non riceve
+                mai le notifiche delle richieste di prenotazione sul telefono */}
+            {isSupported && !isSubscribed && (
+                needsInstallForNotifications ? (
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg border border-blue-300 mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="text-2xl">🔔</div>
+                            <div>
+                                <h3 className="font-bold text-sm">Attiva Notifiche Push</h3>
+                                <p className="text-xs opacity-90">Su iPhone funzionano solo se aggiungi L'Ultimo alla schermata Home (Condividi → Aggiungi alla Home)</p>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg border border-blue-300 mb-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl">🔔</div>
+                                <div>
+                                    <h3 className="font-bold text-sm">Attiva Notifiche Push</h3>
+                                    <p className="text-xs opacity-90">Ricevi subito le richieste di prenotazione dei giocatori</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleActivateNotifications}
+                                className="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-50 transition-colors active:scale-95"
+                            >
+                                Attiva
+                            </button>
+                        </div>
+                    </div>
+                )
             )}
 
             {/* PANNELLO DATI CENTRO (HEADER) */}

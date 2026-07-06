@@ -75,6 +75,26 @@ export async function createNotification({
 }
 
 /**
+ * Notifica il centro sportivo quando riceve una richiesta di prenotazione campo
+ * @param {string} centerId - ID del profilo del centro (sports_courts.center_id)
+ * @param {string} matchTitle - Titolo della partita
+ * @param {string} organizerName - Nome dell'organizzatore che invia la richiesta
+ * @param {string} matchId - ID della partita
+ * @param {string} organizerId - ID dell'organizzatore
+ */
+export async function notifyReservationRequest(centerId, matchTitle, organizerName, matchId, organizerId) {
+  return createNotification({
+    userId: centerId,
+    senderId: organizerId,
+    type: 'reservation_request',
+    title: '📥 Nuova Richiesta di Prenotazione',
+    content: `${organizerName} ha richiesto il campo per ${matchTitle ? `"${matchTitle}"` : 'una partita'}`,
+    link: '/',
+    metadata: { matchId, organizerId, organizerName },
+  });
+}
+
+/**
  * Notifica quando qualcuno si unisce a un match
  * @param {string} matchId - ID del match
  * @param {string} matchTitle - Titolo del match
@@ -199,6 +219,47 @@ export async function notifyMatchCancelled(matchId, matchTitle, participantIds) 
   );
 
   return Promise.all(notifications);
+}
+
+/**
+ * Notifica organizzatore/partecipanti quando il centro sportivo CONFERMA la prenotazione
+ * @param {string} userId - destinatario (organizzatore o partecipante confermato)
+ * @param {string} matchTitle - titolo della partita
+ * @param {string} sport - sport della partita
+ * @param {string} matchId - ID della partita
+ * @param {string} centerId - ID del profilo del centro (mittente)
+ */
+export async function notifyReservationConfirmed(userId, matchTitle, sport, matchId, centerId) {
+  return createNotification({
+    userId,
+    senderId: centerId,
+    type: 'match_update',
+    title: '✅ Prenotazione Confermata!',
+    content: `La tua richiesta per la partita di ${sport} è stata ACCETTATA!`,
+    link: `/match/${matchId}`,
+    metadata: { matchId },
+  });
+}
+
+/**
+ * Notifica organizzatore/partecipanti quando il centro RIFIUTA la richiesta
+ * o ANNULLA la partita già confermata
+ * @param {string} userId - destinatario (organizzatore o partecipante confermato)
+ * @param {string} matchTitle - titolo della partita
+ * @param {string} reason - motivo fornito dal centro
+ * @param {string} matchId - ID della partita
+ * @param {string} centerId - ID del profilo del centro (mittente)
+ */
+export async function notifyReservationRejected(userId, matchTitle, reason, matchId, centerId) {
+  return createNotification({
+    userId,
+    senderId: centerId,
+    type: 'match_cancelled',
+    title: '❌ Prenotazione Annullata',
+    content: `Spiacenti, la partita "${matchTitle}" è stata annullata/rifiutata dal centro sportivo.\nMotivo: ${reason}`,
+    link: `/match/${matchId}`,
+    metadata: { matchId, reason },
+  });
 }
 
 /**

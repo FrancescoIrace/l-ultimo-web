@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
 import { useAlert } from '../../components/AlertComponent';
+import { notifyReservationConfirmed, notifyReservationRejected } from '../../lib/notificationService';
 
 
 export default function BusinessDashboard({ user, name }) {
@@ -24,7 +25,16 @@ export default function BusinessDashboard({ user, name }) {
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [appointmentParticipants, setAppointmentParticipants] = useState([]);
     const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
-    
+
+    // Blocca lo scroll della pagina sotto la modale: senza questo, su mobile lo
+    // scroll "buca" oltre la lista dei giocatori fino al contenuto sottostante.
+    useEffect(() => {
+        if (!isAppointmentModalOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = previousOverflow; };
+    }, [isAppointmentModalOpen]);
+
     // Nuovi stati per il Day Modal (multi-partite)
     const [selectedDayAppointments, setSelectedDayAppointments] = useState(null);
     const [selectedDayDate, setSelectedDayDate] = useState(null);
@@ -237,27 +247,15 @@ export default function BusinessDashboard({ user, name }) {
                 participants.forEach(p => usersToNotify.add(p.user_id));
             }
 
-            const notificationsToInsert = Array.from(usersToNotify).map(userId => {
-                const notificationContent = isConfirming
-                    ? `La tua richiesta per la partita di ${updatedMatch.sport} è stata ACCETTATA!`
-                    : `Spiacenti, la partita "${updatedMatch.title}" è stata annullata/rifiutata dal centro sportivo.\nMotivo: ${reason}`;
-
-                return {
-                    user_id: userId,
-                    sender_id: user.id, // ID del centro
-                    type: 'match_update',
-                    title: isConfirming ? 'Prenotazione Confermata! ✅' : 'Prenotazione Annullata ❌',
-                    content: notificationContent,
-                    link: `/match/${matchId}`,
-                    is_read: false
-                };
-            });
-
-            const { error: notifError } = await supabase
-                .from('notifications')
-                .insert(notificationsToInsert);
-
-            if (notifError) throw notifError;
+            // Notifica in-app + push tramite il service (un insert diretto qui
+            // fallirebbe per RLS: il centro non può scrivere notifiche per altri utenti)
+            await Promise.all(
+                Array.from(usersToNotify).map(userId =>
+                    isConfirming
+                        ? notifyReservationConfirmed(userId, updatedMatch.title, updatedMatch.sport, matchId, user.id)
+                        : notifyReservationRejected(userId, updatedMatch.title, reason, matchId, user.id)
+                )
+            );
 
             // 3. Feedback UI e aggiornamento lista locale
             setRequests(prev => prev.filter(r => r.id !== matchId));
@@ -614,9 +612,9 @@ export default function BusinessDashboard({ user, name }) {
             {/* Modal Dettaglio Partita Prenotata */}
             {isAppointmentModalOpen && selectedAppointment && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /50" onClick={() => setIsAppointmentModalOpen(false)}>
-                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] " onClick={e => e.stopPropagation()}>
+                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
 
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center justify-between mb-6 flex-shrink-0">
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter ">
                                 Dettagli Prenotazione
                             </h3>
@@ -625,7 +623,7 @@ export default function BusinessDashboard({ user, name }) {
                             </button>
                         </div>
 
-                        <div className="bg-blue-50/50 rounded-2xl p-4 md:p-6 border border-blue-100 flex flex-col gap-2 mb-6">
+                        <div className="bg-blue-50/50 rounded-2xl p-4 md:p-6 border border-blue-100 flex flex-col gap-2 mb-6 flex-shrink-0">
                             <span className="text-xs md:text-sm lg:text-base font-bold uppercase text-blue-600 tracking-widest">{selectedAppointment.sport} - {selectedAppointment.sports_courts?.name}</span>
                             <div className="flex justify-between items-center">
                                 <span className="font-bold text-slate-700 md:text-xl">{selectedAppointment.title}</span>
@@ -642,7 +640,7 @@ export default function BusinessDashboard({ user, name }) {
                         {(() => {
                             const hasPhone = !!selectedAppointment.profiles?.cellulare;
                             return (
-                                <div className={`rounded-2xl p-4 md:p-5 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 ${hasPhone ? 'bg-green-50/50 border-green-200 ' : 'bg-slate-50/50 border-slate-200 '}`}>
+                                <div className={`rounded-2xl p-4 md:p-5 border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 flex-shrink-0 ${hasPhone ? 'bg-green-50/50 border-green-200 ' : 'bg-slate-50/50 border-slate-200 '}`}>
                                     <div className="flex flex-col">
                                         <span className={`text-xs md:text-[13px] font-bold uppercase tracking-widest ${hasPhone ? 'text-green-700 ' : 'text-slate-500 '}`}>Organizzatore Partita</span>
                                         <span className="text-base md:text-lg font-black text-slate-800 ">{selectedAppointment.profiles?.full_name || selectedAppointment.profiles?.username}</span>
@@ -669,7 +667,7 @@ export default function BusinessDashboard({ user, name }) {
                             );
                         })()}
 
-                        <div className="flex-1 min-h-[30vh] max-h-[45vh] overflow-y-auto mb-4 border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative ">
+                        <div className="flex-1 min-h-0 max-h-[45vh] overflow-y-auto overscroll-contain mb-4 border border-slate-100 rounded-2xl p-2 md:p-4 bg-slate-50 relative ">
                             {appointmentParticipants.length === 0 ? (
                                 <div className="text-center p-6 text-sm font-bold text-slate-400 ">Nessun partecipante caricato.</div>
                             ) : (
@@ -708,7 +706,7 @@ export default function BusinessDashboard({ user, name }) {
                             )}
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full mt-2 ">
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full mt-2 flex-shrink-0">
                             <button
                                 onClick={() => handleUpdateStatus(selectedAppointment.id, 'rejected')}
                                 disabled={processingId === selectedAppointment.id}

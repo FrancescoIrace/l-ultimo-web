@@ -388,18 +388,30 @@ export default function CreateMatch() {
         // }
 
         // 1. Aggiorniamo la partita esistente
+        const updatePayload = {
+            title: formData.title,
+            location: formData.location,
+            location_lat: formData.location_lat,
+            location_lng: formData.location_lng,
+            datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
+            description: formData.description,
+            team_id: formData.team_id || null,
+            court_id: formData.court_id || null,
+        };
+
+        // Se il campo è stato aggiunto, rimosso o cambiato, avviamo/azzeriamo
+        // il ciclo di richiesta al centro sportivo. Se il campo non cambia,
+        // non tocchiamo lo stato (es. una richiesta già inviata resta tale).
+        const courtChanged = (formData.court_id || null) !== (originalMatch?.court_id || null);
+        if (courtChanged) {
+            updatePayload.reservation_status = formData.court_id ? 'draft' : 'none';
+            updatePayload.request_count = 0;
+            updatePayload.rejection_reason = null;
+        }
+
         const { data: updatedMatch, error: matchError } = await supabase
             .from('matches')
-            .update({
-                title: formData.title,
-                location: formData.location,
-                location_lat: formData.location_lat,
-                location_lng: formData.location_lng,
-                datetime: formattedDatetime, // Formato locale per timestamp (senza timezone)
-                description: formData.description,
-                team_id: formData.team_id || null,
-                court_id: formData.court_id || null,
-            })
+            .update(updatePayload)
             .eq('id', id)
             .select()
             .single();

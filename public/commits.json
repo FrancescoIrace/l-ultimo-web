@@ -1,5 +1,10 @@
 [
   {
+    "date": "06 luglio 2026",
+    "title": "feat: recensioni con partita+squadra, nomi squadre, scroll modale centro, loader unificati",
+    "description": "Task 1 - Recensioni: snapshot della squadra A/B del recensore su reviews\n(nuova colonna reviewer_team_number) e badge partita+squadra nelle card\ndi UserReviews. Unicita' per (recensore, recensito, partita) gia' garantita.\n\nTask 2 - Nomi squadre: l'organizzatore puo' nominare le 2 squadre di una\npartita (nuove colonne matches.team1_name/team2_name), input in MatchDetailV2\nsalvati insieme alle assegnazioni; helper condiviso teamLabel().\n\nTask 3 - Modale calendario centro: lista giocatori con altezza delimitata\n(min-h-[30vh] max-h-[45vh]) e scrollbar visibile, comoda da smartphone.\n\nTask 4 - Loader unificati: nuovo componente Loader (variant page/section/inline)\nal posto dei ~9 stili diversi su ~19 file; icona e velocita' uniche;\ncorretto lo spinner statico in PWADashboard; unificato l'outlier verde.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+  },
+  {
     "date": "05 luglio 2026",
     "title": "feat: nuove notifiche (recensione, nuovo membro team, allerta meteo)",
     "description": "Notifiche aggiunte in questa sessione:\n- Recensione ricevuta a fine partita -> notifica al giocatore recensito\n- Nuovo membro entrato in squadra -> notifica al creatore del team\n- Reminder 24h \"meteo-aware\": diventa allerta meteo se e' previsto brutto\n  tempo (edge function send-24h-reminders, ancora da deployare/wire su Supabase)\n\nAggiunte icone/stili in NotificationBell per i nuovi tipi e rimossa\nla chiave duplicata team_invite.\n\nInclude inoltre lavoro in corso preesistente nel working tree\n(admin dashboard, terms of service, community guidelines, sport roles,\nreview reporting, error fallback, migration correlate).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -43,10 +48,5 @@
     "date": "02 luglio 2026",
     "title": "Aggiorna VITE_VAPID_PUBLIC_KEY di esempio con la chiave generata da Firebase Console",
     "description": "La vecchia chiave in .env.example non era mai stata registrata come\ncertificato web push nel progetto Firebase, causando l'errore\n\"missing required authentication credential\" durante la sottoscrizione\nFCM su iOS.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "02 luglio 2026",
-    "title": "Fix push notifications su iOS e restyling sezione Squadre",
-    "description": "- Corregge il typo vapidKey/vapidPublicKey e registra esplicitamente il\n  service worker, senza il quale navigator.serviceWorker.ready non si\n  risolveva mai su iPhone; il banner \"Attiva Notifiche\" ora avvisa di\n  aggiungere l'app alla Home su iOS non-standalone invece di fallire\n  silenziosamente\n- Sostituisce il blocco apns (inerte per token web) con webpush nella\n  edge function send-push-notification e corregge i path icona rotti\n- Refactor completo di TeamsPage in stile PWADashboard: layout fisso\n  con lista scrollabile, card squadra uniformate, fix badge privacy\n  mai aggiornato per mancanza di is_private nella query\n- Include fix minori pendenti su AlertComponent, LocationPicker e\n  MatchCard (cleanup di timer/listener/subscription)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

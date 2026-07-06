@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived, notifyReservationRequest } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { getSportFamily } from '../lib/sportRoles';
@@ -669,6 +669,13 @@ Scopri di più qui: ${window.location.href}`;
                 .eq('id', match.id);
 
             if (updateError) throw updateError;
+
+            // Notifica il centro sportivo (in-app + push)
+            const centerId = match.sports_courts?.center_id;
+            if (centerId) {
+                const organizerName = user.user_metadata?.username || 'Un organizzatore';
+                notifyReservationRequest(centerId, match.title, organizerName, match.id, user.id);
+            }
 
             success("Richiesta inviata al centro sportivo!");
             getDetails(); // Ricarica i dati per aggiornare UI

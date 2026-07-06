@@ -1,6 +1,11 @@
 [
   {
     "date": "06 luglio 2026",
+    "title": "fix: badge push notifiche, campo Attivo dinamico, conferma presenza ripristinata",
+    "description": "- firebase-messaging-sw.js usava '/icons.svg' come badge notifica push:\n  quel file e' uno sprite di icone social (solo <symbol>, nessun\n  contenuto visibile a livello radice), quindi il badge appariva come\n  quadrato bianco. Sostituito con '/logo-192.png' (gia' usato come\n  icon fallback e nello stesso pattern di sw.js).\n\n- Badge \"Attivo/Inattivo\" nella card campo (dashboard business) ora\n  riflette se c'e' davvero una partita confermata in corso in\n  quel momento, invece di un flag DB statico mai gestito da nessuna UI.\n\n- MatchDetailV2 importava MatchAttendanceManager ma non lo\n  renderizzava mai: ripristinata la UI di conferma presenza (persa\n  nel passaggio dalla vecchia pagina dettaglio partita alla V2),\n  nello stesso punto in cui si trovava prima.\n\n- Corretto un bug nella rinuncia da MatchAttendanceManager: un insert\n  diretto su notifications con campi inesistenti nello schema reale\n  (stesso bug RLS gia' visto altre volte), sostituito con la funzione\n  notifyMatchLeave gia' pronta nel service ma mai collegata.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+  },
+  {
+    "date": "06 luglio 2026",
     "title": "fix: badge campi sovrapposti/sbavati nella dashboard business",
     "description": "Le card \"I tuoi Campi\" usavano span inline con margini fissi (ml-2)\ninvece di un contenitore flex-wrap: se il testo di uno sport/badge\nera piu' lungo del previsto, i badge si accavallavano invece di\nandare a capo, causando l'effetto \"sbavato\" visto in alcune card.\n\nInoltre il colore del badge Aperto/Coperto e Con/Senza Telecamera\nusava una catena di fallback per gestire il casing incoerente delle\ncolonne (isOutdoor/isoutdoor/is_outdoor), ma il TESTO dentro il badge\ncontrollava solo la versione camelCase: se la colonna reale era in\nminuscolo, il testo mostrava sempre il valore di default sbagliato.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   },
@@ -43,10 +48,5 @@
     "date": "02 luglio 2026",
     "title": "Notifica partita piena e ripescaggio automatico dalla lista d'attesa",
     "description": "- notifyMatchFull: avvisa l'organizzatore quando l'ultimo posto si\n  riempie (agganciato in tutti e 3 i punti di iscrizione: MatchDetail,\n  MatchDetailV2, MatchCard)\n- Quando un confermato abbandona una partita piena: il primo in lista\n  d'attesa viene promosso automaticamente a confermato (non succedeva\n  prima, non c'era nessun meccanismo di ripescaggio) e riceve una\n  notifica dedicata (notifyWaitlistPromoted, tipo match_promotion);\n  gli altri confermati ricevono notifyMatchSpotFreed per essere\n  informati dell'abbandono\n- NotificationBell: aggiunte icone/colori per match_full e match_leave\n  (prima mancavano, ricadevano sullo stile generico)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "02 luglio 2026",
-    "title": "Notifica join anche dal bottone nella ricerca partite, fallback per titolo assente",
-    "description": "- MatchCard.jsx (usato nella lista/ricerca partite) ora chiama\n  notifyMatchJoin come già fatto in MatchDetail/MatchDetailV2, invece\n  di lasciare l'organizzatore senza notifica quando ci si iscrive da lì\n- notifyMatchJoin: se la partita non ha un titolo (campo facoltativo),\n  il messaggio usa \"alla tua partita\" invece di mostrare virgolette vuote\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

@@ -1,17 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle,Loader } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { AlertContext } from '../components/AlertComponent';
 import { InstagramEmbed } from './PagesUtils/utils';
 
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState('LOADING'); // LOADING, ALREADY_PLAYED, PLAYING, RESULTS, ERROR
   const { showAlert } = useContext(AlertContext);
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
+  const [upcomingMatch, setUpcomingMatch] = useState(null);
+  const [, setTick] = useState(0); // forza il re-render per aggiornare countdown/stato live
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
   // Su iOS le notifiche push funzionano solo se l'app è stata aggiunta alla Home
   // (standalone mode, iOS 16.4+): chiedere il permesso da una tab Safari normale fallisce sempre.
@@ -79,6 +83,60 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
 
     fetchData();
   }, [user]);
+
+  // Trova, tra le partite a cui l'utente partecipa (confermato), quella che sta per
+  // iniziare (entro 1 ora) o è già in corso, per mostrare il banner sotto.
+  useEffect(() => {
+    const fetchUpcomingMatch = async () => {
+      const pad = (n) => String(n).padStart(2, '0');
+      const toLocalString = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+      const now = new Date();
+      const lowerBound = toLocalString(new Date(now.getTime() - ONE_HOUR_MS));
+      const upperBound = toLocalString(new Date(now.getTime() + ONE_HOUR_MS));
+
+      const { data, error } = await supabase
+        .from('matches')
+        .select('id, title, sport, datetime, participants!inner(user_id, status)')
+        .eq('participants.user_id', user.id)
+        .eq('participants.status', 'confirmed')
+        .gte('datetime', lowerBound)
+        .lte('datetime', upperBound)
+        .order('datetime', { ascending: true });
+
+      if (error) {
+        console.error('Errore nel caricamento della partita in corso:', error);
+        return;
+      }
+
+      const nowMs = Date.now();
+      const active = (data || []).find(m => {
+        const start = new Date(m.datetime.replace(' ', 'T')).getTime();
+        return nowMs >= start - ONE_HOUR_MS && nowMs < start + ONE_HOUR_MS;
+      });
+
+      setUpcomingMatch(active || null);
+    };
+
+    fetchUpcomingMatch();
+  }, [user]);
+
+  // Aggiorna countdown/stato ogni 30s mentre il banner è potenzialmente visibile
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  let matchBanner = null;
+  if (upcomingMatch) {
+    const start = new Date(upcomingMatch.datetime.replace(' ', 'T')).getTime();
+    const nowMs = Date.now();
+    if (nowMs >= start - ONE_HOUR_MS && nowMs < start + ONE_HOUR_MS) {
+      const hasStarted = nowMs >= start;
+      const minutesLeft = Math.max(1, Math.ceil((start - nowMs) / 60000));
+      matchBanner = { hasStarted, minutesLeft };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -185,6 +243,34 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             )}
           </button>
         </div>
+
+        {/* Banner Partita Imminente / In Corso */}
+        {matchBanner && (
+          <div
+            onClick={() => navigate(`/match/${upcomingMatch.id}`)}
+            className={`group relative overflow-hidden flex items-center justify-between p-4 mx-4 my-2 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200 ${matchBanner.hasStarted ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}
+          >
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+                {matchBanner.hasStarted ? (
+                  <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
+                ) : (
+                  <Clock className="text-white" size={22} />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-white font-black text-sm leading-tight">
+                  {matchBanner.hasStarted ? 'Partita in corso' : `Manca ${matchBanner.minutesLeft} min${matchBanner.minutesLeft === 1 ? 'uto' : 'uti'}!`}
+                </h3>
+                <p className="text-white/90 text-xs mt-0.5 truncate">{upcomingMatch.title || upcomingMatch.sport}</p>
+              </div>
+            </div>
+            <ChevronRight
+              className="text-white flex-shrink-0 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+              size={22}
+            />
+          </div>
+        )}
 
         {/* Centri Associati (Pannello Bottone) */}
         <div

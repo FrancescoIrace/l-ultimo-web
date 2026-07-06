@@ -588,17 +588,18 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
 
     const listAppointments = getFilteredAppointmentsForList();
 
-    // Un campo è "Attivo" se in questo momento c'è una partita confermata in corso
+    // Una partita è "in corso" se l'orario attuale rientra nella sua ora di gioco
     // (partite durano convenzionalmente 1 ora, come nel resto dell'app).
-    const isCourtBusyNow = (courtId) => {
+    const isMatchLiveNow = (app) => {
+        if (!app?.datetime) return false;
         const ONE_HOUR_MS = 60 * 60 * 1000;
+        const start = new Date(app.datetime.replace(' ', 'T')).getTime();
         const now = Date.now();
-        return appointments.some(app => {
-            if (app.court_id !== courtId) return false;
-            const start = new Date(app.datetime.replace(' ', 'T')).getTime();
-            return now >= start && now < start + ONE_HOUR_MS;
-        });
+        return now >= start && now < start + ONE_HOUR_MS;
     };
+
+    // Un campo è "Attivo" se in questo momento c'è una partita confermata in corso
+    const isCourtBusyNow = (courtId) => appointments.some(app => app.court_id === courtId && isMatchLiveNow(app));
 
     return (
         <div className="p-2 md:p-6 lg:p-4 max-w-[1700px] mx-auto bg-slate-50/50 min-h-screen /50 rounded-3xl">
@@ -646,12 +647,19 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
             {/* Modal Dettaglio Partita Prenotata */}
             {isAppointmentModalOpen && selectedAppointment && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in /50" onClick={() => { setIsAppointmentModalOpen(false); setIsParticipantsModalOpen(false); }}>
-                    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className={`bg-white rounded-3xl p-6 md:p-8 shadow-2xl max-w-lg md:max-w-3xl lg:max-w-5xl w-full mx-auto animate-slide-up relative flex flex-col max-h-[90vh] overflow-hidden ${isMatchLiveNow(selectedAppointment) ? 'ring-4 ring-emerald-400' : ''}`} onClick={e => e.stopPropagation()}>
 
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                            <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter ">
-                                Dettagli Prenotazione
-                            </h3>
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tighter ">
+                                    Dettagli Prenotazione
+                                </h3>
+                                {isMatchLiveNow(selectedAppointment) && (
+                                    <span className="flex items-center gap-1.5 text-[10px] font-black uppercase bg-emerald-500 text-white px-2.5 py-1 rounded-full shadow-md animate-pulse">
+                                        ● In corso
+                                    </span>
+                                )}
+                            </div>
                             <button onClick={() => { setIsAppointmentModalOpen(false); setIsParticipantsModalOpen(false); }} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
                                 <X size={20} />
                             </button>
@@ -1101,10 +1109,11 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                 const style = GetSportStyle(court.sport_type);
                                 const isOutdoor = court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true;
                                 const hasCamera = court.hasCamera ?? court.has_camera ?? court.hascamera ?? false;
+                                const busyNow = isCourtBusyNow(court.id);
                                 return (
                                     <div
                                         key={court.id}
-                                        className={`relative h-32 rounded-xl overflow-hidden shadow-md border-b-4 ${style.borderColor} ${style.bg} transition-transform active:scale-95`}
+                                        className={`relative h-32 rounded-xl overflow-hidden shadow-md border-b-4 ${style.borderColor} ${style.bg} transition-transform active:scale-95 ${busyNow ? 'ring-2 ring-emerald-400 ring-offset-2 animate-pulse' : ''}`}
                                         style={{ backgroundImage: style.pattern, backgroundSize: '40px 40px' }}
                                     >
                                         {/* Linee del campo (Overlay visivo) */}
@@ -1166,8 +1175,8 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
 
                                         {/* Badge Stato: Attivo = c'è una partita confermata in corso ora su questo campo */}
                                         <div className="absolute bottom-3 right-3">
-                                            <span className={`text-[10px] font-black px-2 py-1 rounded-full shadow-lg uppercase ${isCourtBusyNow(court.id) ? 'bg-emerald-500 text-white' : 'bg-white text-slate-500'}`}>
-                                                {isCourtBusyNow(court.id) ? '● Attivo' : '○ Inattivo'}
+                                            <span className={`text-[10px] font-black px-2 py-1 rounded-full shadow-lg uppercase ${busyNow ? 'bg-emerald-500 text-white' : 'bg-white text-slate-500'}`}>
+                                                {busyNow ? '● Attivo' : '○ Inattivo'}
                                             </span>
                                         </div>
                                     </div>

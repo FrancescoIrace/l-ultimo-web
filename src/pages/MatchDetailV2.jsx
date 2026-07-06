@@ -876,9 +876,16 @@ Scopri di più qui: ${window.location.href}`;
 
                 {/* 1. BLOCCO TITOLO E DESCRIZIONE */}
                 <div className="mb-5">
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight uppercase">
-                        {match.title || match.sport}
-                    </h1>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight uppercase">
+                            {match.title || match.sport}
+                        </h1>
+                        {isMatchStarted && !isMatchFinished && (
+                            <span className="flex items-center gap-1.5 text-[10px] font-black uppercase bg-emerald-500 text-white px-2.5 py-1 rounded-full shadow-md animate-pulse">
+                                ● In corso
+                            </span>
+                        )}
+                    </div>
                     {!match.title && (
                         <span className="text-sm text-slate-400">Titolo autogenerato</span>
                     )}

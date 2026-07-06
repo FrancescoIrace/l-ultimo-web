@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { AlertTriangle, Check, X } from 'lucide-react';
 import { useAlert } from './AlertComponent';
+import { notifyMatchLeave } from '../lib/notificationService';
 
 export default function MatchAttendanceManager({ match, user, onUpdate }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -99,20 +100,16 @@ export default function MatchAttendanceManager({ match, user, onUpdate }) {
         return;
       }
 
-      // 2. Invia notifica al creatore
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single();
+      // 2. Invia notifica al creatore (in-app + push)
+      if (match.creator_id !== user.id) {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
 
-      await supabase.from('notifications').insert({
-        user_id: match.creator_id,
-        sender_id: user.id,
-        type: 'MATCH_LEAVE',
-        message: `${userProfile?.username || 'Qualcuno'} ha rinunciato alla partita che hai creato.`,
-        related_match_id: match.id,
-      });
+        notifyMatchLeave(match.id, match.title, userProfile?.username || 'Un giocatore', match.creator_id, user.id);
+      }
 
       onUpdate();
       setIsLoading(false);

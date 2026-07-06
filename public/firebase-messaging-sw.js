@@ -35,7 +35,7 @@ messaging.onBackgroundMessage((payload) => {
     body,
     icon: icon || '/logo-192.png',
     image,
-    badge: '/icons.svg',
+    badge: '/logo-192.png',
     tag: 'firebase-notification',
     requireInteraction: false,
     data: data || {},

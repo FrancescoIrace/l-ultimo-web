@@ -1198,8 +1198,7 @@ Scopri di più qui: ${window.location.href}`;
 
                 </div>
 
-
-
+                <MatchAttendanceManager match={match} user={user} onUpdate={getDetails} />
 
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>

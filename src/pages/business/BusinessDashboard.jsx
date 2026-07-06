@@ -162,6 +162,7 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
             max_players,
             reservation_status,
             creator_id,
+            court_id,
             sports_courts!inner (
                 name,
                 center_id,
@@ -586,6 +587,18 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
     };
 
     const listAppointments = getFilteredAppointmentsForList();
+
+    // Un campo è "Attivo" se in questo momento c'è una partita confermata in corso
+    // (partite durano convenzionalmente 1 ora, come nel resto dell'app).
+    const isCourtBusyNow = (courtId) => {
+        const ONE_HOUR_MS = 60 * 60 * 1000;
+        const now = Date.now();
+        return appointments.some(app => {
+            if (app.court_id !== courtId) return false;
+            const start = new Date(app.datetime.replace(' ', 'T')).getTime();
+            return now >= start && now < start + ONE_HOUR_MS;
+        });
+    };
 
     return (
         <div className="p-2 md:p-6 lg:p-4 max-w-[1700px] mx-auto bg-slate-50/50 min-h-screen /50 rounded-3xl">
@@ -1151,10 +1164,10 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                             </div>
                                         </div>
 
-                                        {/* Badge Stato */}
+                                        {/* Badge Stato: Attivo = c'è una partita confermata in corso ora su questo campo */}
                                         <div className="absolute bottom-3 right-3">
-                                            <span className="text-[10px] font-black bg-white text-slate-900 px-2 py-1 rounded-full shadow-lg uppercase">
-                                                {court.is_active ? '● Attivo' : '○ Inattivo'}
+                                            <span className={`text-[10px] font-black px-2 py-1 rounded-full shadow-lg uppercase ${isCourtBusyNow(court.id) ? 'bg-emerald-500 text-white' : 'bg-white text-slate-500'}`}>
+                                                {isCourtBusyNow(court.id) ? '● Attivo' : '○ Inattivo'}
                                             </span>
                                         </div>
                                     </div>

@@ -1086,6 +1086,8 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                         <div className="grid grid-cols-1 gap-4">
                             {campi.map(court => {
                                 const style = GetSportStyle(court.sport_type);
+                                const isOutdoor = court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true;
+                                const hasCamera = court.hasCamera ?? court.has_camera ?? court.hascamera ?? false;
                                 return (
                                     <div
                                         key={court.id}
@@ -1126,24 +1128,26 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
 
                                         {/* Contenuto Informativo */}
                                         <div className="relative z-0 p-4 flex justify-between items-start h-full text-white">
-                                            <div>
-                                                <h4 className="text-xl font-black uppercase tracking-tight drop-shadow-md">
+                                            <div className="flex flex-col gap-1.5 min-w-0 max-w-full">
+                                                <h4 className="text-xl font-black uppercase tracking-tight drop-shadow-md truncate">
                                                     {court.name}
                                                 </h4>
-                                                <span className="bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase">
-                                                    {court.sport_type}
-                                                </span>
-                                                <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border ${(court.isOutdoor ?? court.isoutdoor ?? court.is_outdoor ?? true) ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
-                                                    {court.isOutdoor ? "All'aperto" : "Coperto"}
-                                                </span>
-                                                <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border ${(court.hasCamera ?? court.has_camera ?? court.hascamera ?? false) ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
-                                                    {court.hasCamera ? "📷 Con Telecamera" : "🏟️ Senza Telecamera"}
-                                                </span>
-                                                {court.price_p_p != null && (
-                                                    <span className="bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase ml-2 text-white shadow-sm border border-blue-400">
-                                                        {court.price_p_p}€ / p
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className="max-w-[45%] truncate bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase">
+                                                        {court.sport_type}
                                                     </span>
-                                                )}
+                                                    <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase text-white shadow-sm border whitespace-nowrap ${isOutdoor ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
+                                                        {isOutdoor ? "All'aperto" : "Coperto"}
+                                                    </span>
+                                                    <span className={`backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase text-white shadow-sm border whitespace-nowrap ${hasCamera ? 'bg-amber-500/90 border-amber-400' : 'bg-slate-600/90 border-slate-500'}`}>
+                                                        {hasCamera ? "📷 Con Telecamera" : "🏟️ Senza Telecamera"}
+                                                    </span>
+                                                    {court.price_p_p != null && (
+                                                        <span className="bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold uppercase text-white shadow-sm border border-blue-400 whitespace-nowrap">
+                                                            {court.price_p_p}€ / p
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 

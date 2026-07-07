@@ -314,7 +314,7 @@ export default function Profile({ session }) {
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
-        navigate('/');
+        navigate('/login');
     };
 
     const hasConsentToDataProcessing = Boolean(

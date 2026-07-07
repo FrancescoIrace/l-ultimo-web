@@ -6,6 +6,7 @@ import { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { AlertContext } from '../components/AlertComponent';
 import { InstagramEmbed } from './PagesUtils/utils';
+import ContactRequestModal from '../components/ContactRequestModal';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -16,6 +17,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const [upcomingMatch, setUpcomingMatch] = useState(null);
   const [, setTick] = useState(0); // forza il re-render per aggiornare countdown/stato live
+  const [contactModalType, setContactModalType] = useState(null); // 'advertising' | 'suggestion' | null
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
   // Su iOS le notifiche push funzionano solo se l'app è stata aggiunta alla Home
   // (standalone mode, iOS 16.4+): chiedere il permesso da una tab Safari normale fallisce sempre.
@@ -365,11 +367,10 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         )}
 
         {/* Banner Richiesta Sponsorizzazione */}
-        <a
-          href={`https://wa.me/393285816683?text=Ciao%20L%27ultimo,%20siamo%20interessati%20a%20sponsorizzare%20la%20nostra%20attivit%C3%A0.`}
-          target="_blank"
-          rel="noreferrer"
-          className="group relative flex items-center justify-between p-5 mx-4 my-2 bg-gradient-to-r from-sky-400 to-blue-500 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200"
+        <button
+          type="button"
+          onClick={() => setContactModalType('advertising')}
+          className="group relative flex items-center justify-between p-5 mx-4 my-2 bg-gradient-to-r from-sky-400 to-blue-500 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200 text-left"
         >
           <div className="flex items-center gap-4 max-w-[85%]">
             <div className="flex flex-col">
@@ -384,17 +385,15 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             className="text-white flex-shrink-0 opacity-75 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
             size={22}
           />
-        </a>
+        </button>
 
         {/* Banner Feedback */}
-        <a
-          href={`https://wa.me/393285816683?text=Ciao%20L%27ultimo,%20abbiamo%20dei%20suggerimenti%20per%20la%20tua%20app.`}
-          target="_blank"
-          rel="noreferrer"
-          className="group flex items-center justify-between p-5 mx-4 my-2 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200"
+        <button
+          type="button"
+          onClick={() => setContactModalType('suggestion')}
+          className="group flex items-center justify-between p-5 mx-4 my-2 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200 text-left"
         >
           <div className="flex items-center gap-4 max-w-[85%]">
-            {/* Icona WhatsApp / Messaggio per dare un tocco di colore nativo */}
             <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-100 transition-colors duration-200 flex-shrink-0">
               <MessageCircle size={22} />
             </div>
@@ -410,7 +409,15 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
             size={22}
           />
-        </a>
+        </button>
+
+        <ContactRequestModal
+          isOpen={!!contactModalType}
+          onClose={() => setContactModalType(null)}
+          type={contactModalType}
+          userId={user?.id}
+          defaultEmail={user?.email}
+        />
 
 
         {/* Banner esempio 1 */}

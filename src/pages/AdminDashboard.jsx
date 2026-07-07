@@ -406,8 +406,8 @@ export default function AdminDashboard({ session }) {
                 <div className="space-y-3">
                     {searchResults.map((profile) => (
                         <div key={profile.id} className="p-4 bg-white border border-slate-100 shadow-sm rounded-2xl flex items-center gap-3">
-                            <div className="flex-1">
-                                <p className="font-bold text-sm text-slate-800">{profile.username}</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-sm text-slate-800 truncate">{profile.username}</p>
                                 {profile.is_banned && (
                                     <p className="text-[10px] font-black uppercase text-red-500">
                                         Bannato{profile.ban_reason ? ` — ${profile.ban_reason}` : ''}

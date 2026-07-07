@@ -511,7 +511,7 @@ export default function PublicProfile() {
                             <span className="font-black text-blue-600">{profile?.username?.charAt(0).toUpperCase()}</span>
                         )}
                     </div>
-                    <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800">
+                    <h2 className="w-full px-2 text-3xl font-black uppercase tracking-tighter text-slate-800 text-center truncate">
                         {profile?.username}
                     </h2>
                     <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mt-1">

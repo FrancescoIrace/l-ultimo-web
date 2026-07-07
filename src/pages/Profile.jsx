@@ -611,8 +611,8 @@ export default function Profile({ session }) {
                                         : profile?.username?.charAt(0).toUpperCase()
                                     }
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 leading-tight">{profile?.username}</h2>
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 leading-tight truncate">{profile?.username}</h2>
                                     <p className="text-slate-400 text-xs font-bold mt-0.5">
                                         📍 {profile?.location || profile?.province}
                                         {profile?.location && profile?.zip_code ? ` (${profile.zip_code})` : ''}

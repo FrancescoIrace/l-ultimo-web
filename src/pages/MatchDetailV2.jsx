@@ -1,8 +1,9 @@
-import { Bell, Building2, Calendar, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown } from 'lucide-react';
+import { Bell, Building2, Calendar, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown, MessageCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
+import MatchMessageThread from '../components/MatchMessageThread';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
 import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived, notifyReservationRequest } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
@@ -39,6 +40,7 @@ export default function MatchDetail({ user }) {
     const [tooltipActive, setTooltipActive] = useState(false);
     const [team1NameLocal, setTeam1NameLocal] = useState('');
     const [team2NameLocal, setTeam2NameLocal] = useState('');
+    const [isMessageThreadOpen, setIsMessageThreadOpen] = useState(false);
 
 
     const checkMatchStatus = (matchDatetime) => {
@@ -1164,6 +1166,15 @@ Scopri di più qui: ${window.location.href}`;
                         </div>
                     )}
 
+                    {match?.creator_id === user.id && match?.court_id && (
+                        <button
+                            onClick={() => setIsMessageThreadOpen(true)}
+                            className="w-full mb-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold shadow-sm hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            <MessageCircle size={18} className="text-blue-600" /> Invia messaggio al centro
+                        </button>
+                    )}
+
                     {match?.creator_id !== user.id && match?.court_id && (
                         <>
                             {(() => {
@@ -1206,6 +1217,20 @@ Scopri di più qui: ${window.location.href}`;
                 </div>
 
                 <MatchAttendanceManager match={match} user={user} onUpdate={getDetails} />
+
+                {match?.court_id && (
+                    <MatchMessageThread
+                        isOpen={isMessageThreadOpen}
+                        onClose={() => setIsMessageThreadOpen(false)}
+                        matchId={match.id}
+                        currentUserId={user.id}
+                        currentUserName={user.user_metadata?.username || 'Un organizzatore'}
+                        otherUserId={match.sports_courts?.center_id}
+                        otherUserName={match.sports_courts?.profiles?.username || 'Centro Sportivo'}
+                        matchLabel={`${match.sport} — ${new Date(match.datetime.replace(' ', 'T')).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${match.sports_courts?.name || ''}`}
+                        recipientLink="/"
+                    />
+                )}
 
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>

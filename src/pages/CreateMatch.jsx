@@ -449,6 +449,10 @@ export default function CreateMatch() {
 
     if (loading) return <Loader variant="page" />;
 
+    // In modifica, se la richiesta al centro è già stata inviata (in attesa di
+    // risposta) o accettata, il campo non è più modificabile: cambiarlo ora
+    // lascerebbe il vecchio campo prenotato mentre la partita punta altrove.
+    const isCourtLocked = !!id && (formData.reservation_status === 'requested' || formData.reservation_status === 'confirmed');
 
     // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
@@ -558,8 +562,9 @@ export default function CreateMatch() {
                         </div>
                         <button
                             type="button"
+                            disabled={isCourtLocked}
                             onClick={() => setIsPickerOpen(true)}
-                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-sm flex items-center justify-between gap-2 hover:bg-slate-100 transition-colors"
+                            className={`w-full p-3 border rounded-xl text-left text-sm flex items-center justify-between gap-2 transition-colors ${isCourtLocked ? 'bg-slate-100 border-slate-100 opacity-60 cursor-not-allowed' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
                         >
                             <span className="flex items-center gap-2 min-w-0">
                                 <Building2 size={16} className="text-slate-400 flex-shrink-0" />
@@ -571,6 +576,13 @@ export default function CreateMatch() {
                             </span>
                             <ChevronRight size={16} className="text-slate-400 flex-shrink-0" />
                         </button>
+                        {isCourtLocked && (
+                            <p className="text-[11px] text-slate-400 mt-2 leading-snug">
+                                {formData.reservation_status === 'confirmed'
+                                    ? 'Non modificabile: la prenotazione è già stata confermata dal centro.'
+                                    : 'Non modificabile: la richiesta è già stata inviata al centro, in attesa di risposta.'}
+                            </p>
+                        )}
                     </div>
 
                     <CenterCourtPicker

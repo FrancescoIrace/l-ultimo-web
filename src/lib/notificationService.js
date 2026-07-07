@@ -443,3 +443,26 @@ export async function notifyTeamMemberJoined(team, newMemberId) {
     console.error('Errore nella notifica nuovo membro team:', err);
   }
 }
+
+/**
+ * Notifica quando si riceve un nuovo messaggio nel thread organizzatore↔centro
+ * @param {string} recipientUserId - destinatario del messaggio
+ * @param {string} senderId - chi ha scritto
+ * @param {string} matchId - ID della partita
+ * @param {string} senderName - nome di chi ha scritto
+ * @param {string} messagePreview - anteprima del contenuto del messaggio
+ * @param {string} link - dove porta il click sulla notifica: /match/:id per
+ *   l'organizzatore, / (dashboard) per il centro, che non ha una pagina
+ *   dettaglio partita propria
+ */
+export async function notifyNewMatchMessage(recipientUserId, senderId, matchId, senderName, messagePreview, link = `/match/${matchId}`) {
+  return createNotification({
+    userId: recipientUserId,
+    senderId,
+    type: 'match_message',
+    title: '💬 Nuovo messaggio',
+    content: `${senderName}: ${messagePreview}`,
+    link,
+    metadata: { matchId, senderId },
+  });
+}

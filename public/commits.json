@@ -1,6 +1,11 @@
 [
   {
     "date": "06 luglio 2026",
+    "title": "feat: modale centro/campo con ricerca e ordinamento per distanza",
+    "description": "Sostituiti i due <select> classici (centro + campo) in creazione/\nmodifica partita con un'unica modale: lista centri con barra di\nricerca ordinata per vicinanza all'utente (geolocalizzazione con\nfallback alla posizione salvata sul profilo), click su un centro\nmostra i suoi campi.\n\nI campi non vengono mai filtrati/nascosti in base allo sport: i\nvalori di sport_type dei campi (Calcio a 5/Padel/Basket/Tennis, solo\n4 categorie) non corrispondono agli sport delle partite (13 valori\npiu' specifici, es. \"Basket (3vs3)\") - un filtro esatto avrebbe\nnascosto quasi tutti i campi in quasi tutti i casi. I campi della\ncategoria corrispondente vengono invece ordinati per primi.\n\nCorretto anche un bug preesistente: selectedCenter era a volte una\nstringa (id), a volte un intero oggetto profilo, con vari typeof\nsparsi per compensare - ora e' sempre un id stringa.\n\nNuovi file:\n- src/lib/geo.js: formula haversine estratta da Home.jsx (era locale,\n  duplicata in memoria per questo componente)\n- src/components/CenterCourtPicker.jsx: la modale\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+  },
+  {
+    "date": "06 luglio 2026",
     "title": "feat: nuovo logo dell'app (favicon, icone PWA, icona push)",
     "description": "Sostituito il vecchio logo con il nuovo design (porta da calcetto a U\nbianca, pallino verde, cerchio di centrocampo) in:\n- favicon.svg (tab del browser)\n- android-chrome-192x192.png / 512x512.png (icona PWA \"any\")\n- logo-192.png / logo-512.png (icona notifiche push)\n\nAggiunte varianti dedicate android-chrome-*-maskable.png (safe-zone\n72%, sfondo pieno senza angoli arrotondati, come richiede lo standard\nmaskable) al posto di riusare i file \"any\": prima manifest.json\nriusava lo stesso file sia per purpose \"any\" che \"maskable\", perdendo\ncontenuto ai bordi quando l'OS applica la sua maschera. Aggiunta anche\nla entry maskable 512x512 mancante.\n\nPNG generati via sharp da sorgente SVG vettoriale (dipendenza usata\nsolo localmente per la generazione, non aggiunta al progetto).\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   },
@@ -43,10 +48,5 @@
     "date": "03 luglio 2026",
     "title": "fix block",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "02 luglio 2026",
-    "title": "Notifica partita annullata e partita modificata ai partecipanti",
-    "description": "- handleDeleteMatch (MatchDetail/V2): quando l'organizzatore annulla\n  una partita futura, tutti i confermati e chi era in lista d'attesa\n  ricevono notifyMatchCancelled (prima nessuno veniva avvisato, la\n  funzione esisteva ma non era mai stata agganciata). Nessuna notifica\n  per l'eliminazione di partite già concluse (pulizia storico, non\n  un vero annullamento).\n- CreateMatch.jsx (handleUpdate, il form di modifica realmente usato\n  dalla route /modifica/:id): confronta i valori originali con quelli\n  salvati e notifica i confermati con notifyMatchUpdate, elencando\n  cosa è cambiato (orario/luogo/titolo/descrizione)\n- notifyMatchCancelled/notifyMatchUpdate: stesso fix già fatto per\n  notifyMatchJoin per il titolo partita facoltativo (niente più\n  virgolette vuote se il titolo manca)\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

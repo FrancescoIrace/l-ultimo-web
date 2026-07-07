@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle, Handshake, Star, CloudRain, Building2 } from 'lucide-react';
+import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle, Handshake, Star, CloudRain, Building2, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getNotificationStyles(type) {
@@ -80,6 +80,11 @@ function getNotificationStyles(type) {
       bg: 'bg-indigo-50',
       dot: 'bg-indigo-500',
       hover: 'hover:bg-indigo-100',
+    },
+    match_message: {
+      bg: 'bg-blue-50',
+      dot: 'bg-blue-500',
+      hover: 'hover:bg-blue-100',
     }
   };
   return styles[type] || styles.match_update;
@@ -217,6 +222,8 @@ export function NotificationBell({ userId }) {
                             return <CloudRain size={18} className="text-sky-600" />;
                           case 'reservation_request':
                             return <Building2 size={18} className="text-indigo-600" />;
+                          case 'match_message':
+                            return <MessageCircle size={18} className="text-blue-600" />;
                           default:
                             return <Bell size={18} className="text-blue-600" />;
                         }

@@ -1,9 +1,10 @@
 import { data, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight, CheckCircle, Download, XCircle, MessageCircle, Bell } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Calendar as CalendarIcon, Info, ArrowRight, ArrowLeft, LayoutDashboard, Clock, Pencil, Edit2, Search, X, AlertCircle, List, ChevronLeft, ChevronRight, CheckCircle, Download, XCircle, MessageCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
+import MatchMessageThread from '../../components/MatchMessageThread';
 import { useAlert } from '../../components/AlertComponent';
 import { notifyReservationConfirmed, notifyReservationRejected } from '../../lib/notificationService';
 
@@ -46,6 +47,8 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
     const [selectedDayDate, setSelectedDayDate] = useState(null);
 
     const [isSavingParticipants, setIsSavingParticipants] = useState(false);
+    const [activeMessageThread, setActiveMessageThread] = useState(null);
+    const [organizerMessages, setOrganizerMessages] = useState([]);
     const { success, error, alert, confirm } = useAlert();
 
     const handleActivateNotifications = async () => {
@@ -61,30 +64,39 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
         }
     };
 
-    const handleSendOrganizerNotification = async (appointment) => {
-        if (!appointment?.profiles?.id) return;
-        confirm("Vuoi inviare una notifica all'organizzatore per chiedergli di farsi vivo?", async () => {
-            const { error: notifError } = await supabase
-                .from('notifications')
-                .insert([
-                    {
-                        user_id: appointment.creator_id,
-                        sender_id: user.id, // ID del centro
-                        type: 'system',
-                        title: 'Messaggio dal Centro Sportivo',
-                        content: `Ciao ${appointment.profiles?.full_name || appointment.profiles?.username}, ${name ? `il ${name}` : 'il centro sportivo'} ti vuole contattare.`,
-                        link: `/partite/${appointment.id}`
-                    }
-                ]);
-
-            if (notifError) {
-                console.error(notifError);
-                error("Errore nell'invio della notifica.");
-            } else {
-                success("Notifica inviata all'organizzatore!");
-            }
+    function openMessageThread(appointment) {
+        if (!appointment?.creator_id) return;
+        setActiveMessageThread({
+            matchId: appointment.id,
+            otherUserId: appointment.creator_id,
+            otherUserName: appointment.profiles?.full_name || appointment.profiles?.username || 'Organizzatore',
+            matchLabel: `${appointment.sport} — ${new Date(appointment.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${appointment.sports_courts?.name || ''}`,
         });
-    };
+    }
+
+    async function fetchOrganizerMessages() {
+        const { data, error } = await supabase
+            .from('match_messages')
+            .select(`
+                id, match_id, sender_id, content, created_at, read_at,
+                matches ( title, sport, datetime, sports_courts ( name ) ),
+                sender:sender_id ( username, full_name )
+            `)
+            .eq('recipient_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Errore caricamento messaggi organizzatori:', error);
+            return;
+        }
+
+        // Un solo riepilogo per thread (match_id): tiene il messaggio più recente
+        const byMatch = new Map();
+        for (const m of data || []) {
+            if (!byMatch.has(m.match_id)) byMatch.set(m.match_id, m);
+        }
+        setOrganizerMessages(Array.from(byMatch.values()));
+    }
 
     async function fetchHours() {
         const { data } = await supabase.from('business_hours').select('*').eq('center_id', user.id).order('day_of_week');
@@ -475,6 +487,7 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
         fetchHours();
         fetchIncomingRequests();
         fetchAppointments();
+        fetchOrganizerMessages();
         // Sottoscrizione Realtime
         const channel = supabase
             .channel('business_requests')
@@ -490,6 +503,11 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                     fetchIncomingRequests();
                     fetchAppointments();
                 }
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'match_messages' },
+                () => fetchOrganizerMessages()
             )
             .subscribe();
 
@@ -698,11 +716,11 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                             <MessageCircle size={20} className="md:w-6 md:h-6" /> Contatta su WhatsApp
                                         </a>
                                     ) : (
-                                        <button 
-                                            onClick={() => handleSendOrganizerNotification(selectedAppointment)}
+                                        <button
+                                            onClick={() => openMessageThread(selectedAppointment)}
                                             className="w-full sm:w-auto bg-slate-800 text-white flex items-center justify-center gap-2 px-5 py-3 md:px-6 md:py-3.5 rounded-xl font-bold shadow-lg active:scale-95 transition-all text-sm md:text-base hover:bg-slate-700"
                                         >
-                                            <Bell size={20} className="md:w-6 md:h-6" /> Invia notifica In-App
+                                            <MessageCircle size={20} className="md:w-6 md:h-6" /> Invia Messaggio
                                         </button>
                                     )}
                                 </div>
@@ -796,6 +814,17 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                     </div>
                 </div>
             )}
+
+            <MatchMessageThread
+                isOpen={!!activeMessageThread}
+                onClose={() => setActiveMessageThread(null)}
+                matchId={activeMessageThread?.matchId}
+                currentUserId={user.id}
+                currentUserName={name || 'Centro Sportivo'}
+                otherUserId={activeMessageThread?.otherUserId}
+                otherUserName={activeMessageThread?.otherUserName}
+                matchLabel={activeMessageThread?.matchLabel}
+            />
 
             {/* Modal Rifiuto */}
             {rejectingMatchId && (
@@ -1213,6 +1242,52 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    {/* PANNELLO MESSAGGI */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
+                                <MessageCircle size={20} />
+                            </div>
+                            <h3 className="font-bold text-slate-800 uppercase tracking-tighter">Messaggi dagli Organizzatori</h3>
+                        </div>
+                        {organizerMessages.length === 0 ? (
+                            <p className="text-sm text-slate-400 text-center py-6">Nessun messaggio ricevuto.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {organizerMessages.map(m => {
+                                    const unread = !m.read_at;
+                                    const senderName = m.sender?.full_name || m.sender?.username || 'Organizzatore';
+                                    const matchInfo = m.matches;
+                                    return (
+                                        <button
+                                            key={m.match_id}
+                                            onClick={() => setActiveMessageThread({
+                                                matchId: m.match_id,
+                                                otherUserId: m.sender_id,
+                                                otherUserName: senderName,
+                                                matchLabel: matchInfo
+                                                    ? `${matchInfo.sport} — ${new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${matchInfo.sports_courts?.name || ''}`
+                                                    : '',
+                                            })}
+                                            className={`w-full text-left p-4 rounded-2xl border transition-colors ${unread ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="font-bold text-slate-800 text-sm truncate">{senderName}</span>
+                                                {unread && <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />}
+                                            </div>
+                                            {matchInfo && (
+                                                <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                                                    {matchInfo.sport} — {new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — {matchInfo.sports_courts?.name}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-slate-600 mt-1 truncate">{m.content}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                 </div> {/* CHIUDE COLONNA DESTRA */}

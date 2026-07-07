@@ -1,6 +1,16 @@
 [
   {
     "date": "07 luglio 2026",
+    "title": "fix: sul logout la pagina tornava a \"/\" (landing) invece del login \"/login\"",
+    "description": "Modifica all'app"
+  },
+  {
+    "date": "07 luglio 2026",
+    "title": "feat: landing page pubblica, segnalazione chat, sezione admin dedicata",
+    "description": "Aggiunge la landing page di marketing (con CTA \"Google Play - Presto\"\nal posto delle guide di installazione), sposta il pannello messaggi\nnella dashboard business, e introduce la segnalazione delle chat\norganizzatore-centro con relativa gestione lato admin."
+  },
+  {
+    "date": "07 luglio 2026",
     "title": "feat: thread messaggi organizzatore-centro + blocco cambio campo con richiesta attiva",
     "description": "- Nuovo sistema di messaggi persistenti tra organizzatore e centro\n  sportivo per una partita (tabella match_messages con RLS). Sostituisce\n  il vecchio bottone \"Invia notifica In-App\" che faceva un insert diretto\n  su notifications bypassando la RPC privilegiata (bug RLS gia' noto,\n  probabilmente non funzionante).\n  - Bottone \"Invia messaggio al centro\" nel dettaglio partita, visibile\n    solo all'organizzatore, sotto la sezione richiesta prenotazione.\n  - Nuovo pannello \"Messaggi dagli Organizzatori\" nella dashboard\n    business, con nome/sport/giorno/ora/campo e indicatore non letto,\n    aggiornamento realtime.\n  - Componente condiviso MatchMessageThread (bolle chat + invio),\n    riusato da entrambe le parti.\n  - notifyNewMatchMessage segue il pattern RPC standard del resto\n    dell'app (mai insert diretto).\n\n- Fix CreateMatch.jsx: in modifica, se la richiesta al centro e' gia'\n  stata inviata (in attesa) o accettata, il campo/centro non e' piu'\n  modificabile - altrimenti il vecchio campo resterebbe prenotato\n  mentre la partita punta altrove.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   },
@@ -38,15 +48,5 @@
     "date": "06 luglio 2026",
     "title": "fix: reservation_status in modifica partita + notifiche prenotazioni + modale centro",
     "description": "- Fix: modificare una partita per aggiungere/cambiare il campo non\n  aggiornava reservation_status (handleUpdate in CreateMatch.jsx era la\n  funzione realmente eseguita in modifica, non handleSubmit), quindi il\n  bottone \"Invia Richiesta al Centro\" non appariva mai dopo un edit.\n  Ora si resetta a 'draft'/'none' solo quando il campo cambia davvero.\n\n- Nuova notifica al centro sportivo quando riceve una richiesta di\n  prenotazione (notifyReservationRequest).\n\n- Notifiche a organizzatore e partecipanti quando il centro accetta,\n  rifiuta una richiesta o annulla una partita confermata: sostituito\n  un insert diretto sulla tabella notifications (bloccato dalle RLS,\n  causava un errore fuorviante lato centro) con le funzioni del\n  service che passano dalla RPC privilegiata (in-app + push).\n\n- Fix modale \"Dettagli Prenotazione\" nel calendario centro: bloccato\n  lo scroll della pagina sotto la modale e corretto il layout flex\n  (overflow-hidden + flex-shrink-0 sui blocchi fissi) cosi' i bottoni\n  in fondo non vengono piu' tagliati fuori dallo schermo.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "06 luglio 2026",
-    "title": "feat: recensioni con partita+squadra, nomi squadre, scroll modale centro, loader unificati",
-    "description": "Task 1 - Recensioni: snapshot della squadra A/B del recensore su reviews\n(nuova colonna reviewer_team_number) e badge partita+squadra nelle card\ndi UserReviews. Unicita' per (recensore, recensito, partita) gia' garantita.\n\nTask 2 - Nomi squadre: l'organizzatore puo' nominare le 2 squadre di una\npartita (nuove colonne matches.team1_name/team2_name), input in MatchDetailV2\nsalvati insieme alle assegnazioni; helper condiviso teamLabel().\n\nTask 3 - Modale calendario centro: lista giocatori con altezza delimitata\n(min-h-[30vh] max-h-[45vh]) e scrollbar visibile, comoda da smartphone.\n\nTask 4 - Loader unificati: nuovo componente Loader (variant page/section/inline)\nal posto dei ~9 stili diversi su ~19 file; icona e velocita' uniche;\ncorretto lo spinner statico in PWADashboard; unificato l'outlier verde.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-  },
-  {
-    "date": "05 luglio 2026",
-    "title": "feat: nuove notifiche (recensione, nuovo membro team, allerta meteo)",
-    "description": "Notifiche aggiunte in questa sessione:\n- Recensione ricevuta a fine partita -> notifica al giocatore recensito\n- Nuovo membro entrato in squadra -> notifica al creatore del team\n- Reminder 24h \"meteo-aware\": diventa allerta meteo se e' previsto brutto\n  tempo (edge function send-24h-reminders, ancora da deployare/wire su Supabase)\n\nAggiunte icone/stili in NotificationBell per i nuovi tipi e rimossa\nla chiave duplicata team_invite.\n\nInclude inoltre lavoro in corso preesistente nel working tree\n(admin dashboard, terms of service, community guidelines, sport roles,\nreview reporting, error fallback, migration correlate).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   }
 ]

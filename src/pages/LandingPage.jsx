@@ -49,7 +49,12 @@ export default function LandingPage() {
                         <a href="#sport" className="hover:text-blue-600 transition-colors">Sport</a>
                         <a href="#lista-attesa" className="hover:text-blue-600 transition-colors">Lista d'attesa</a>
                     </nav>
-                    <ComingSoonPill />
+                    <div className="flex items-center gap-3">
+                        <Link to="/accedi" className="text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
+                            Accedi
+                        </Link>
+                        <ComingSoonPill />
+                    </div>
                 </div>
             </header>
 

@@ -137,7 +137,7 @@ function App() {
       <AlertProvider>
         <Suspense fallback={<RouteLoader />}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={isPWA ? <Auth /> : <LandingPage />} />
             <Route path="/accedi" element={<Auth />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />

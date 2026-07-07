@@ -1,6 +1,11 @@
 [
   {
     "date": "07 luglio 2026",
+    "title": "fix: tronca username troppo lunghi negli header di profilo",
+    "description": "Gli username derivati da Google (nome completo + suffisso anti-collisione)\npossono essere lunghi e rompevano il layout dell'header profilo. Aggiunto\ntruncate + min-w-0 sui contenitori flex in Profile, PublicProfile e\nAdminDashboard."
+  },
+  {
+    "date": "07 luglio 2026",
     "title": "feat: login con Google (OAuth) e trigger profilo aggiornato",
     "description": "Aggiunge il bottone \"Accedi con Google\" in Auth.jsx e aggiorna\nhandle_new_user() per estrarre nome/avatar dai metadati OAuth, con\nsuffisso anti-collisione sullo username quando derivato da Google."
   },
@@ -43,10 +48,5 @@
     "date": "06 luglio 2026",
     "title": "feat: stati visivi \"in corso\" + banner prossima partita in home",
     "description": "- Card campo e modale \"Dettagli Prenotazione\" (dashboard business):\n  evidenziazione verde pulsante quando c'e' una partita confermata\n  in corso in quel momento. Logica di finestra oraria unificata in\n  isMatchLiveNow(), riusata sia per il campo che per la modale.\n\n- Dettaglio partita (lato giocatore): badge \"In corso\" accanto al\n  titolo quando la partita e' iniziata ma non ancora finita.\n\n- Nuovo banner in home (PWADashboard): compare quando manca meno di\n  1 ora a una partita confermata dell'utente e resta visibile fino\n  alla fine. Mostra il countdown prima dell'inizio e \"Partita in\n  corso\" durante, con il nome partita come sottotitolo troncato\n  (evita che titoli lunghi rompano il layout). Il click porta al\n  dettaglio della partita. Si aggiorna da solo ogni 30s.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "06 luglio 2026",
-    "title": "fix: badge push notifiche, campo Attivo dinamico, conferma presenza ripristinata",
-    "description": "- firebase-messaging-sw.js usava '/icons.svg' come badge notifica push:\n  quel file e' uno sprite di icone social (solo <symbol>, nessun\n  contenuto visibile a livello radice), quindi il badge appariva come\n  quadrato bianco. Sostituito con '/logo-192.png' (gia' usato come\n  icon fallback e nello stesso pattern di sw.js).\n\n- Badge \"Attivo/Inattivo\" nella card campo (dashboard business) ora\n  riflette se c'e' davvero una partita confermata in corso in\n  quel momento, invece di un flag DB statico mai gestito da nessuna UI.\n\n- MatchDetailV2 importava MatchAttendanceManager ma non lo\n  renderizzava mai: ripristinata la UI di conferma presenza (persa\n  nel passaggio dalla vecchia pagina dettaglio partita alla V2),\n  nello stesso punto in cui si trovava prima.\n\n- Corretto un bug nella rinuncia da MatchAttendanceManager: un insert\n  diretto su notifications con campi inesistenti nello schema reale\n  (stesso bug RLS gia' visto altre volte), sostituito con la funzione\n  notifyMatchLeave gia' pronta nel service ma mai collegata.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

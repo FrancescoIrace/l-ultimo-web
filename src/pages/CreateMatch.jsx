@@ -28,7 +28,7 @@ export default function CreateMatch() {
     const [activeMatchCount, setActiveMatchCount] = useState(0);
     const [userId, setUserId] = useState(null);
     const [tooltipActive, setTooltipActive] = useState(false);
-    const { success, error, alert, confirmDangerous } = useAlert();
+    const { success, error } = useAlert();
     const [formData, setFormData] = useState({
         sport: 'Calcetto',
         title: '',
@@ -302,6 +302,18 @@ export default function CreateMatch() {
                 }
             }
 
+            if (!formData.title?.trim()) {
+                error("Inserisci un titolo per la partita.");
+                setLoading(false);
+                return;
+            }
+
+            if (!locationData.location || locationData.location_lat == null || locationData.location_lng == null) {
+                error("Aggiungi una posizione: cerca un indirizzo, scegli un centro affiliato oppure imposta la tua posizione base nel profilo.");
+                setLoading(false);
+                return;
+            }
+
             // 5. INSERIMENTO / AGGIORNAMENTO PARTITA
             // Usiamo l'ID se presente per capire se è un update o un insert
             const isUpdate = !!id;
@@ -357,7 +369,8 @@ export default function CreateMatch() {
                 navigate(`/match/${data.id}`, { replace: true });
             };
         } catch (err) {
-            error("Errore creazione partita: " + err.message);
+            console.error('Errore creazione partita:', err);
+            error("Non è stato possibile creare la partita. Riprova tra poco.");
         } finally {
             setLoading(false);
         }
@@ -369,6 +382,18 @@ export default function CreateMatch() {
 
         if (containsLinks(formData.description)) {
             error("La descrizione non può contenere link.");
+            setLoading(false);
+            return;
+        }
+
+        if (!formData.title?.trim()) {
+            error("Inserisci un titolo per la partita.");
+            setLoading(false);
+            return;
+        }
+
+        if (!formData.location || formData.location_lat == null || formData.location_lng == null) {
+            error("Aggiungi una posizione: cerca un indirizzo o scegli un centro affiliato.");
             setLoading(false);
             return;
         }
@@ -414,7 +439,8 @@ export default function CreateMatch() {
             .single();
 
         if (matchError) {
-            alert("Errore aggiornamento partita: " + matchError.message);
+            console.error('Errore aggiornamento partita:', matchError);
+            error("Non è stato possibile salvare le modifiche. Riprova tra poco.");
             setLoading(false);
             return;
         }
@@ -442,7 +468,7 @@ export default function CreateMatch() {
             }
         }
 
-        alert("Partita aggiornata con successo!");
+        success("Partita aggiornata con successo!");
         navigate('/match/' + id);
         setLoading(false);
     };
@@ -514,6 +540,7 @@ export default function CreateMatch() {
                         </label>
                         <input
                             type="text"
+                            required
                             maxLength={32}
                             className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
                             value={formData.title}
@@ -528,6 +555,12 @@ export default function CreateMatch() {
                         <input
                             type="datetime-local"
                             lang="it-IT"
+                            min={(() => {
+                                const now = new Date();
+                                now.setMinutes(0, 0, 0);
+                                const offset = now.getTimezoneOffset() * 60000;
+                                return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+                            })()}
                             step="1800" // Mostra intervalli di 30 minuti sulla ghiera nativa
                             required
                             className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
@@ -596,10 +629,13 @@ export default function CreateMatch() {
                     />
 
                     {/* LUOGO E DESCRIZIONE */}
-                    <LocationPicker
-                        value={formData}
-                        onChange={(locationData) => setFormData(prev => ({ ...prev, ...locationData }))}
-                    />
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Luogo</label>
+                        <LocationPicker
+                            value={formData}
+                            onChange={(locationData) => setFormData(prev => ({ ...prev, ...locationData }))}
+                        />
+                    </div>
 
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -748,8 +784,10 @@ export default function CreateMatch() {
                     </label>
                     <input
                         type="text"
+                        required
                         maxLength={32}
                         className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
+                        value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     />
                 </div>
@@ -829,10 +867,13 @@ export default function CreateMatch() {
                 />
 
                 {/* LUOGO E DESCRIZIONE */}
-                <LocationPicker
-                    value={formData}
-                    onChange={(locationData) => setFormData(prev => ({ ...prev, ...locationData }))}
-                />
+                <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Luogo</label>
+                    <LocationPicker
+                        value={formData}
+                        onChange={(locationData) => setFormData(prev => ({ ...prev, ...locationData }))}
+                    />
+                </div>
 
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">

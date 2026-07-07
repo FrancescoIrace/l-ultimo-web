@@ -1,6 +1,11 @@
 [
   {
     "date": "07 luglio 2026",
+    "title": "feat: modale di contatto per pubblicità e suggerimenti al posto di WhatsApp",
+    "description": "I due banner della dashboard PWA ora aprono un mini-form (email + messaggio)\nche salva la richiesta in contact_requests e invia un alert email via Edge\nFunction, invece di aprire una chat WhatsApp diretta."
+  },
+  {
+    "date": "07 luglio 2026",
     "title": "fix: PWA in standalone mostra login invece della landing, aggiunto bottone Accedi",
     "description": "Dopo il logout dalla PWA installata, la root ora rimanda direttamente\nalla schermata di login invece della landing di marketing (pensata solo\nper i visitatori da browser). Aggiunto anche un link \"Accedi\" in header."
   },
@@ -43,10 +48,5 @@
     "date": "06 luglio 2026",
     "title": "fix: badge campi sovrapposti/sbavati nella dashboard business",
     "description": "Le card \"I tuoi Campi\" usavano span inline con margini fissi (ml-2)\ninvece di un contenitore flex-wrap: se il testo di uno sport/badge\nera piu' lungo del previsto, i badge si accavallavano invece di\nandare a capo, causando l'effetto \"sbavato\" visto in alcune card.\n\nInoltre il colore del badge Aperto/Coperto e Con/Senza Telecamera\nusava una catena di fallback per gestire il casing incoerente delle\ncolonne (isOutdoor/isoutdoor/is_outdoor), ma il TESTO dentro il badge\ncontrollava solo la versione camelCase: se la colonna reale era in\nminuscolo, il testo mostrava sempre il valore di default sbagliato.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "06 luglio 2026",
-    "title": "fix: attivazione push per il centro + lista giocatori in modale dedicata",
-    "description": "- BusinessDashboard non aveva alcun modo di attivare le notifiche push\n  (subscribeToPushNotifications veniva passato solo a PWADashboard):\n  aggiunto lo stesso banner di attivazione gia' presente lato giocatore,\n  props collegate in App.jsx.\n\n- La lista giocatori nella modale \"Dettagli Prenotazione\" restava\n  compressa perche' gli altri blocchi (info partita, contatto\n  organizzatore/WhatsApp) occupano gia' quasi tutto lo spazio\n  disponibile nei 90vh. Sostituita con un bottone \"Vedi Lista\n  Giocatori (n)\" che apre una modale dedicata con piu' spazio\n  verticale (max-h-[85vh]) e lo stesso scroll interno bloccato.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

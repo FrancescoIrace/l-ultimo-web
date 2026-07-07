@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import UserLocationInput from '../components/UserLocationInput';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -214,6 +215,14 @@ export default function Auth() {
             {loading ? 'Caricamento...' : isSignUp ? 'Registrati' : 'Accedi'}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-slate-200" />
+          <span className="text-xs font-bold uppercase text-slate-400">oppure</span>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <GoogleSignInButton />
 
         <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-slate-700">
           <p className="font-bold text-slate-900 mb-2">Per la migliore esperienza</p>

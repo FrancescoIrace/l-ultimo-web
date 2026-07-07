@@ -1035,6 +1035,52 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                         </div>
                     </div>
 
+                    {/* PANNELLO MESSAGGI */}
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
+                                <MessageCircle size={20} />
+                            </div>
+                            <h3 className="font-bold text-slate-800 uppercase tracking-tighter">Messaggi dagli Organizzatori</h3>
+                        </div>
+                        {organizerMessages.length === 0 ? (
+                            <p className="text-sm text-slate-400 text-center py-6">Nessun messaggio ricevuto.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {organizerMessages.map(m => {
+                                    const unread = !m.read_at;
+                                    const senderName = m.sender?.full_name || m.sender?.username || 'Organizzatore';
+                                    const matchInfo = m.matches;
+                                    return (
+                                        <button
+                                            key={m.match_id}
+                                            onClick={() => setActiveMessageThread({
+                                                matchId: m.match_id,
+                                                otherUserId: m.sender_id,
+                                                otherUserName: senderName,
+                                                matchLabel: matchInfo
+                                                    ? `${matchInfo.sport} — ${new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${matchInfo.sports_courts?.name || ''}`
+                                                    : '',
+                                            })}
+                                            className={`w-full text-left p-4 rounded-2xl border transition-colors ${unread ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="font-bold text-slate-800 text-sm truncate">{senderName}</span>
+                                                {unread && <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />}
+                                            </div>
+                                            {matchInfo && (
+                                                <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                                                    {matchInfo.sport} — {new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — {matchInfo.sports_courts?.name}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-slate-600 mt-1 truncate">{m.content}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
                     {/* PANNELLO CALENDARIO - Il più importante */}
                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm ">
                         <div className="flex items-center justify-between mb-6">
@@ -1242,52 +1288,6 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                 </div>
                             ))}
                         </div>
-                    </div>
-
-                    {/* PANNELLO MESSAGGI */}
-                    <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-inner">
-                                <MessageCircle size={20} />
-                            </div>
-                            <h3 className="font-bold text-slate-800 uppercase tracking-tighter">Messaggi dagli Organizzatori</h3>
-                        </div>
-                        {organizerMessages.length === 0 ? (
-                            <p className="text-sm text-slate-400 text-center py-6">Nessun messaggio ricevuto.</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {organizerMessages.map(m => {
-                                    const unread = !m.read_at;
-                                    const senderName = m.sender?.full_name || m.sender?.username || 'Organizzatore';
-                                    const matchInfo = m.matches;
-                                    return (
-                                        <button
-                                            key={m.match_id}
-                                            onClick={() => setActiveMessageThread({
-                                                matchId: m.match_id,
-                                                otherUserId: m.sender_id,
-                                                otherUserName: senderName,
-                                                matchLabel: matchInfo
-                                                    ? `${matchInfo.sport} — ${new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${matchInfo.sports_courts?.name || ''}`
-                                                    : '',
-                                            })}
-                                            className={`w-full text-left p-4 rounded-2xl border transition-colors ${unread ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
-                                        >
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="font-bold text-slate-800 text-sm truncate">{senderName}</span>
-                                                {unread && <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />}
-                                            </div>
-                                            {matchInfo && (
-                                                <p className="text-[11px] text-slate-400 mt-0.5 truncate">
-                                                    {matchInfo.sport} — {new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — {matchInfo.sports_courts?.name}
-                                                </p>
-                                            )}
-                                            <p className="text-xs text-slate-600 mt-1 truncate">{m.content}</p>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
                     </div>
 
                 </div> {/* CHIUDE COLONNA DESTRA */}

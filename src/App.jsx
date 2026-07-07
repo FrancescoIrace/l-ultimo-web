@@ -13,6 +13,7 @@ import { usePWAMode } from './hooks/usePWAMode';
 // invece di finire tutta nel bundle iniziale (erano 33 pagine in un
 // unico chunk da 1MB+ anche solo per vedere la schermata di login).
 const Auth = lazy(() => import('./pages/Auth'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const CreateMatch = lazy(() => import('./pages/CreateMatch'));
 const FindFriends = lazy(() => import('./pages/FindFriends'));
 const FriendRequests = lazy(() => import('./pages/FriendRequests'));
@@ -136,6 +137,8 @@ function App() {
       <AlertProvider>
         <Suspense fallback={<RouteLoader />}>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/accedi" element={<Auth />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />

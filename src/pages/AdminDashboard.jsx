@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
-import { ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search } from 'lucide-react';
+import { ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search, MessageCircle } from 'lucide-react';
 import Loader from '../components/Loader';
 
 const ADMIN_EMAIL = 'admin@admin.it';
@@ -16,6 +16,8 @@ export default function AdminDashboard({ session }) {
     const [loading, setLoading] = useState(isAdmin);
     const [reports, setReports] = useState([]);
     const [reportActionId, setReportActionId] = useState(null);
+    const [chatReports, setChatReports] = useState([]);
+    const [chatReportActionId, setChatReportActionId] = useState(null);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -50,6 +52,29 @@ export default function AdminDashboard({ session }) {
         }
 
         if (isAdmin) fetchReports();
+    }, [isAdmin]);
+
+    useEffect(() => {
+        async function fetchChatReports() {
+            const { data, error } = await supabase
+                .from('match_message_reports')
+                .select(`
+                    id, reason, status, created_at,
+                    reporter:reporter_id ( id, username ),
+                    reported:reported_user_id ( id, username, is_banned ),
+                    match:match_id ( id, title )
+                `)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Errore fetch segnalazioni chat:', error.message);
+            } else {
+                setChatReports(data || []);
+            }
+        }
+
+        if (isAdmin) fetchChatReports();
     }, [isAdmin]);
 
     const handleDismiss = async (report) => {
@@ -96,6 +121,51 @@ export default function AdminDashboard({ session }) {
         setReportActionId(null);
         setReports(prev => prev.filter(r => r.id !== report.id));
         success('Recensione rimossa');
+    };
+
+    const handleDismissChatReport = async (report) => {
+        setChatReportActionId(report.id);
+        const { error } = await supabase
+            .from('match_message_reports')
+            .update({ status: 'dismissed' })
+            .eq('id', report.id);
+        setChatReportActionId(null);
+
+        if (error) {
+            showError('Impossibile aggiornare la segnalazione');
+            return;
+        }
+        setChatReports(prev => prev.filter(r => r.id !== report.id));
+        success('Segnalazione ignorata');
+    };
+
+    const handleBanFromChatReport = async (report) => {
+        if (!report.reported) {
+            showError('L\'utente segnalato non esiste più');
+            return;
+        }
+        const confirmed = await confirmDangerous(`Bannare ${report.reported.username}? Non potrà più accedere all'app.`);
+        if (!confirmed) return;
+
+        setChatReportActionId(report.id);
+        const { error } = await supabase.functions.invoke('admin-ban-user', {
+            body: { targetUserId: report.reported.id, action: 'ban', reason: `Segnalazione chat: ${report.reason}` },
+        });
+
+        if (error) {
+            setChatReportActionId(null);
+            showError('Impossibile bannare l\'utente');
+            return;
+        }
+
+        await supabase
+            .from('match_message_reports')
+            .update({ status: 'resolved' })
+            .eq('id', report.id);
+
+        setChatReportActionId(null);
+        setChatReports(prev => prev.filter(r => r.id !== report.id));
+        success(`${report.reported.username} è stato bannato`);
     };
 
     const handleSearch = async (e) => {
@@ -255,6 +325,59 @@ export default function AdminDashboard({ session }) {
                     ) : (
                         <div className="p-6 bg-white border border-slate-100 rounded-3xl text-center">
                             <p className="font-bold text-slate-600">Nessuna segnalazione in sospeso.</p>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ── SEGNALAZIONI CHAT ── */}
+            <section className="mb-8">
+                <h2 className="text-lg font-black uppercase text-slate-700 mb-3 flex items-center gap-2">
+                    <MessageCircle size={18} className="text-blue-600" />
+                    Segnalazioni Chat ({chatReports.length})
+                </h2>
+                <div className="space-y-4">
+                    {chatReports.length > 0 ? (
+                        chatReports.map((report) => (
+                            <div key={report.id} className="p-5 bg-white border border-slate-100 shadow-sm rounded-3xl">
+                                <p className="text-[10px] font-black uppercase text-slate-400 mb-2">
+                                    Segnalata da <span className="text-blue-600">{report.reporter?.username || 'utente eliminato'}</span>
+                                    {' '}contro{' '}
+                                    <span className="text-red-600">{report.reported?.username || 'utente eliminato'}</span>
+                                </p>
+
+                                {report.match?.title && (
+                                    <p className="text-xs italic text-slate-400 mb-2">Partita: {report.match.title}</p>
+                                )}
+
+                                <p className="text-sm text-slate-600 mb-4">
+                                    <strong>Motivo:</strong> {report.reason}
+                                </p>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDismissChatReport(report)}
+                                        disabled={chatReportActionId === report.id}
+                                        className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-black rounded-2xl uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-colors disabled:opacity-50"
+                                    >
+                                        Ignora
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleBanFromChatReport(report)}
+                                        disabled={chatReportActionId === report.id || !report.reported || report.reported.is_banned}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-red-600 text-white font-black rounded-2xl uppercase text-[10px] tracking-widest hover:bg-red-700 transition-colors disabled:opacity-50"
+                                    >
+                                        <Ban size={13} />
+                                        Banna utente
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-6 bg-white border border-slate-100 rounded-3xl text-center">
+                            <p className="font-bold text-slate-600">Nessuna segnalazione chat in sospeso.</p>
                         </div>
                     )}
                 </div>

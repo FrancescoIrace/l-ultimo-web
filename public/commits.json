@@ -1,5 +1,10 @@
 [
   {
+    "date": "07 luglio 2026",
+    "title": "feat: thread messaggi organizzatore-centro + blocco cambio campo con richiesta attiva",
+    "description": "- Nuovo sistema di messaggi persistenti tra organizzatore e centro\n  sportivo per una partita (tabella match_messages con RLS). Sostituisce\n  il vecchio bottone \"Invia notifica In-App\" che faceva un insert diretto\n  su notifications bypassando la RPC privilegiata (bug RLS gia' noto,\n  probabilmente non funzionante).\n  - Bottone \"Invia messaggio al centro\" nel dettaglio partita, visibile\n    solo all'organizzatore, sotto la sezione richiesta prenotazione.\n  - Nuovo pannello \"Messaggi dagli Organizzatori\" nella dashboard\n    business, con nome/sport/giorno/ora/campo e indicatore non letto,\n    aggiornamento realtime.\n  - Componente condiviso MatchMessageThread (bolle chat + invio),\n    riusato da entrambe le parti.\n  - notifyNewMatchMessage segue il pattern RPC standard del resto\n    dell'app (mai insert diretto).\n\n- Fix CreateMatch.jsx: in modifica, se la richiesta al centro e' gia'\n  stata inviata (in attesa) o accettata, il campo/centro non e' piu'\n  modificabile - altrimenti il vecchio campo resterebbe prenotato\n  mentre la partita punta altrove.\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+  },
+  {
     "date": "06 luglio 2026",
     "title": "feat: modale centro/campo con ricerca e ordinamento per distanza",
     "description": "Sostituiti i due <select> classici (centro + campo) in creazione/\nmodifica partita con un'unica modale: lista centri con barra di\nricerca ordinata per vicinanza all'utente (geolocalizzazione con\nfallback alla posizione salvata sul profilo), click su un centro\nmostra i suoi campi.\n\nI campi non vengono mai filtrati/nascosti in base allo sport: i\nvalori di sport_type dei campi (Calcio a 5/Padel/Basket/Tennis, solo\n4 categorie) non corrispondono agli sport delle partite (13 valori\npiu' specifici, es. \"Basket (3vs3)\") - un filtro esatto avrebbe\nnascosto quasi tutti i campi in quasi tutti i casi. I campi della\ncategoria corrispondente vengono invece ordinati per primi.\n\nCorretto anche un bug preesistente: selectedCenter era a volte una\nstringa (id), a volte un intero oggetto profilo, con vari typeof\nsparsi per compensare - ora e' sempre un id stringa.\n\nNuovi file:\n- src/lib/geo.js: formula haversine estratta da Home.jsx (era locale,\n  duplicata in memoria per questo componente)\n- src/components/CenterCourtPicker.jsx: la modale\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
@@ -43,10 +48,5 @@
     "date": "05 luglio 2026",
     "title": "feat: nuove notifiche (recensione, nuovo membro team, allerta meteo)",
     "description": "Notifiche aggiunte in questa sessione:\n- Recensione ricevuta a fine partita -> notifica al giocatore recensito\n- Nuovo membro entrato in squadra -> notifica al creatore del team\n- Reminder 24h \"meteo-aware\": diventa allerta meteo se e' previsto brutto\n  tempo (edge function send-24h-reminders, ancora da deployare/wire su Supabase)\n\nAggiunte icone/stili in NotificationBell per i nuovi tipi e rimossa\nla chiave duplicata team_invite.\n\nInclude inoltre lavoro in corso preesistente nel working tree\n(admin dashboard, terms of service, community guidelines, sport roles,\nreview reporting, error fallback, migration correlate).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-  },
-  {
-    "date": "03 luglio 2026",
-    "title": "fix block",
-    "description": "Modifica all'app"
   }
 ]

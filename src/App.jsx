@@ -126,17 +126,20 @@ function App() {
       <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600 overflow-hidden">
         <motion.h1
           initial={{ scale: 0.1, opacity: 1 }}
-          animate={{ scale: [0.1, 1.15, 5], opacity: [1, 1, 0] }}
-          transition={{ duration: 1.6, times: [0, 0.4, 1], ease: ['easeOut', 'easeIn'] }}
+          animate={{ scale: [0.1, 1.15, 3, 5], opacity: [1, 1, 1, 0] }}
+          transition={{ duration: 1.6, times: [0, 0.4, 0.75, 1], ease: ['easeOut', 'easeIn', 'easeIn'] }}
           className="text-[7rem] leading-none font-black tracking-tighter"
         >
           U
         </motion.h1>
-        <div className="mt-6 flex gap-1">
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-        </div>
+        <motion.p
+          initial={{ scale: 0.9, opacity: 0.7 }}
+          animate={{ scale: [0.9, 1.08, 0.9], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+          className="mt-6 text-sm font-bold uppercase tracking-widest text-blue-600"
+        >
+          Caricamento...
+        </motion.p>
       </div>
     );
   }

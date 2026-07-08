@@ -49,12 +49,21 @@ function RouteLoader() {
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [splashElapsed, setSplashElapsed] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
   const isPWA = usePWAMode();
   const { isSupported, isSubscribed, subscribeToPushNotifications } = usePushNotifications(session?.user?.id);
 
   const [userRole, setUserRole] = useState(null); // Nuovo stato per il ruolo
+
+  // Durata minima dello splash: anche se la sessione/il profilo sono già
+  // pronti prima, l'animazione della "U" resta visibile per intero invece
+  // di sparire a metà.
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashElapsed(true), 1700);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // 1. Gestione Sessione Iniziale
@@ -112,13 +121,13 @@ function App() {
     }
   }, [session?.user?.id]);
 
-  if (loading) {
+  if (loading || !splashElapsed) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600 overflow-hidden">
         <motion.h1
-          initial={{ scale: 0.1, opacity: 0 }}
-          animate={{ scale: [0.1, 1.15, 1], opacity: 1 }}
-          transition={{ duration: 0.9, times: [0, 0.7, 1], ease: 'easeOut' }}
+          initial={{ scale: 0.1, opacity: 1 }}
+          animate={{ scale: [0.1, 1.15, 5], opacity: [1, 1, 0] }}
+          transition={{ duration: 1.6, times: [0, 0.4, 1], ease: ['easeOut', 'easeIn'] }}
           className="text-[7rem] leading-none font-black tracking-tighter"
         >
           U

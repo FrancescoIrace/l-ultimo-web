@@ -1,6 +1,11 @@
 [
   {
     "date": "08 luglio 2026",
+    "title": "fix: lock piu' robusto dello scroll di sfondo nella modale \"Prossime partite\"",
+    "description": "overflow:hidden da solo non basta su mobile (scroll touch/rubber-band non\nbloccato, barra indirizzi del browser che si ridimensiona a meta'\ninterazione). Sostituito con il blocco position:fixed sul body alla\nposizione di scroll corrente, ripristinata alla chiusura."
+  },
+  {
+    "date": "08 luglio 2026",
     "title": "fix: blocca lo scroll dello sfondo nella modale \"Prossime partite\"",
     "description": "Senza il lock su document.body, la dashboard sotto restava scrollabile\ne su mobile il viewport si ridimensionava lasciando un gap in fondo alla\nmodale. Stesso pattern gia' usato in MatchMessageThread.jsx."
   },
@@ -43,10 +48,5 @@
     "date": "07 luglio 2026",
     "title": "fix: validazione titolo/posizione e messaggi corretti nel form partita",
     "description": "Aggiunge controlli pre-invio su titolo e posizione (con messaggi chiari\ninvece dell'errore Postgres grezzo), corregge i toast di handleUpdate\nche mostravano successo/errore come semplice info, aggiunge il limite\nminimo sulla data in modifica ed etichetta il campo Luogo."
-  },
-  {
-    "date": "07 luglio 2026",
-    "title": "fix: tronca username troppo lunghi negli header di profilo",
-    "description": "Gli username derivati da Google (nome completo + suffisso anti-collisione)\npossono essere lunghi e rompevano il layout dell'header profilo. Aggiunto\ntruncate + min-w-0 sui contenitori flex in Profile, PublicProfile e\nAdminDashboard."
   }
 ]

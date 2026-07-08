@@ -386,8 +386,9 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         )}
 
         {isMatchesModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setIsMatchesModalOpen(false)}>
-            <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <>
+            <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setIsMatchesModalOpen(false)} />
+            <div className="fixed bottom-0 left-0 right-0 z-50 w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-black text-slate-800">Prossime partite</h2>
                 <button onClick={() => setIsMatchesModalOpen(false)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
@@ -398,7 +399,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
                 {myMatches.map(renderMatchRow)}
               </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Centri Associati (Pannello Bottone) */}

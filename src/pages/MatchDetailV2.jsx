@@ -4,8 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
 import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import MatchMessageThread from '../components/MatchMessageThread';
+import RescheduleRequestModal from '../components/RescheduleRequestModal';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived, notifyReservationRequest } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived, notifyReservationRequest, notifyMatchKicked } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { getSportFamily } from '../lib/sportRoles';
@@ -41,6 +42,8 @@ export default function MatchDetail({ user }) {
     const [team1NameLocal, setTeam1NameLocal] = useState('');
     const [team2NameLocal, setTeam2NameLocal] = useState('');
     const [isMessageThreadOpen, setIsMessageThreadOpen] = useState(false);
+    const [rescheduleRequest, setRescheduleRequest] = useState(null);
+    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
 
 
     const checkMatchStatus = (matchDatetime) => {
@@ -178,8 +181,20 @@ export default function MatchDetail({ user }) {
         return () => document.removeEventListener('click', handleClickOutside);
     }, [isCalendarMenuOpen, isLocationMenuOpen]);
 
+    const fetchRescheduleRequest = useCallback(async () => {
+        const { data } = await supabase
+            .from('match_reschedule_requests')
+            .select('*')
+            .eq('match_id', id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        setRescheduleRequest(data || null);
+    }, [id]);
+
     useEffect(() => {
         getDetails();
+        fetchRescheduleRequest();
 
         if (!id || !user?.id) return;
 
@@ -217,14 +232,27 @@ export default function MatchDetail({ user }) {
                     }));
                 }
             )
-            // 3. SUBSCRIBE
+            // 3. Sottoscrizione alle richieste di modifica orario
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'match_reschedule_requests',
+                    filter: `match_id=eq.${id}`,
+                },
+                () => {
+                    fetchRescheduleRequest();
+                }
+            )
+            // 4. SUBSCRIBE
             .subscribe();
 
         return () => {
             supabase.removeChannel(matchChannel);
         };
 
-    }, [id, user.id, getDetails]);
+    }, [id, user.id, getDetails, fetchRescheduleRequest]);
 
     // Fetch dati meteo se la partita è entro i prossimi 7 giorni
     useEffect(() => {
@@ -344,6 +372,75 @@ export default function MatchDetail({ user }) {
         setTeam2NameLocal(match?.team2_name || '');
     };
 
+    // Ripesca il primo in lista d'attesa nel posto lasciato libero (da un
+    // abbandono volontario o da una rimozione dell'organizzatore), oppure
+    // avvisa gli altri confermati se la lista d'attesa è vuota. Condiviso
+    // da handleLeave e handleKickPlayer.
+    const promoteFromWaitlist = async (freedByName, otherConfirmedIds) => {
+        const nextInLine = waitingPlayers.length > 0
+            ? [...waitingPlayers].sort((a, b) => a.waitlist_order - b.waitlist_order)[0]
+            : null;
+
+        if (nextInLine) {
+            const { error: promoteError } = await supabase
+                .from('participants')
+                .update({ status: 'confirmed', waitlist_order: null })
+                .eq('match_id', id)
+                .eq('user_id', nextInLine.user_id);
+
+            if (promoteError) {
+                console.error('❌ Errore ripescaggio lista d\'attesa:', promoteError);
+            } else {
+                notifyWaitlistPromoted(id, match.title, nextInLine.user_id);
+                notifyOrganizerSpotFilled(
+                    id,
+                    match.title,
+                    freedByName,
+                    nextInLine.profiles?.username || 'Un giocatore',
+                    match.creator_id
+                );
+            }
+        } else if (otherConfirmedIds.length > 0) {
+            notifyMatchSpotFreed(id, match.title, freedByName, otherConfirmedIds);
+        }
+    };
+
+    const handleKickPlayer = (p) => {
+        if (match.creator_id !== user.id || p.user_id === match.creator_id) return;
+
+        if (checkMatchStatus(match.datetime).isMatchStarted) {
+            error('La partita è già iniziata: non puoi più rimuovere giocatori.');
+            return;
+        }
+
+        confirmDangerous(`Rimuovere ${p.profiles?.username || 'questo giocatore'} dalla partita?`, async () => {
+            const { error: partError } = await supabase
+                .from('participants')
+                .delete()
+                .eq('match_id', id)
+                .eq('user_id', p.user_id);
+
+            if (partError) {
+                console.error('❌ Errore rimozione giocatore:', partError);
+                error('Errore durante la rimozione: ' + partError.message);
+                return;
+            }
+
+            const organizerName = user.user_metadata?.username || "L'organizzatore";
+            notifyMatchKicked(p.user_id, id, match.title, organizerName);
+
+            const wasFull = confirmedPlayers.length >= match.max_players;
+            if (wasFull) {
+                const otherConfirmedIds = confirmedPlayers
+                    .map(cp => cp.user_id)
+                    .filter(uid => uid !== p.user_id);
+                await promoteFromWaitlist(organizerName, otherConfirmedIds);
+            }
+
+            success('Giocatore rimosso dalla partita.');
+        });
+    };
+
     const handleLeave = async () => {
         if (match.creator_id === user.id) {
             error("Sei l'organizzatore, Non puoi uscire dalla partita. Per annullare la partita usa il pulsante dedicato.");
@@ -427,38 +524,10 @@ export default function MatchDetail({ user }) {
                     // - se la lista d'attesa è vuota, avvisa tutti i confermati rimasti
                     const wasFull = confirmedPlayers.length >= match.max_players;
                     if (wasFull) {
-                        const nextInLine = waitingPlayers.length > 0
-                            ? [...waitingPlayers].sort((a, b) => a.waitlist_order - b.waitlist_order)[0]
-                            : null;
-
-                        if (nextInLine) {
-                            const { error: promoteError } = await supabase
-                                .from('participants')
-                                .update({ status: 'confirmed', waitlist_order: null })
-                                .eq('match_id', id)
-                                .eq('user_id', nextInLine.user_id);
-
-                            if (promoteError) {
-                                console.error('❌ Errore ripescaggio lista d\'attesa:', promoteError);
-                            } else {
-                                notifyWaitlistPromoted(id, match.title, nextInLine.user_id);
-                                notifyOrganizerSpotFilled(
-                                    id,
-                                    match.title,
-                                    username,
-                                    nextInLine.profiles?.username || 'Un giocatore',
-                                    match.creator_id
-                                );
-                            }
-                        } else {
-                            const otherConfirmedIds = confirmedPlayers
-                                .map(p => p.user_id)
-                                .filter(uid => uid !== user.id);
-
-                            if (otherConfirmedIds.length > 0) {
-                                notifyMatchSpotFreed(id, match.title, username, otherConfirmedIds);
-                            }
-                        }
+                        const otherConfirmedIds = confirmedPlayers
+                            .map(p => p.user_id)
+                            .filter(uid => uid !== user.id);
+                        await promoteFromWaitlist(username, otherConfirmedIds);
                     }
 
                     success('Hai abbandonato la partita!');
@@ -1102,9 +1171,33 @@ Scopri di più qui: ${window.location.href}`;
 
                                 if (status === 'confirmed') {
                                     return (
-                                        <div className="w-full py-3 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold tracking-tight text-center flex items-center justify-center gap-2 shadow-sm">
-                                            ✅ Prenotazione Confermata dal Gestore
-                                        </div>
+                                        <>
+                                            <div className="w-full py-3 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold tracking-tight text-center flex items-center justify-center gap-2 shadow-sm">
+                                                ✅ Prenotazione Confermata dal Gestore
+                                            </div>
+
+                                            {rescheduleRequest?.status === 'pending' ? (
+                                                <button disabled className="w-full mt-3 py-3 bg-amber-500 text-white rounded-xl font-bold shadow-md shadow-amber-200 cursor-wait flex items-center justify-center gap-2 transition-all">
+                                                    <Loader variant="inline" size={20} color="white" />
+                                                    In attesa di risposta ({new Date(rescheduleRequest.proposed_datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })})
+                                                </button>
+                                            ) : (
+                                                <>
+                                                    {rescheduleRequest?.status === 'rejected' && (
+                                                        <div className="mt-3 text-sm text-red-700 bg-white/50 p-3 rounded-xl border border-red-100 shadow-sm leading-tight">
+                                                            <p className="font-bold mb-1">❌ Il centro ha rifiutato la modifica orario:</p>
+                                                            <p className="italic opacity-80">{rescheduleRequest.rejection_reason || "Nessun motivo specificato."}</p>
+                                                        </div>
+                                                    )}
+                                                    <button
+                                                        onClick={() => setIsRescheduleModalOpen(true)}
+                                                        className="w-full mt-3 py-3 bg-white border border-amber-200 text-amber-700 rounded-xl font-bold shadow-sm hover:bg-amber-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                    >
+                                                        🕐 Richiedi modifica orario
+                                                    </button>
+                                                </>
+                                            )}
+                                        </>
                                     );
                                 }
 
@@ -1229,6 +1322,20 @@ Scopri di più qui: ${window.location.href}`;
                         otherUserName={match.sports_courts?.profiles?.username || 'Centro Sportivo'}
                         matchLabel={`${match.sport} — ${new Date(match.datetime.replace(' ', 'T')).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${match.sports_courts?.name || ''}`}
                         recipientLink="/"
+                    />
+                )}
+
+                {match?.court_id && (
+                    <RescheduleRequestModal
+                        isOpen={isRescheduleModalOpen}
+                        onClose={() => setIsRescheduleModalOpen(false)}
+                        matchId={match.id}
+                        matchTitle={match.title}
+                        currentDatetime={match.datetime}
+                        organizerId={user.id}
+                        organizerName={user.user_metadata?.username || 'Un organizzatore'}
+                        centerId={match.sports_courts?.center_id}
+                        onRequested={fetchRescheduleRequest}
                     />
                 )}
 
@@ -1370,6 +1477,15 @@ Scopri di più qui: ${window.location.href}`;
                                         >
                                             ✕
                                         </button>
+                                        {p.user_id !== match.creator_id && (
+                                            <button
+                                                onClick={() => handleKickPlayer(p)}
+                                                className="w-8 h-8 flex items-center justify-center rounded-xl font-black text-sm transition-all shadow-sm bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                                                title="Rimuovi dalla partita"
+                                            >
+                                                <UserMinus size={14} />
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>

@@ -1,5 +1,10 @@
 [
   {
+    "date": "08 luglio 2026",
+    "title": "fix: username lunghi negli elenchi giocatori + avatar Google non caricati",
+    "description": "Tronca lo username nella lista giocatori/lista d'attesa di MatchDetailV2\nper non spingere fuori schermo i controlli A/B/rimuovi. Aggiunge\nreferrerPolicy=\"no-referrer\" a tutti gli <img> avatar dell'app: le foto\nprofilo di Google (lh3.googleusercontent.com) vengono a volte bloccate\ndal CDN in base al Referer inviato dal browser."
+  },
+  {
     "date": "07 luglio 2026",
     "title": "fix: validazione titolo/posizione e messaggi corretti nel form partita",
     "description": "Aggiunge controlli pre-invio su titolo e posizione (con messaggi chiari\ninvece dell'errore Postgres grezzo), corregge i toast di handleUpdate\nche mostravano successo/errore come semplice info, aggiunge il limite\nminimo sulla data in modifica ed etichetta il campo Luogo."
@@ -43,10 +48,5 @@
     "date": "06 luglio 2026",
     "title": "feat: modale centro/campo con ricerca e ordinamento per distanza",
     "description": "Sostituiti i due <select> classici (centro + campo) in creazione/\nmodifica partita con un'unica modale: lista centri con barra di\nricerca ordinata per vicinanza all'utente (geolocalizzazione con\nfallback alla posizione salvata sul profilo), click su un centro\nmostra i suoi campi.\n\nI campi non vengono mai filtrati/nascosti in base allo sport: i\nvalori di sport_type dei campi (Calcio a 5/Padel/Basket/Tennis, solo\n4 categorie) non corrispondono agli sport delle partite (13 valori\npiu' specifici, es. \"Basket (3vs3)\") - un filtro esatto avrebbe\nnascosto quasi tutti i campi in quasi tutti i casi. I campi della\ncategoria corrispondente vengono invece ordinati per primi.\n\nCorretto anche un bug preesistente: selectedCenter era a volte una\nstringa (id), a volte un intero oggetto profilo, con vari typeof\nsparsi per compensare - ora e' sempre un id stringa.\n\nNuovi file:\n- src/lib/geo.js: formula haversine estratta da Home.jsx (era locale,\n  duplicata in memoria per questo componente)\n- src/components/CenterCourtPicker.jsx: la modale\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
-  },
-  {
-    "date": "06 luglio 2026",
-    "title": "feat: nuovo logo dell'app (favicon, icone PWA, icona push)",
-    "description": "Sostituito il vecchio logo con il nuovo design (porta da calcetto a U\nbianca, pallino verde, cerchio di centrocampo) in:\n- favicon.svg (tab del browser)\n- android-chrome-192x192.png / 512x512.png (icona PWA \"any\")\n- logo-192.png / logo-512.png (icona notifiche push)\n\nAggiunte varianti dedicate android-chrome-*-maskable.png (safe-zone\n72%, sfondo pieno senza angoli arrotondati, come richiede lo standard\nmaskable) al posto di riusare i file \"any\": prima manifest.json\nriusava lo stesso file sia per purpose \"any\" che \"maskable\", perdendo\ncontenuto ai bordi quando l'OS applica la sua maschera. Aggiunta anche\nla entry maskable 512x512 mancante.\n\nPNG generati via sharp da sorgente SVG vettoriale (dipendenza usata\nsolo localmente per la generazione, non aggiunta al progetto).\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

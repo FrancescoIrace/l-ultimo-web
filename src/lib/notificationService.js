@@ -263,6 +263,88 @@ export async function notifyReservationRejected(userId, matchTitle, reason, matc
 }
 
 /**
+ * Notifica il centro sportivo quando l'organizzatore richiede di spostare
+ * l'orario di una partita già confermata.
+ * @param {string} centerId - destinatario (profilo del centro)
+ * @param {string} organizerId - mittente (organizzatore)
+ * @param {string} matchId - ID della partita
+ * @param {string} matchTitle - titolo della partita
+ * @param {string} organizerName - nome dell'organizzatore
+ * @param {string} newDatetimeLabel - orario proposto, già formattato per la UI
+ */
+export async function notifyRescheduleRequest(centerId, organizerId, matchId, matchTitle, organizerName, newDatetimeLabel) {
+  return createNotification({
+    userId: centerId,
+    senderId: organizerId,
+    type: 'reschedule_request',
+    title: '🕐 Richiesta modifica orario',
+    content: `${organizerName} vuole spostare "${matchTitle}" a ${newDatetimeLabel}`,
+    link: '/',
+    metadata: { matchId, organizerId },
+  });
+}
+
+/**
+ * Notifica organizzatore/partecipanti quando il centro ACCETTA la
+ * richiesta di modifica orario.
+ * @param {string} userId - destinatario (organizzatore o partecipante confermato)
+ * @param {string} matchId - ID della partita
+ * @param {string} matchTitle - titolo della partita
+ * @param {string} newDatetimeLabel - nuovo orario, già formattato per la UI
+ * @param {string} centerId - mittente (profilo del centro)
+ */
+export async function notifyRescheduleAccepted(userId, matchId, matchTitle, newDatetimeLabel, centerId) {
+  return createNotification({
+    userId,
+    senderId: centerId,
+    type: 'reschedule_accepted',
+    title: '✅ Orario modificato',
+    content: `Il centro ha accettato: "${matchTitle}" è stata spostata a ${newDatetimeLabel}`,
+    link: `/match/${matchId}`,
+    metadata: { matchId },
+  });
+}
+
+/**
+ * Notifica l'organizzatore quando il centro RIFIUTA la richiesta di
+ * modifica orario.
+ * @param {string} organizerId - destinatario
+ * @param {string} matchId - ID della partita
+ * @param {string} matchTitle - titolo della partita
+ * @param {string} reason - motivo fornito dal centro (opzionale)
+ * @param {string} centerId - mittente (profilo del centro)
+ */
+export async function notifyRescheduleRejected(organizerId, matchId, matchTitle, reason, centerId) {
+  return createNotification({
+    userId: organizerId,
+    senderId: centerId,
+    type: 'reschedule_rejected',
+    title: '❌ Modifica orario rifiutata',
+    content: `Il centro ha rifiutato la richiesta di cambio orario per "${matchTitle}"${reason ? `: ${reason}` : ''}`,
+    link: `/match/${matchId}`,
+    metadata: { matchId, reason },
+  });
+}
+
+/**
+ * Notifica un giocatore quando l'organizzatore lo rimuove dalla partita.
+ * @param {string} userId - destinatario (giocatore rimosso)
+ * @param {string} matchId - ID della partita
+ * @param {string} matchTitle - titolo della partita
+ * @param {string} organizerName - nome dell'organizzatore
+ */
+export async function notifyMatchKicked(userId, matchId, matchTitle, organizerName) {
+  return createNotification({
+    userId,
+    type: 'match_kicked',
+    title: '🚫 Rimosso dalla partita',
+    content: `${organizerName} ti ha rimosso da "${matchTitle}"`,
+    link: `/match/${matchId}`,
+    metadata: { matchId },
+  });
+}
+
+/**
  * Notifica reminder prima di un match
  */
 export async function notifyMatchReminder(matchId, matchTitle, hoursLeft, participantIds) {

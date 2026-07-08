@@ -6,7 +6,8 @@ import { GetSportStyle } from './BusinessUtils';
 import ModalOrari from '../../components/ModalOrari';
 import MatchMessageThread from '../../components/MatchMessageThread';
 import { useAlert } from '../../components/AlertComponent';
-import { notifyReservationConfirmed, notifyReservationRejected } from '../../lib/notificationService';
+import { notifyReservationConfirmed, notifyReservationRejected, notifyRescheduleAccepted, notifyRescheduleRejected, notifyMatchUpdate } from '../../lib/notificationService';
+import { getMinDatetimeLocal } from '../../lib/datetime';
 
 
 export default function BusinessDashboard({ user, name, isSupported, isSubscribed, subscribeToPushNotifications, isPWA }) {
@@ -49,6 +50,12 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
     const [isSavingParticipants, setIsSavingParticipants] = useState(false);
     const [activeMessageThread, setActiveMessageThread] = useState(null);
     const [organizerMessages, setOrganizerMessages] = useState([]);
+    const [rescheduleRequests, setRescheduleRequests] = useState([]);
+    const [rejectingRescheduleId, setRejectingRescheduleId] = useState(null);
+    const [rescheduleRejectionReason, setRescheduleRejectionReason] = useState('');
+    const [processingRescheduleId, setProcessingRescheduleId] = useState(null);
+    const [editingTimeAppointment, setEditingTimeAppointment] = useState(false);
+    const [newAppointmentDatetime, setNewAppointmentDatetime] = useState('');
     const { success, error, alert, confirm } = useAlert();
 
     const handleActivateNotifications = async () => {
@@ -96,6 +103,90 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
             if (!byMatch.has(m.match_id)) byMatch.set(m.match_id, m);
         }
         setOrganizerMessages(Array.from(byMatch.values()));
+    }
+
+    async function fetchRescheduleRequests() {
+        const { data, error } = await supabase
+            .from('match_reschedule_requests')
+            .select(`
+                id, match_id, requested_by, current_datetime, proposed_datetime, reason, created_at,
+                matches ( title, sport ),
+                organizer:requested_by ( username, full_name )
+            `)
+            .eq('center_id', user.id)
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Errore caricamento richieste modifica orario:', error);
+            return;
+        }
+        setRescheduleRequests(data || []);
+    }
+
+    async function handleAcceptReschedule(req) {
+        setProcessingRescheduleId(req.id);
+        const { data: updatedMatch, error: matchError } = await supabase
+            .from('matches')
+            .update({ datetime: req.proposed_datetime, reminder_24h_sent: false })
+            .eq('id', req.match_id)
+            .select('creator_id, title')
+            .single();
+
+        if (matchError) {
+            console.error('Errore aggiornamento orario:', matchError);
+            error('Impossibile aggiornare l\'orario della partita');
+            setProcessingRescheduleId(null);
+            return;
+        }
+
+        await supabase
+            .from('match_reschedule_requests')
+            .update({ status: 'accepted', responded_at: new Date().toISOString() })
+            .eq('id', req.id);
+
+        const { data: participants } = await supabase
+            .from('participants')
+            .select('user_id')
+            .eq('match_id', req.match_id)
+            .eq('status', 'confirmed');
+
+        const usersToNotify = new Set([updatedMatch.creator_id]);
+        (participants || []).forEach(p => usersToNotify.add(p.user_id));
+
+        const newDatetimeLabel = new Date(req.proposed_datetime.replace(' ', 'T')).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        await Promise.all(
+            Array.from(usersToNotify).map(userId =>
+                notifyRescheduleAccepted(userId, req.match_id, updatedMatch.title, newDatetimeLabel, user.id)
+            )
+        );
+
+        setRescheduleRequests(prev => prev.filter(r => r.id !== req.id));
+        setProcessingRescheduleId(null);
+        success('Orario modificato e organizzatore avvisato!');
+    }
+
+    function handleOpenRejectReschedule(req) {
+        setRejectingRescheduleId(req.id);
+        setRescheduleRejectionReason('');
+    }
+
+    async function handleConfirmRejectReschedule() {
+        const req = rescheduleRequests.find(r => r.id === rejectingRescheduleId);
+        if (!req) return;
+
+        setProcessingRescheduleId(req.id);
+        await supabase
+            .from('match_reschedule_requests')
+            .update({ status: 'rejected', rejection_reason: rescheduleRejectionReason.trim() || null, responded_at: new Date().toISOString() })
+            .eq('id', req.id);
+
+        await notifyRescheduleRejected(req.requested_by, req.match_id, req.matches?.title, rescheduleRejectionReason.trim() || null, user.id);
+
+        setRescheduleRequests(prev => prev.filter(r => r.id !== req.id));
+        setRejectingRescheduleId(null);
+        setProcessingRescheduleId(null);
+        success('Richiesta rifiutata.');
     }
 
     async function fetchHours() {
@@ -319,6 +410,8 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
         setIsAppointmentModalOpen(true);
         setIsParticipantsModalOpen(false);
         setAppointmentParticipants([]); // Reset inside modal
+        setEditingTimeAppointment(false);
+        setNewAppointmentDatetime('');
 
         let { data: partData, error } = await supabase
             .from('participants')
@@ -341,6 +434,49 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
             }));
             setAppointmentParticipants(mappedData);
         }
+    };
+
+    // Il centro cambia direttamente l'orario di una prenotazione già confermata
+    // (nessun ciclo di richiesta: è lui l'autorità sul campo). Notifica comunque
+    // organizzatore e partecipanti, e resetta il flag del promemoria 24h così
+    // il cron lo rimanda per il nuovo orario.
+    const handleUpdateAppointmentTime = async () => {
+        if (!newAppointmentDatetime || !selectedAppointment) return;
+
+        const formattedDatetime = newAppointmentDatetime.replace('T', ' ') + ':00';
+        const { error: updateError } = await supabase
+            .from('matches')
+            .update({ datetime: formattedDatetime, reminder_24h_sent: false })
+            .eq('id', selectedAppointment.id);
+
+        if (updateError) {
+            console.error('Errore modifica orario:', updateError);
+            error('Impossibile modificare l\'orario della partita');
+            return;
+        }
+
+        setSelectedAppointment(prev => ({ ...prev, datetime: formattedDatetime }));
+        setAppointments(prev => prev.map(a => a.id === selectedAppointment.id ? { ...a, datetime: formattedDatetime } : a));
+        setEditingTimeAppointment(false);
+
+        const { data: participants } = await supabase
+            .from('participants')
+            .select('user_id')
+            .eq('match_id', selectedAppointment.id)
+            .eq('status', 'confirmed');
+
+        const usersToNotify = new Set([selectedAppointment.creator_id]);
+        (participants || []).forEach(p => usersToNotify.add(p.user_id));
+
+        const newLabel = new Date(formattedDatetime.replace(' ', 'T')).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        await notifyMatchUpdate(
+            selectedAppointment.id,
+            selectedAppointment.title,
+            `il centro ha spostato l'orario alle ${newLabel}`,
+            Array.from(usersToNotify)
+        );
+
+        success('Orario aggiornato e partecipanti avvisati!');
     };
 
     const toggleHasPaid = (participantId, currentStatus) => {
@@ -488,6 +624,7 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
         fetchIncomingRequests();
         fetchAppointments();
         fetchOrganizerMessages();
+        fetchRescheduleRequests();
         // Sottoscrizione Realtime
         const channel = supabase
             .channel('business_requests')
@@ -508,6 +645,11 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'match_messages' },
                 () => fetchOrganizerMessages()
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'match_reschedule_requests' },
+                () => fetchRescheduleRequests()
             )
             .subscribe();
 
@@ -687,9 +829,38 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                             <span className="text-xs md:text-sm lg:text-base font-bold uppercase text-blue-600 tracking-widest">{selectedAppointment.sport} - {selectedAppointment.sports_courts?.name}</span>
                             <div className="flex justify-between items-center">
                                 <span className="font-bold text-slate-700 md:text-xl">{selectedAppointment.title}</span>
-                                <span className="text-sm md:text-base lg:text-lg font-black bg-blue-100 text-blue-800 px-2 py-1 rounded-lg">
-                                    {new Date(selectedAppointment.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                </span>
+                                {editingTimeAppointment ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="datetime-local"
+                                            lang="it-IT"
+                                            min={getMinDatetimeLocal()}
+                                            step="1800"
+                                            value={newAppointmentDatetime}
+                                            onChange={(e) => setNewAppointmentDatetime(e.target.value)}
+                                            className="p-2 text-sm bg-white border border-blue-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                                        />
+                                        <button onClick={handleUpdateAppointmentTime} className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                            <CheckCircle size={18} />
+                                        </button>
+                                        <button onClick={() => setEditingTimeAppointment(false)} className="p-2 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors">
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            const dt = new Date(selectedAppointment.datetime);
+                                            const offset = dt.getTimezoneOffset() * 60000;
+                                            setNewAppointmentDatetime(new Date(dt.getTime() - offset).toISOString().slice(0, 16));
+                                            setEditingTimeAppointment(true);
+                                        }}
+                                        className="flex items-center gap-1.5 text-sm md:text-base lg:text-lg font-black bg-blue-100 text-blue-800 px-2 py-1 rounded-lg hover:bg-blue-200 transition-colors"
+                                    >
+                                        {new Date(selectedAppointment.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                        <Pencil size={14} />
+                                    </button>
+                                )}
                             </div>
                             <div className="flex mt-3 md:mt-4 pt-3 md:pt-4 border-t border-blue-100 justify-between items-center">
                                 <span className="text-sm md:text-base lg:text-lg text-slate-600 font-medium">Giocatori iscritti:</span>
@@ -876,6 +1047,33 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                 </div>
             )}
 
+            {/* Modal Rifiuto Modifica Orario */}
+            {rejectingRescheduleId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={() => setRejectingRescheduleId(null)}>
+                    <div className="bg-white rounded-3xl p-6 shadow-2xl max-w-sm w-full mx-auto" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-black text-slate-800 uppercase mb-1">Rifiuta modifica orario</h3>
+                        <p className="text-sm text-slate-500 mb-4">Spiega all'organizzatore perché il nuovo orario non va bene (opzionale).</p>
+                        <textarea
+                            value={rescheduleRejectionReason}
+                            onChange={(e) => setRescheduleRejectionReason(e.target.value)}
+                            placeholder="Motivo..."
+                            rows={3}
+                            className="w-full p-3 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-500"
+                        />
+                        <div className="flex gap-3 mt-5">
+                            <button onClick={() => setRejectingRescheduleId(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl active:scale-95 transition-transform">Indietro</button>
+                            <button
+                                onClick={handleConfirmRejectReschedule}
+                                disabled={processingRescheduleId === rejectingRescheduleId}
+                                className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 active:scale-95 transition-transform disabled:opacity-50"
+                            >
+                                Conferma
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Banner attivazione notifiche push: senza questo il centro non riceve
                 mai le notifiche delle richieste di prenotazione sul telefono */}
             {isSupported && !isSubscribed && (
@@ -1034,6 +1232,56 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                             )}
                         </div>
                     </div>
+
+                    {/* PANNELLO RICHIESTE MODIFICA ORARIO */}
+                    {rescheduleRequests.length > 0 && (
+                        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-3 bg-amber-100 text-amber-600 rounded-xl shadow-inner">
+                                    <Clock size={20} />
+                                </div>
+                                <h3 className="font-bold text-slate-800 uppercase tracking-tighter">Richieste Modifica Orario</h3>
+                                <span className="ml-auto bg-amber-100 text-amber-600 px-3 py-1 rounded-full text-xs font-black uppercase">
+                                    {rescheduleRequests.length}
+                                </span>
+                            </div>
+                            <div className="space-y-3">
+                                {rescheduleRequests.map(req => {
+                                    const currentLabel = new Date(req.current_datetime.replace(' ', 'T')).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                                    const proposedLabel = new Date(req.proposed_datetime.replace(' ', 'T')).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                                    return (
+                                        <div key={req.id} className="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl">
+                                            <p className="text-xs font-black uppercase text-slate-400 mb-1">
+                                                {req.organizer?.full_name || req.organizer?.username || 'Organizzatore'} — {req.matches?.title}
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-700 mb-2">
+                                                {currentLabel} → <span className="text-amber-700">{proposedLabel}</span>
+                                            </p>
+                                            {req.reason && (
+                                                <p className="text-xs text-slate-500 italic mb-3">"{req.reason}"</p>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    disabled={processingRescheduleId === req.id}
+                                                    onClick={() => handleOpenRejectReschedule(req)}
+                                                    className="w-12 h-12 flex items-center justify-center rounded-xl bg-white text-red-500 border border-red-200 hover:bg-red-50 transition-all disabled:opacity-50"
+                                                >
+                                                    <X size={20} />
+                                                </button>
+                                                <button
+                                                    disabled={processingRescheduleId === req.id}
+                                                    onClick={() => handleAcceptReschedule(req)}
+                                                    className="flex-1 h-12 rounded-xl font-bold text-sm uppercase tracking-widest bg-amber-500 text-white shadow-md shadow-amber-200 hover:bg-amber-600 transition-all disabled:opacity-50"
+                                                >
+                                                    {processingRescheduleId === req.id ? 'Elaborazione...' : 'Accetta nuovo orario'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {/* PANNELLO MESSAGGI */}
                     <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">

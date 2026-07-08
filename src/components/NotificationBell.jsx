@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
-import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle, Handshake, Star, CloudRain, Building2, MessageCircle } from 'lucide-react';
+import { Bell, X, Trash2, RefreshCw, UserPlus, UserCheck, UserX, UserMinus, Users, Calendar, AlertTriangle, Handshake, Star, CloudRain, Building2, MessageCircle, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getNotificationStyles(type) {
@@ -85,7 +85,27 @@ function getNotificationStyles(type) {
       bg: 'bg-blue-50',
       dot: 'bg-blue-500',
       hover: 'hover:bg-blue-100',
-    }
+    },
+    reschedule_request: {
+      bg: 'bg-amber-50',
+      dot: 'bg-amber-500',
+      hover: 'hover:bg-amber-100',
+    },
+    reschedule_accepted: {
+      bg: 'bg-green-50',
+      dot: 'bg-green-500',
+      hover: 'hover:bg-green-100',
+    },
+    reschedule_rejected: {
+      bg: 'bg-red-50',
+      dot: 'bg-red-500',
+      hover: 'hover:bg-red-100',
+    },
+    match_kicked: {
+      bg: 'bg-red-50',
+      dot: 'bg-red-500',
+      hover: 'hover:bg-red-100',
+    },
   };
   return styles[type] || styles.match_update;
 }
@@ -224,6 +244,12 @@ export function NotificationBell({ userId }) {
                             return <Building2 size={18} className="text-indigo-600" />;
                           case 'match_message':
                             return <MessageCircle size={18} className="text-blue-600" />;
+                          case 'reschedule_request':
+                          case 'reschedule_accepted':
+                          case 'reschedule_rejected':
+                            return <Clock size={18} className="text-amber-600" />;
+                          case 'match_kicked':
+                            return <UserMinus size={18} className="text-red-600" />;
                           default:
                             return <Bell size={18} className="text-blue-600" />;
                         }

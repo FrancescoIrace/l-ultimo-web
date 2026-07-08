@@ -115,19 +115,19 @@ function App() {
   if (loading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: [1, 1.1, 1], opacity: 1 }}
-          transition={{ duration: 1, repeat: Infinity }}
-          className="flex flex-col items-center"
+        <motion.h1
+          initial={{ scale: 0.1, opacity: 0 }}
+          animate={{ scale: [0.1, 1.15, 1], opacity: 1 }}
+          transition={{ duration: 0.9, times: [0, 0.7, 1], ease: 'easeOut' }}
+          className="text-[7rem] leading-none font-black tracking-tighter"
         >
-          <h1 className="text-5xl font-black tracking-tighter">L'ULTIMO</h1>
-          <div className="mt-4 flex gap-1">
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-          </div>
-        </motion.div>
+          U
+        </motion.h1>
+        <div className="mt-6 flex gap-1">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+        </div>
       </div>
     );
   }

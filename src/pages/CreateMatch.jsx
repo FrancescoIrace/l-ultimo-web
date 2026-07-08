@@ -11,15 +11,7 @@ import CenterCourtPicker from '../components/CenterCourtPicker';
 import GetSportStyle, { validateBookingTime, getSportCategoryForMatch } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { notifyMatchUpdate } from '../lib/notificationService';
-
-
-// Converti da datetime-local string (YYYY-MM-DDTHH:mm) a formato timestamp locale
-// Per colonna timestamp (senza timezone) su Supabase
-function formatDatetimeForTimestamp(dateTimeString) {
-    if (!dateTimeString) return null;
-    // Converti "2024-05-07T15:30" a "2024-05-07 15:30:00"
-    return dateTimeString.replace('T', ' ') + ':00';
-}
+import { roundToHalfHour, getMinDatetimeLocal, formatDatetimeForTimestamp } from '../lib/datetime';
 
 export default function CreateMatch() {
     const { id } = useParams(); // Se c'è un ID, siamo in modalità modifica
@@ -109,32 +101,6 @@ export default function CreateMatch() {
     const containsLinks = (text) => {
         const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/gi;
         return urlRegex.test(text);
-    };
-
-    const roundToHalfHour = (dateTimeString) => {
-        if (!dateTimeString) return '';
-
-        // Il formato nativo è YYYY-MM-DDTHH:MM
-        const [date, time] = dateTimeString.split('T');
-        if (!time) return dateTimeString;
-
-        let [hours, minutes] = time.split(':');
-        let mins = parseInt(minutes, 10);
-
-        // Arrotonda al blocco di 30 minuti più vicino (00 o 30)
-        if (mins < 15) {
-            mins = 0;
-        } else if (mins >= 15 && mins < 45) {
-            mins = 30;
-        } else {
-            mins = 0;
-            // Se va a 60, aumentiamo l'ora di 1
-            let hrs = parseInt(hours, 10) + 1;
-            hours = hrs < 10 ? `0${hrs}` : `${hrs}`;
-        }
-
-        const finalMinutes = mins === 0 ? '00' : '30';
-        return `${date}T${hours}:${finalMinutes}`;
     };
 
     // Carica l'ID utente e conta le partite attive
@@ -555,12 +521,7 @@ export default function CreateMatch() {
                         <input
                             type="datetime-local"
                             lang="it-IT"
-                            min={(() => {
-                                const now = new Date();
-                                now.setMinutes(0, 0, 0);
-                                const offset = now.getTimezoneOffset() * 60000;
-                                return new Date(now.getTime() - offset).toISOString().slice(0, 16);
-                            })()}
+                            min={getMinDatetimeLocal()}
                             step="1800" // Mostra intervalli di 30 minuti sulla ghiera nativa
                             required
                             className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
@@ -799,14 +760,7 @@ export default function CreateMatch() {
                     <input
                         type="datetime-local"
                         lang="it-IT"
-                        // Arrotonda il valore minimo all'inizio dell'ora corrente per non sballare lo step dei 30 minuti
-                        min={(() => {
-                            const now = new Date();
-                            now.setMinutes(0, 0, 0); // Imposta i minuti a :00
-                            // Converte in ISO string mantenendo il fuso orario locale corretto per l'input nativo
-                            const offset = now.getTimezoneOffset() * 60000;
-                            return new Date(now.getTime() - offset).toISOString().slice(0, 16);
-                        })()}
+                        min={getMinDatetimeLocal()}
                         step="1800" // Intervalli perfetti di 30 minuti
                         required
                         className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"

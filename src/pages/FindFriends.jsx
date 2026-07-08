@@ -162,7 +162,7 @@ export default function FindFriends({ user }) {
                   className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center text-xl font-bold text-slate-600"
                 >
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                    <img src={profile.avatar_url} alt={profile.username} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   ) : (
                     profile.username?.charAt(0).toUpperCase() || '?'
                   )}

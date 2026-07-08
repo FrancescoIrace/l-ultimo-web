@@ -196,7 +196,7 @@ export default function CenterCourtPicker({ isOpen, onClose, sport, centers, use
                                     >
                                         <div className="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-slate-200">
                                             {center.avatar_url ? (
-                                                <img src={center.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                <img src={center.avatar_url} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                                             ) : (
                                                 <Building2 className="text-slate-400" size={24} />
                                             )}

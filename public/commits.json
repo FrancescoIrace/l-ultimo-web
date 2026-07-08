@@ -1,6 +1,11 @@
 [
   {
     "date": "07 luglio 2026",
+    "title": "fix: validazione titolo/posizione e messaggi corretti nel form partita",
+    "description": "Aggiunge controlli pre-invio su titolo e posizione (con messaggi chiari\ninvece dell'errore Postgres grezzo), corregge i toast di handleUpdate\nche mostravano successo/errore come semplice info, aggiunge il limite\nminimo sulla data in modifica ed etichetta il campo Luogo."
+  },
+  {
+    "date": "07 luglio 2026",
     "title": "fix: tronca username troppo lunghi negli header di profilo",
     "description": "Gli username derivati da Google (nome completo + suffisso anti-collisione)\npossono essere lunghi e rompevano il layout dell'header profilo. Aggiunto\ntruncate + min-w-0 sui contenitori flex in Profile, PublicProfile e\nAdminDashboard."
   },
@@ -43,10 +48,5 @@
     "date": "06 luglio 2026",
     "title": "feat: nuovo logo dell'app (favicon, icone PWA, icona push)",
     "description": "Sostituito il vecchio logo con il nuovo design (porta da calcetto a U\nbianca, pallino verde, cerchio di centrocampo) in:\n- favicon.svg (tab del browser)\n- android-chrome-192x192.png / 512x512.png (icona PWA \"any\")\n- logo-192.png / logo-512.png (icona notifiche push)\n\nAggiunte varianti dedicate android-chrome-*-maskable.png (safe-zone\n72%, sfondo pieno senza angoli arrotondati, come richiede lo standard\nmaskable) al posto di riusare i file \"any\": prima manifest.json\nriusava lo stesso file sia per purpose \"any\" che \"maskable\", perdendo\ncontenuto ai bordi quando l'OS applica la sua maschera. Aggiunta anche\nla entry maskable 512x512 mancante.\n\nPNG generati via sharp da sorgente SVG vettoriale (dipendenza usata\nsolo localmente per la generazione, non aggiunta al progetto).\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
-  },
-  {
-    "date": "06 luglio 2026",
-    "title": "feat: stati visivi \"in corso\" + banner prossima partita in home",
-    "description": "- Card campo e modale \"Dettagli Prenotazione\" (dashboard business):\n  evidenziazione verde pulsante quando c'e' una partita confermata\n  in corso in quel momento. Logica di finestra oraria unificata in\n  isMatchLiveNow(), riusata sia per il campo che per la modale.\n\n- Dettaglio partita (lato giocatore): badge \"In corso\" accanto al\n  titolo quando la partita e' iniziata ma non ancora finita.\n\n- Nuovo banner in home (PWADashboard): compare quando manca meno di\n  1 ora a una partita confermata dell'utente e resta visibile fino\n  alla fine. Mostra il countdown prima dell'inizio e \"Partita in\n  corso\" durante, con il nome partita come sottotitolo troncato\n  (evita che titoli lunghi rompano il layout). Il click porta al\n  dettaglio della partita. Si aggiorna da solo ogni 30s.\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
   }
 ]

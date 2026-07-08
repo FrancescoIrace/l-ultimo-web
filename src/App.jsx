@@ -182,7 +182,7 @@ function App() {
               className="mr-3 border-2 border-blue-600 rounded-full hover:bg-blue-50 transition-all overflow-hidden"
             >
               {session.avatar_url ? (
-                <img src={session.avatar_url} alt="avatar" className="w-12 h-12 object-cover" />
+                <img src={session.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-12 h-12 object-cover" />
               ) : (
                 <div className="w-12 h-12 bg-slate-200 flex items-center justify-center text-xl font-bold text-slate-600">
                   {session.user?.user_metadata?.username?.charAt(0).toUpperCase()}

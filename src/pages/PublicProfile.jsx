@@ -290,6 +290,7 @@ export default function PublicProfile() {
                             <img
                                 src={profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'Centro')}&background=random&size=150`}
                                 alt="Logo Centro"
+                                referrerPolicy="no-referrer"
                                 className="w-full h-full object-cover rounded-xl bg-slate-100"
                             />
                         </div>
@@ -506,7 +507,7 @@ export default function PublicProfile() {
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-blue-50 shadow-xl overflow-hidden">
                         {profile?.avatar_url ? (
-                            <img src={profile.avatar_url} className="w-full h-full object-cover" />
+                            <img src={profile.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                         ) : (
                             <span className="font-black text-blue-600">{profile?.username?.charAt(0).toUpperCase()}</span>
                         )}

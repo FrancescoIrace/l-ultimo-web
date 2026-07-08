@@ -81,7 +81,7 @@ export default function ClassificaMinigame() {
             <div className="flex flex-col items-center flex-1">
               <div className="relative mb-2">
                 <div className="w-16 h-16 rounded-full border-4 border-slate-200 overflow-hidden bg-white shadow-lg">
-                  <img src={leaderboard[1].avatar_url || `https://ui-avatars.com/api/?name=${leaderboard[1].username}`} alt="2nd" className="w-full h-full object-cover" />
+                  <img src={leaderboard[1].avatar_url || `https://ui-avatars.com/api/?name=${leaderboard[1].username}`} alt="2nd" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-slate-200 text-slate-600 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shadow-md border-2 border-white">2</div>
               </div>
@@ -96,7 +96,7 @@ export default function ClassificaMinigame() {
                   <Crown className="text-yellow-400 fill-yellow-400 animate-bounce" size={32} />
                 </div>
                 <div className="w-20 h-20 rounded-full border-4 border-yellow-400 overflow-hidden bg-white shadow-[0_0_20px_rgba(250,204,21,0.3)] scale-110">
-                  <img src={leaderboard[0].avatar_url || `https://ui-avatars.com/api/?name=${leaderboard[0].username}`} alt="1st" className="w-full h-full object-cover" />
+                  <img src={leaderboard[0].avatar_url || `https://ui-avatars.com/api/?name=${leaderboard[0].username}`} alt="1st" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shadow-md border-2 border-white">1</div>
               </div>
@@ -108,7 +108,7 @@ export default function ClassificaMinigame() {
             <div className="flex flex-col items-center flex-1">
               <div className="relative mb-2">
                 <div className="w-16 h-16 rounded-full border-4 border-amber-600/30 overflow-hidden bg-white shadow-lg">
-                  <img src={leaderboard[2].avatar_url || `https://ui-avatars.com/api/?name=${leaderboard[2].username}`} alt="3rd" className="w-full h-full object-cover" />
+                  <img src={leaderboard[2].avatar_url || `https://ui-avatars.com/api/?name=${leaderboard[2].username}`} alt="3rd" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 bg-amber-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shadow-md border-2 border-white">3</div>
               </div>
@@ -136,7 +136,7 @@ export default function ClassificaMinigame() {
                     {getRankBadge(idx)}
                   </div>
                   <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-100 bg-slate-100">
-                    <img src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.username}`} alt={user.username} className="w-full h-full object-cover" />
+                    <img src={user.avatar_url || `https://ui-avatars.com/api/?name=${user.username}`} alt={user.username} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <p className={`text-sm font-black ${user.id === currentUser?.id ? 'text-blue-600' : 'text-slate-800'}`}>

@@ -226,6 +226,7 @@ export default function FriendRequests({ user }) {
                       <img
                         src={req.sender.avatar_url}
                         alt={req.sender.username}
+                        referrerPolicy="no-referrer"
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -292,6 +293,7 @@ export default function FriendRequests({ user }) {
                   <img
                     src={f.profile.avatar_url}
                     alt={f.profile.username}
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                   />
                 ) : (

@@ -1299,17 +1299,17 @@ Scopri di più qui: ${window.location.href}`;
                                 }`}
                             onClick={() => { p.user_id !== user.id ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                         >
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 min-w-0 flex-1">
                                 <div className={`w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden flex-shrink-0 ${p.final_attendance ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}>
                                     {p.profiles?.avatar_url ? (
-                                        <img src={p.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                                        <img src={p.profiles.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                                     ) : (
                                         p.profiles?.username?.charAt(0).toUpperCase() || '?'
                                     )}
                                 </div>
 
-                                <div>
-                                    <p className="font-bold text-slate-800">
+                                <div className="min-w-0">
+                                    <p className="font-bold text-slate-800 truncate">
                                         {p.profiles?.username || 'Utente anonimo'}
                                         {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
                                     </p>
@@ -1334,14 +1334,14 @@ Scopri di più qui: ${window.location.href}`;
                                 {isMatchFinished && p.user_id !== user.id && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles, p.user_id); }}
-                                        className="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full"
+                                        className="text-[10px] font-black bg-slate-800 text-white px-3 py-1 rounded-full flex-shrink-0"
                                     >
                                         VOTA
                                     </button>
                                 )}
                             </div>
 
-                            <div className="flex flex-col items-end gap-2">
+                            <div className="flex flex-col items-end gap-2 flex-shrink-0">
                                 {p.user_id === match.creator_id && (
                                     <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-amber-600">
                                         <Crown size={12} className="fill-amber-400" />
@@ -1442,18 +1442,18 @@ Scopri di più qui: ${window.location.href}`;
                                         }`}
                                     onClick={() => { (p.user_id !== user.id) ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                                 >
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-4 min-w-0">
                                         {/* Avatar o Iniziale */}
-                                        <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden">
+                                        <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden flex-shrink-0">
                                             {p.profiles?.avatar_url ? (
-                                                <img src={p.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                                                <img src={p.profiles.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                                             ) : (
                                                 p.profiles?.username?.charAt(0).toUpperCase() || '?'
                                             )}
                                         </div>
 
-                                        <div>
-                                            <p className="font-bold text-slate-800">
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-slate-800 truncate">
                                                 {p.profiles?.username || 'Utente anonimo'}
                                                 {p.user_id === user.id && <span className="text-blue-500 ml-2 text-xs">(Tu)</span>}
                                             </p>

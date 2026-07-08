@@ -754,6 +754,7 @@ export default function TeamDetail({ session }) {
                                         <img
                                             src={member.profiles.avatar_url}
                                             alt={member.profiles.username}
+                                            referrerPolicy="no-referrer"
                                             className="w-full h-full rounded-full object-cover"
                                         />
                                     ) : (
@@ -823,6 +824,7 @@ export default function TeamDetail({ session }) {
                                                     <img
                                                         src={friend.avatar_url}
                                                         alt={friend.username}
+                                                        referrerPolicy="no-referrer"
                                                         className="w-full h-full rounded-full object-cover"
                                                     />
                                                 ) : (

@@ -170,7 +170,7 @@ export default function CentersList() {
               >
                 <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-slate-200">
                   {center.avatar_url ? (
-                    <img src={center.avatar_url} alt={center.username} className="w-full h-full object-cover" />
+                    <img src={center.avatar_url} alt={center.username} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   ) : (
                     <Building2 className="text-slate-400" size={28} />
                   )}

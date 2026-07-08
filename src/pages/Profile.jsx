@@ -409,6 +409,7 @@ export default function Profile({ session }) {
                                                 src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
                                                 className="w-full h-full object-cover"
                                                 alt="Anteprima avatar"
+                                                referrerPolicy="no-referrer"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">
@@ -607,7 +608,7 @@ export default function Profile({ session }) {
                             <div className="flex items-center gap-4 mb-5">
                                 <div className="w-20 h-20 bg-blue-100 rounded-full flex-shrink-0 flex items-center justify-center text-3xl font-black text-blue-600 border-4 border-white shadow-lg overflow-hidden">
                                     {profile?.avatar_url
-                                        ? <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                                        ? <img src={profile.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                                         : profile?.username?.charAt(0).toUpperCase()
                                     }
                                 </div>
@@ -847,6 +848,7 @@ export default function Profile({ session }) {
                                                 src={`${editData.avatar_url}?t=${Date.now()}`}
                                                 className="w-full h-full object-cover"
                                                 alt="Anteprima avatar"
+                                                referrerPolicy="no-referrer"
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-slate-400 font-black">

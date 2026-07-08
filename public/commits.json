@@ -1,6 +1,11 @@
 [
   {
     "date": "08 luglio 2026",
+    "title": "fix: blocca lo scroll dello sfondo nella modale \"Prossime partite\"",
+    "description": "Senza il lock su document.body, la dashboard sotto restava scrollabile\ne su mobile il viewport si ridimensionava lasciando un gap in fondo alla\nmodale. Stesso pattern gia' usato in MatchMessageThread.jsx."
+  },
+  {
+    "date": "08 luglio 2026",
     "title": "feat: rinomina \"Prossime partite\" e banner collassato oltre 3 partite",
     "description": "Con meno di 3 partite organizzate future resta la lista di card; da 3 in\nsu (max 5 attive) un unico banner blu con contatore apre una modale con\nl'elenco completo, per non affollare la dashboard."
   },
@@ -43,10 +48,5 @@
     "date": "07 luglio 2026",
     "title": "fix: tronca username troppo lunghi negli header di profilo",
     "description": "Gli username derivati da Google (nome completo + suffisso anti-collisione)\npossono essere lunghi e rompevano il layout dell'header profilo. Aggiunto\ntruncate + min-w-0 sui contenitori flex in Profile, PublicProfile e\nAdminDashboard."
-  },
-  {
-    "date": "07 luglio 2026",
-    "title": "feat: login con Google (OAuth) e trigger profilo aggiornato",
-    "description": "Aggiunge il bottone \"Accedi con Google\" in Auth.jsx e aggiorna\nhandle_new_user() per estrarre nome/avatar dai metadati OAuth, con\nsuffisso anti-collisione sullo username quando derivato da Google."
   }
 ]

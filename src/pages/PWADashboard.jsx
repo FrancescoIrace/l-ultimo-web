@@ -157,14 +157,26 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
     return () => clearInterval(interval);
   }, []);
 
-  // Blocca lo scroll della dashboard sotto la modale: senza questo lo sfondo
-  // scrolla ancora e su mobile il viewport si ridimensiona lasciando un gap
-  // in fondo alla modale.
+  // Blocca lo scroll della dashboard sotto la modale. Il solo overflow:hidden
+  // non basta su mobile (non blocca lo scroll touch/rubber-band e lascia che
+  // la barra indirizzi del browser si ridimensioni a metà interazione,
+  // lasciando un gap in fondo alla modale): si blocca il body in position
+  // fixed alla posizione di scroll corrente e la si ripristina alla chiusura.
   useEffect(() => {
     if (!isMatchesModalOpen) return;
-    const previousOverflow = document.body.style.overflow;
+    const scrollY = window.scrollY;
+    const { position, top, width, overflow } = document.body.style;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = previousOverflow; };
+    return () => {
+      document.body.style.position = position;
+      document.body.style.top = top;
+      document.body.style.width = width;
+      document.body.style.overflow = overflow;
+      window.scrollTo(0, scrollY);
+    };
   }, [isMatchesModalOpen]);
 
   let matchBanner = null;

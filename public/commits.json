@@ -1,6 +1,11 @@
 [
   {
     "date": "08 luglio 2026",
+    "title": "fix: ritarda la dissolvenza dello splash e sostituisce i puntini con testo",
+    "description": "La \"U\" resta piena fino al 75% dell'animazione invece di iniziare a\nsfumare subito dopo il pop. Sotto, al posto dei puntini, un testo\n\"Caricamento...\" con un piccolo pop in loop."
+  },
+  {
+    "date": "08 luglio 2026",
     "title": "feat: animazione splash stile Netflix (zoom + dissolvenza) e durata minima",
     "description": "La \"U\" ora parte piccola, fa un accenno di pop e poi si ingrandisce fino\na riempire lo schermo sfumando a trasparente, invece di restare ferma.\nAggiunta anche una durata minima dello splash (1.7s) cosi' l'animazione\nsi vede sempre per intero anche se sessione/profilo caricano piu' in fretta."
   },
@@ -43,10 +48,5 @@
     "date": "07 luglio 2026",
     "title": "fix: sul logout la pagina tornava a \"/\" (landing) invece del login \"/login\"",
     "description": "Modifica all'app"
-  },
-  {
-    "date": "07 luglio 2026",
-    "title": "feat: landing page pubblica, segnalazione chat, sezione admin dedicata",
-    "description": "Aggiunge la landing page di marketing (con CTA \"Google Play - Presto\"\nal posto delle guide di installazione), sposta il pannello messaggi\nnella dashboard business, e introduce la segnalazione delle chat\norganizzatore-centro con relativa gestione lato admin."
   }
 ]

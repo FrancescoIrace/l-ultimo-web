@@ -123,7 +123,7 @@ function App() {
 
   if (loading || !splashElapsed) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-blue-600 overflow-hidden">
+      <div className="h-screen w-full relative flex items-center justify-center bg-white text-blue-600 overflow-hidden">
         <motion.h1
           initial={{ scale: 0.1, opacity: 1 }}
           animate={{ scale: [0.1, 1.15, 3, 5], opacity: [1, 1, 1, 0] }}
@@ -136,7 +136,7 @@ function App() {
           initial={{ scale: 0.9, opacity: 0.7 }}
           animate={{ scale: [0.9, 1.08, 0.9], opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-          className="mt-6 text-sm font-bold uppercase tracking-widest text-blue-600"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-sm font-bold uppercase tracking-widest text-blue-600"
         >
           Caricamento...
         </motion.p>

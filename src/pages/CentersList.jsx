@@ -10,98 +10,20 @@ export default function CentersList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Placeholder data
-  const placeholders = [
-    {
-      id: 'placeholder-1',
-      username: 'Jumbo Padel & Calcetto',
-      full_name: 'Jumbo Padel & Calcetto',
-      business_address: 'Via dello Sport 1, Milano',
-      avatar_url: 'https://images.unsplash.com/photo-1556054817-64cd1e2c1e84?auto=format&fit=crop&q=80&w=200&h=200',
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-2',
-      username: 'Centrale Sport Club',
-      full_name: 'Centrale Sport Club',
-      business_address: 'Piazza Garibaldi 24, Roma',
-      avatar_url: 'https://images.unsplash.com/photo-1542659086-635b7190d659?auto=format&fit=crop&q=80&w=200&h=200',
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-3',
-      username: 'Arena Soccer Stadium',
-      full_name: 'Arena Soccer Stadium',
-      business_address: 'Viale Kennedy 12, Napoli',
-      avatar_url: 'https://images.unsplash.com/photo-1600255821058-c4f89958d700?auto=format&fit=crop&q=80&w=200&h=200',
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-4',
-      username: 'Sporting Village 4',
-      full_name: 'Sporting Village 4',
-      business_address: 'Via Roma 1, Milano',
-      avatar_url: null,
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-5',
-      username: 'Padel & Soccer',
-      full_name: 'Padel & Soccer Club',
-      business_address: 'Via Napoli 2, Roma',
-      avatar_url: null,
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-6',
-      username: 'Tennis Club 6',
-      full_name: 'Tennis Club 6',
-      business_address: 'Torino',
-      avatar_url: null,
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-7',
-      username: 'Centro Fitness 7',
-      full_name: 'Centro Fitness 7',
-      business_address: 'Bologna',
-      avatar_url: null,
-      role: 'center',
-      isPlaceholder: true,
-    },
-    {
-      id: 'placeholder-8',
-      username: 'Playground 8',
-      full_name: 'Playground 8',
-      business_address: 'Firenze',
-      avatar_url: null,
-      role: 'center',
-      isPlaceholder: true,
-    }
-  ];
-
   useEffect(() => {
     async function fetchCenters() {
       try {
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username, full_name, avatar_url, business_address, location')
-          .eq('role', 'center');
+          .eq('role', 'center')
+          .eq('is_visible', true);
 
         if (error) throw error;
-
-        // Unisci i dati reali con i placeholder
-        const combined = [...(data || []), ...placeholders];
-        setCenters(combined);
+        setCenters(data || []);
       } catch (err) {
         console.error('Error fetching centers:', err);
-        setCenters(placeholders); // fallback to placeholders on error
+        setCenters([]);
       } finally {
         setLoading(false);
       }
@@ -168,7 +90,7 @@ export default function CentersList() {
             filteredCenters.map((center) => (
               <div
                 key={center.id}
-                onClick={() => center.isPlaceholder ? alert('Questo è un centro di esempio!') : navigate(`/profile/${center.id}`)}
+                onClick={() => navigate(`/profile/${center.id}`)}
                 className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm active:scale-[0.98] transition-all cursor-pointer flex gap-4 items-center"
               >
                 <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-slate-200">
@@ -190,11 +112,6 @@ export default function CentersList() {
                       {center.business_address || center.location || 'Indirizzo non specificato'}
                     </p>
                   </div>
-                  {center.isPlaceholder && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] font-bold rounded-md uppercase tracking-wider">
-                      Esempio
-                    </span>
-                  )}
                 </div>
                 <ChevronRight size={20} className="text-slate-300 flex-shrink-0" />
               </div>

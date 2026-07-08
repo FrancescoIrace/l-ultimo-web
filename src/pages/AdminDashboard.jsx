@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
-import { ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search, MessageCircle, Building2, Plus, Eye, EyeOff, X } from 'lucide-react';
 import Loader from '../components/Loader';
+import LocationPicker from '../components/LocationPicker';
 
 const ADMIN_EMAIL = 'admin@admin.it';
 
@@ -25,6 +26,13 @@ export default function AdminDashboard({ session }) {
     const [banTarget, setBanTarget] = useState(null); // profilo in fase di ban
     const [banReason, setBanReason] = useState('');
     const [banActionLoading, setBanActionLoading] = useState(false);
+
+    const [centers, setCenters] = useState([]);
+    const [togglingCenterId, setTogglingCenterId] = useState(null);
+    const [isCreateCenterOpen, setIsCreateCenterOpen] = useState(false);
+    const [creatingCenter, setCreatingCenter] = useState(false);
+    const emptyCenterForm = { email: '', password: '', username: '', full_name: '', business_address: '', lat: null, lng: null, cellulare: '' };
+    const [centerForm, setCenterForm] = useState(emptyCenterForm);
 
     useEffect(() => {
         async function fetchReports() {
@@ -75,6 +83,24 @@ export default function AdminDashboard({ session }) {
         }
 
         if (isAdmin) fetchChatReports();
+    }, [isAdmin]);
+
+    useEffect(() => {
+        async function fetchCenters() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, username, full_name, business_address, is_visible')
+                .eq('role', 'center')
+                .order('full_name', { ascending: true });
+
+            if (error) {
+                console.error('Errore fetch centri:', error.message);
+            } else {
+                setCenters(data || []);
+            }
+        }
+
+        if (isAdmin) fetchCenters();
     }, [isAdmin]);
 
     const handleDismiss = async (report) => {
@@ -226,6 +252,66 @@ export default function AdminDashboard({ session }) {
 
         setSearchResults(prev => prev.map(u => u.id === profile.id ? { ...u, is_banned: false, ban_reason: null } : u));
         success(`${profile.username} è stato sbannato`);
+    };
+
+    const handleCreateCenter = async () => {
+        if (!centerForm.email.trim() || !centerForm.password.trim() || !centerForm.username.trim() || !centerForm.full_name.trim()) {
+            showError('Email, password, username e nome del centro sono obbligatori');
+            return;
+        }
+        if (centerForm.password.trim().length < 6) {
+            showError('La password deve avere almeno 6 caratteri');
+            return;
+        }
+
+        setCreatingCenter(true);
+        const { data, error } = await supabase.functions.invoke('admin-create-center', {
+            body: {
+                email: centerForm.email.trim(),
+                password: centerForm.password.trim(),
+                username: centerForm.username.trim(),
+                full_name: centerForm.full_name.trim(),
+                business_address: centerForm.business_address || null,
+                lat: centerForm.lat,
+                lng: centerForm.lng,
+                cellulare: centerForm.cellulare.trim() || null,
+            },
+        });
+        setCreatingCenter(false);
+
+        if (error) {
+            showError('Impossibile creare il centro: ' + error.message);
+            return;
+        }
+
+        setCenters(prev => [...prev, {
+            id: data.centerId,
+            username: centerForm.username.trim(),
+            full_name: centerForm.full_name.trim(),
+            business_address: centerForm.business_address || null,
+            is_visible: true,
+        }].sort((a, b) => a.full_name.localeCompare(b.full_name)));
+
+        success(`Centro "${centerForm.full_name}" creato con successo!`);
+        setIsCreateCenterOpen(false);
+        setCenterForm(emptyCenterForm);
+    };
+
+    const handleToggleVisibility = async (center) => {
+        setTogglingCenterId(center.id);
+        const newValue = !center.is_visible;
+        const { error } = await supabase
+            .from('profiles')
+            .update({ is_visible: newValue })
+            .eq('id', center.id);
+        setTogglingCenterId(null);
+
+        if (error) {
+            showError('Impossibile aggiornare la visibilità');
+            return;
+        }
+
+        setCenters(prev => prev.map(c => c.id === center.id ? { ...c, is_visible: newValue } : c));
     };
 
     if (!isAdmin) {
@@ -439,6 +525,116 @@ export default function AdminDashboard({ session }) {
                     ))}
                 </div>
             </section>
+
+            {/* ── GESTIONE CENTRI ── */}
+            <section className="mt-8">
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-black uppercase text-slate-700 flex items-center gap-2">
+                        <Building2 size={18} className="text-emerald-600" />
+                        Gestione Centri
+                    </h2>
+                    <button
+                        type="button"
+                        onClick={() => { setCenterForm(emptyCenterForm); setIsCreateCenterOpen(true); }}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white font-black rounded-xl uppercase text-[10px] tracking-widest hover:bg-emerald-700 transition-colors"
+                    >
+                        <Plus size={13} />
+                        Crea Centro
+                    </button>
+                </div>
+
+                <div className="space-y-3">
+                    {centers.length > 0 ? (
+                        centers.map((center) => (
+                            <div key={center.id} className="p-4 bg-white border border-slate-100 shadow-sm rounded-2xl flex items-center gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-sm text-slate-800 truncate">{center.full_name || center.username}</p>
+                                    <p className="text-xs text-slate-400 truncate">{center.business_address || 'Indirizzo non specificato'}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleToggleVisibility(center)}
+                                    disabled={togglingCenterId === center.id}
+                                    className={`flex items-center gap-1.5 px-3 py-2 font-black rounded-xl uppercase text-[10px] tracking-widest transition-colors disabled:opacity-50 ${center.is_visible ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                                >
+                                    {center.is_visible ? <Eye size={13} /> : <EyeOff size={13} />}
+                                    {center.is_visible ? 'Visibile' : 'Nascosto'}
+                                </button>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-6 bg-white border border-slate-100 rounded-3xl text-center">
+                            <p className="font-bold text-slate-600">Nessun centro creato.</p>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {isCreateCenterOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setIsCreateCenterOpen(false)}>
+                    <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-3 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between mb-1">
+                            <h2 className="text-lg font-black text-slate-800 uppercase">Crea Centro</h2>
+                            <button onClick={() => setIsCreateCenterOpen(false)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <input
+                            type="email"
+                            placeholder="Email di accesso"
+                            value={centerForm.email}
+                            onChange={(e) => setCenterForm(prev => ({ ...prev, email: e.target.value }))}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Password (min 6 caratteri)"
+                            value={centerForm.password}
+                            onChange={(e) => setCenterForm(prev => ({ ...prev, password: e.target.value }))}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Username"
+                            value={centerForm.username}
+                            onChange={(e) => setCenterForm(prev => ({ ...prev, username: e.target.value }))}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Nome del centro"
+                            value={centerForm.full_name}
+                            onChange={(e) => setCenterForm(prev => ({ ...prev, full_name: e.target.value }))}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Cellulare (opzionale)"
+                            value={centerForm.cellulare}
+                            onChange={(e) => setCenterForm(prev => ({ ...prev, cellulare: e.target.value }))}
+                            className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+
+                        <div>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Indirizzo</p>
+                            <LocationPicker
+                                value={{ location: centerForm.business_address, location_lat: centerForm.lat, location_lng: centerForm.lng }}
+                                onChange={(loc) => setCenterForm(prev => ({ ...prev, business_address: loc.location, lat: loc.location_lat, lng: loc.location_lng }))}
+                            />
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleCreateCenter}
+                            disabled={creatingCenter}
+                            className="w-full py-3 bg-emerald-600 text-white font-black rounded-2xl uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-colors disabled:opacity-60 mt-2"
+                        >
+                            {creatingCenter ? 'Creazione in corso...' : 'Crea Centro'}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {banTarget && (
                 <div className="fixed inset-0 bg-black/50 flex items-end z-50">

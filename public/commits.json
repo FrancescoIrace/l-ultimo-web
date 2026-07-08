@@ -1,6 +1,11 @@
 [
   {
     "date": "08 luglio 2026",
+    "title": "feat: invita amici alla partita, \"Le tue partite\" in dashboard, layout centri fisso",
+    "description": "- Bottone \"Invita amici\" nel dettaglio partita (organizzatore sempre,\n  partecipante se ha aderito): notifica in-app + push con link diretto\n  al match.\n- Nuova sezione \"Le tue partite\" sopra \"Centri Associati\" nella dashboard,\n  visibile solo se ci sono partite future organizzate dall'utente.\n- CentersList.jsx: header e barra di ricerca ora fissi, solo la lista\n  scrolla in un contenitore indipendente."
+  },
+  {
+    "date": "08 luglio 2026",
     "title": "fix: sposta il testo \"Caricamento...\" in fondo alla pagina nello splash",
     "description": "Ancorato con position absolute in basso, indipendente dalla U centrata."
   },
@@ -43,10 +48,5 @@
     "date": "07 luglio 2026",
     "title": "feat: modale di contatto per pubblicità e suggerimenti al posto di WhatsApp",
     "description": "I due banner della dashboard PWA ora aprono un mini-form (email + messaggio)\nche salva la richiesta in contact_requests e invia un alert email via Edge\nFunction, invece di aprire una chat WhatsApp diretta."
-  },
-  {
-    "date": "07 luglio 2026",
-    "title": "fix: PWA in standalone mostra login invece della landing, aggiunto bottone Accedi",
-    "description": "Dopo il logout dalla PWA installata, la root ora rimanda direttamente\nalla schermata di login invece della landing di marketing (pensata solo\nper i visitatori da browser). Aggiunto anche un link \"Accedi\" in header."
   }
 ]

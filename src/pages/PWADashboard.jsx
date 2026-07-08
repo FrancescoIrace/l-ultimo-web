@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -17,6 +17,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const [upcomingMatch, setUpcomingMatch] = useState(null);
   const [myMatches, setMyMatches] = useState([]);
+  const [isMatchesModalOpen, setIsMatchesModalOpen] = useState(false);
   const [, setTick] = useState(0); // forza il re-render per aggiornare countdown/stato live
   const [contactModalType, setContactModalType] = useState(null); // 'advertising' | 'suggestion' | null
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
@@ -124,7 +125,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
     fetchUpcomingMatch();
   }, [user]);
 
-  // Partite future organizzate dall'utente, per la sezione "Le tue partite"
+  // Partite future organizzate dall'utente, per la sezione "Prossime partite"
   // sopra "Centri Associati" — nascosta del tutto se non ce n'è nessuna.
   useEffect(() => {
     const fetchMyMatches = async () => {
@@ -166,6 +167,35 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
       matchBanner = { hasStarted, minutesLeft };
     }
   }
+
+  const renderMatchRow = (m) => {
+    const dt = new Date(m.datetime.replace(' ', 'T'));
+    const day = dt.toLocaleDateString('it-IT', { day: '2-digit' });
+    const month = dt.toLocaleDateString('it-IT', { month: 'short' }).replace('.', '');
+    const time = dt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    return (
+      <div
+        key={m.id}
+        onClick={() => navigate(`/match/${m.id}`)}
+        className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
+      >
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <div className="flex flex-col items-center justify-center w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex-shrink-0">
+            <span className="text-sm font-black leading-none">{day}</span>
+            <span className="text-[9px] font-bold uppercase leading-none mt-0.5">{month}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="text-slate-900 font-bold text-sm truncate">{m.title || m.sport}</h4>
+            <p className="text-slate-500 text-xs mt-0.5">{time} · {m.sport}</p>
+          </div>
+        </div>
+        <ChevronRight
+          size={20}
+          className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -301,39 +331,51 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
           </div>
         )}
 
-        {/* Le tue partite (solo se hai partite future organizzate) */}
+        {/* Prossime partite (solo se hai partite future organizzate).
+            Con 3 o più partite attive, un unico banner al posto della lista
+            per non affollare la dashboard: apre una modale con l'elenco. */}
         {myMatches.length > 0 && (
           <div className="mx-4 my-2">
-            <h3 className="text-slate-800 font-bold text-base mb-2 px-1">Le tue partite</h3>
-            <div className="space-y-2">
-              {myMatches.map((m) => {
-                const dt = new Date(m.datetime.replace(' ', 'T'));
-                const day = dt.toLocaleDateString('it-IT', { day: '2-digit' });
-                const month = dt.toLocaleDateString('it-IT', { month: 'short' }).replace('.', '');
-                const time = dt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                return (
-                  <div
-                    key={m.id}
-                    onClick={() => navigate(`/match/${m.id}`)}
-                    className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
-                  >
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex-shrink-0">
-                        <span className="text-sm font-black leading-none">{day}</span>
-                        <span className="text-[9px] font-bold uppercase leading-none mt-0.5">{month}</span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h4 className="text-slate-900 font-bold text-sm truncate">{m.title || m.sport}</h4>
-                        <p className="text-slate-500 text-xs mt-0.5">{time} · {m.sport}</p>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      size={20}
-                      className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
-                    />
+            <h3 className="text-slate-800 font-bold text-base mb-2 px-1">Prossime partite</h3>
+            {myMatches.length < 3 ? (
+              <div className="space-y-2">
+                {myMatches.map(renderMatchRow)}
+              </div>
+            ) : (
+              <div
+                onClick={() => setIsMatchesModalOpen(true)}
+                className="group flex items-center justify-between p-4 bg-blue-600 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm shadow-inner flex-shrink-0">
+                    <Clock className="text-white" size={22} />
                   </div>
-                );
-              })}
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-white font-black text-sm leading-tight">Prossime partite ({myMatches.length})</h4>
+                    <p className="text-white/90 text-xs mt-0.5">Tocca per vedere l'elenco</p>
+                  </div>
+                </div>
+                <ChevronRight
+                  className="text-white flex-shrink-0 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+                  size={22}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {isMatchesModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setIsMatchesModalOpen(false)}>
+            <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-black text-slate-800">Prossime partite</h2>
+                <button onClick={() => setIsMatchesModalOpen(false)} className="p-2 bg-slate-100 text-slate-400 rounded-full hover:bg-slate-200">
+                    <X size={18} />
+                </button>
+              </div>
+              <div className="space-y-2">
+                {myMatches.map(renderMatchRow)}
+              </div>
             </div>
           </div>
         )}

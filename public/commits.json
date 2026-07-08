@@ -1,6 +1,11 @@
 [
   {
     "date": "08 luglio 2026",
+    "title": "fix: sposta il testo \"Caricamento...\" in fondo alla pagina nello splash",
+    "description": "Ancorato con position absolute in basso, indipendente dalla U centrata."
+  },
+  {
+    "date": "08 luglio 2026",
     "title": "fix: ritarda la dissolvenza dello splash e sostituisce i puntini con testo",
     "description": "La \"U\" resta piena fino al 75% dell'animazione invece di iniziare a\nsfumare subito dopo il pop. Sotto, al posto dei puntini, un testo\n\"Caricamento...\" con un piccolo pop in loop."
   },
@@ -43,10 +48,5 @@
     "date": "07 luglio 2026",
     "title": "fix: PWA in standalone mostra login invece della landing, aggiunto bottone Accedi",
     "description": "Dopo il logout dalla PWA installata, la root ora rimanda direttamente\nalla schermata di login invece della landing di marketing (pensata solo\nper i visitatori da browser). Aggiunto anche un link \"Accedi\" in header."
-  },
-  {
-    "date": "07 luglio 2026",
-    "title": "fix: sul logout la pagina tornava a \"/\" (landing) invece del login \"/login\"",
-    "description": "Modifica all'app"
   }
 ]

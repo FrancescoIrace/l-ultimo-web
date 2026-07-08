@@ -46,6 +46,11 @@ function getNotificationStyles(type) {
       dot: 'bg-purple-500',
       hover: 'hover:bg-purple-100',
     },
+    match_invite: {
+      bg: 'bg-green-50',
+      dot: 'bg-green-500',
+      hover: 'hover:bg-green-100',
+    },
     friend_request: {
       bg: 'bg-blue-50',
       dot: 'bg-blue-500',
@@ -234,6 +239,8 @@ export function NotificationBell({ userId }) {
                             return <UserX size={18} className="text-red-500" />;
                           case 'team_invite':
                             return <Handshake size={18} className="text-purple-600" />;
+                          case 'match_invite':
+                            return <UserPlus size={18} className="text-green-600" />;
                           case 'review_received':
                             return <Star size={18} className="text-amber-600" />;
                           case 'team_member_joined':

@@ -6,7 +6,7 @@ import MatchAttendanceManager from '../components/MatchAttendanceManager';
 import MatchMessageThread from '../components/MatchMessageThread';
 import RescheduleRequestModal from '../components/RescheduleRequestModal';
 import { useReminderRateLimit } from '../hooks/useReminderRateLimit';
-import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived, notifyReservationRequest, notifyMatchKicked } from '../lib/notificationService';
+import { notifyMatchJoin, notifyMatchReminder, notifyMatchFull, notifyMatchSpotFreed, notifyWaitlistPromoted, notifyOrganizerSpotFilled, notifyMatchCancelled, notifyReviewReceived, notifyReservationRequest, notifyMatchKicked, notifyMatchInvite } from '../lib/notificationService';
 import { supabase } from '../lib/supabase';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { getSportFamily } from '../lib/sportRoles';
@@ -44,6 +44,10 @@ export default function MatchDetail({ user }) {
     const [isMessageThreadOpen, setIsMessageThreadOpen] = useState(false);
     const [rescheduleRequest, setRescheduleRequest] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [inviteFriends, setInviteFriends] = useState([]);
+    const [selectedInviteFriends, setSelectedInviteFriends] = useState(new Set());
+    const [isSendingInvites, setIsSendingInvites] = useState(false);
 
 
     const checkMatchStatus = (matchDatetime) => {
@@ -638,6 +642,66 @@ Scopri di più qui: ${window.location.href}`;
         await shareFallback();
     };
 
+    // Carica gli amici accettati dell'utente per il modale "Invita amici",
+    // stesso pattern di loadFriends in TeamDetail.jsx.
+    const loadInviteFriends = async () => {
+        const { data: friendships, error: friendsError } = await supabase
+            .from('friendships')
+            .select('friend_id')
+            .eq('user_id', user.id)
+            .eq('status', 'accepted');
+
+        if (friendsError) {
+            console.error('Errore caricamento amici:', friendsError);
+            return;
+        }
+
+        const friendIds = (friendships || []).map(f => f.friend_id);
+        if (friendIds.length === 0) {
+            setInviteFriends([]);
+            return;
+        }
+
+        const { data: friendProfiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', friendIds);
+
+        if (profilesError) {
+            console.error('Errore caricamento profili amici:', profilesError);
+            return;
+        }
+
+        setInviteFriends(friendProfiles || []);
+    };
+
+    const handleOpenInviteModal = () => {
+        setSelectedInviteFriends(new Set());
+        setIsInviteModalOpen(true);
+        if (inviteFriends.length === 0) loadInviteFriends();
+    };
+
+    const handleInviteFriendsToMatch = async () => {
+        if (selectedInviteFriends.size === 0) {
+            error('Seleziona almeno un amico');
+            return;
+        }
+
+        setIsSendingInvites(true);
+        const inviterName = user.user_metadata?.username || 'Un giocatore';
+
+        await Promise.all(
+            Array.from(selectedInviteFriends).map(friendId =>
+                notifyMatchInvite(friendId, inviterName, match.title || match.sport, match.id, user.id)
+            )
+        );
+
+        setIsSendingInvites(false);
+        success(`Invito inviato a ${selectedInviteFriends.size} amico/i!`);
+        setIsInviteModalOpen(false);
+        setSelectedInviteFriends(new Set());
+    };
+
     const handleSendReminders = async () => {
         if (checkMatchStatus(match.datetime).isMatchFinished) {
             error('La partita è terminata: non puoi più inviare reminder.');
@@ -919,6 +983,13 @@ Scopri di più qui: ${window.location.href}`;
                             <Bell size={18} />
                         </button> */}
                         <button
+                            onClick={handleOpenInviteModal}
+                            className="p-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-100 transition-all"
+                            title="Invita amici"
+                        >
+                            <UserPlus size={18} />
+                        </button>
+                        <button
                             onClick={() => navigate(`/modifica/${match.id}`)}
                             className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
                         >
@@ -932,13 +1003,24 @@ Scopri di più qui: ${window.location.href}`;
                         </button>
                     </div>
                 ) : (
-                    // Tasto condividi standard se l'utente non è admin
-                    <button
-                        onClick={handleShare}
-                        className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
-                    >
-                        <Share2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {isJoined && (
+                            <button
+                                onClick={handleOpenInviteModal}
+                                className="p-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-100 transition-all"
+                                title="Invita amici"
+                            >
+                                <UserPlus size={18} />
+                            </button>
+                        )}
+                        {/* Tasto condividi standard se l'utente non è admin */}
+                        <button
+                            onClick={handleShare}
+                            className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
+                        >
+                            <Share2 size={18} />
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -1339,6 +1421,93 @@ Scopri di più qui: ${window.location.href}`;
                     />
                 )}
 
+                {isInviteModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 flex items-end z-50" onClick={() => setIsInviteModalOpen(false)}>
+                        <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800">Invita Amici</h2>
+                                <p className="text-sm text-slate-500 mt-2">
+                                    Seleziona gli amici da invitare a "{match.title || match.sport}"
+                                </p>
+                            </div>
+
+                            {inviteFriends.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <p className="text-slate-500">Non hai amici da invitare</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                    {inviteFriends.map((friend) => (
+                                        <label
+                                            key={friend.id}
+                                            className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedInviteFriends.has(friend.id)}
+                                                onChange={(e) => {
+                                                    const newSelected = new Set(selectedInviteFriends);
+                                                    if (e.target.checked) {
+                                                        newSelected.add(friend.id);
+                                                    } else {
+                                                        newSelected.delete(friend.id);
+                                                    }
+                                                    setSelectedInviteFriends(newSelected);
+                                                }}
+                                                className="w-4 h-4 accent-blue-600"
+                                            />
+                                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                                {friend.avatar_url ? (
+                                                    <img
+                                                        src={friend.avatar_url}
+                                                        alt={friend.username}
+                                                        referrerPolicy="no-referrer"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <span className="text-sm font-bold text-blue-600">
+                                                        {friend.username?.[0]?.toUpperCase() || '?'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm font-semibold text-slate-800 flex-1">
+                                                {friend.username}
+                                            </p>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => { setIsInviteModalOpen(false); setSelectedInviteFriends(new Set()); }}
+                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleInviteFriendsToMatch}
+                                    disabled={isSendingInvites || selectedInviteFriends.size === 0}
+                                    className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isSendingInvites ? (
+                                        <>
+                                            <Loader variant="inline" size={16} color="white" />
+                                            Invio...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserPlus size={18} />
+                                            Invita ({selectedInviteFriends.size})
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>
 

@@ -16,6 +16,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   const { showAlert } = useContext(AlertContext);
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const [upcomingMatch, setUpcomingMatch] = useState(null);
+  const [myMatches, setMyMatches] = useState([]);
   const [, setTick] = useState(0); // forza il re-render per aggiornare countdown/stato live
   const [contactModalType, setContactModalType] = useState(null); // 'advertising' | 'suggestion' | null
   const getCurrentDate = () => new Date().toISOString().split('T')[0];
@@ -121,6 +122,32 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
     };
 
     fetchUpcomingMatch();
+  }, [user]);
+
+  // Partite future organizzate dall'utente, per la sezione "Le tue partite"
+  // sopra "Centri Associati" — nascosta del tutto se non ce n'è nessuna.
+  useEffect(() => {
+    const fetchMyMatches = async () => {
+      const pad = (n) => String(n).padStart(2, '0');
+      const now = new Date();
+      const nowStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      const { data, error } = await supabase
+        .from('matches')
+        .select('id, title, sport, datetime')
+        .eq('creator_id', user.id)
+        .gte('datetime', nowStr)
+        .order('datetime', { ascending: true })
+        .limit(5);
+
+      if (error) {
+        console.error('Errore nel caricamento delle tue partite:', error);
+        return;
+      }
+      setMyMatches(data || []);
+    };
+
+    fetchMyMatches();
   }, [user]);
 
   // Aggiorna countdown/stato ogni 30s mentre il banner è potenzialmente visibile
@@ -271,6 +298,43 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
               className="text-white flex-shrink-0 opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
               size={22}
             />
+          </div>
+        )}
+
+        {/* Le tue partite (solo se hai partite future organizzate) */}
+        {myMatches.length > 0 && (
+          <div className="mx-4 my-2">
+            <h3 className="text-slate-800 font-bold text-base mb-2 px-1">Le tue partite</h3>
+            <div className="space-y-2">
+              {myMatches.map((m) => {
+                const dt = new Date(m.datetime.replace(' ', 'T'));
+                const day = dt.toLocaleDateString('it-IT', { day: '2-digit' });
+                const month = dt.toLocaleDateString('it-IT', { month: 'short' }).replace('.', '');
+                const time = dt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => navigate(`/match/${m.id}`)}
+                    className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl shadow-md cursor-pointer active:scale-[0.99] transition-transform duration-200"
+                  >
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className="flex flex-col items-center justify-center w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex-shrink-0">
+                        <span className="text-sm font-black leading-none">{day}</span>
+                        <span className="text-[9px] font-bold uppercase leading-none mt-0.5">{month}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-slate-900 font-bold text-sm truncate">{m.title || m.sport}</h4>
+                        <p className="text-slate-500 text-xs mt-0.5">{time} · {m.sport}</p>
+                      </div>
+                    </div>
+                    <ChevronRight
+                      size={20}
+                      className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

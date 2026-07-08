@@ -385,6 +385,26 @@ export async function notifyTeamInvite(invitedUserId, inviterName, teamName, tea
 }
 
 /**
+ * Notifica per invito a una partita
+ * @param {string} invitedUserId - ID dell'utente invitato
+ * @param {string} inviterName - Nome di chi invita
+ * @param {string} matchTitle - Titolo/sport della partita
+ * @param {string} matchId - ID della partita (per il link)
+ * @param {string} invitedByUserId - ID di chi invita
+ */
+export async function notifyMatchInvite(invitedUserId, inviterName, matchTitle, matchId, invitedByUserId) {
+  return createNotification({
+    userId: invitedUserId,
+    senderId: invitedByUserId,
+    type: 'match_invite',
+    title: '⚽ Invito a una partita',
+    content: `${inviterName} ti ha invitato a "${matchTitle}"`,
+    link: `/match/${matchId}`,
+    metadata: { matchId, matchTitle, inviterName },
+  });
+}
+
+/**
  * Notifica quando un giocatore abbandona un match
  */
 export async function notifyMatchLeave(matchId, matchTitle, playerName, organizerId, leftUserId) {

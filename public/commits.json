@@ -1,6 +1,11 @@
 [
   {
     "date": "08 luglio 2026",
+    "title": "feat: rinomina \"Prossime partite\" e banner collassato oltre 3 partite",
+    "description": "Con meno di 3 partite organizzate future resta la lista di card; da 3 in\nsu (max 5 attive) un unico banner blu con contatore apre una modale con\nl'elenco completo, per non affollare la dashboard."
+  },
+  {
+    "date": "08 luglio 2026",
     "title": "feat: invita amici alla partita, \"Le tue partite\" in dashboard, layout centri fisso",
     "description": "- Bottone \"Invita amici\" nel dettaglio partita (organizzatore sempre,\n  partecipante se ha aderito): notifica in-app + push con link diretto\n  al match.\n- Nuova sezione \"Le tue partite\" sopra \"Centri Associati\" nella dashboard,\n  visibile solo se ci sono partite future organizzate dall'utente.\n- CentersList.jsx: header e barra di ricerca ora fissi, solo la lista\n  scrolla in un contenitore indipendente."
   },
@@ -43,10 +48,5 @@
     "date": "07 luglio 2026",
     "title": "feat: login con Google (OAuth) e trigger profilo aggiornato",
     "description": "Aggiunge il bottone \"Accedi con Google\" in Auth.jsx e aggiorna\nhandle_new_user() per estrarre nome/avatar dai metadati OAuth, con\nsuffisso anti-collisione sullo username quando derivato da Google."
-  },
-  {
-    "date": "07 luglio 2026",
-    "title": "feat: modale di contatto per pubblicità e suggerimenti al posto di WhatsApp",
-    "description": "I due banner della dashboard PWA ora aprono un mini-form (email + messaggio)\nche salva la richiesta in contact_requests e invia un alert email via Edge\nFunction, invece di aprire una chat WhatsApp diretta."
   }
 ]

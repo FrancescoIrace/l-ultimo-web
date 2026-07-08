@@ -157,6 +157,16 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
     return () => clearInterval(interval);
   }, []);
 
+  // Blocca lo scroll della dashboard sotto la modale: senza questo lo sfondo
+  // scrolla ancora e su mobile il viewport si ridimensiona lasciando un gap
+  // in fondo alla modale.
+  useEffect(() => {
+    if (!isMatchesModalOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [isMatchesModalOpen]);
+
   let matchBanner = null;
   if (upcomingMatch) {
     const start = new Date(upcomingMatch.datetime.replace(' ', 'T')).getTime();
@@ -336,7 +346,6 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             per non affollare la dashboard: apre una modale con l'elenco. */}
         {myMatches.length > 0 && (
           <div className="mx-4 my-2">
-            <h3 className="text-slate-800 font-bold text-base mb-2 px-1">Prossime partite</h3>
             {myMatches.length < 3 ? (
               <div className="space-y-2">
                 {myMatches.map(renderMatchRow)}

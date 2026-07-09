@@ -224,6 +224,24 @@ export default function Profile({ session }) {
             return;
         }
 
+        // Se l'username è cambiato, verifichiamo che non sia già in uso da un altro profilo
+        if ((editData.username || '').trim().toLowerCase() !== (profile?.username || '').trim().toLowerCase()) {
+            const escaped = (editData.username || '').trim().replace(/[%_\\]/g, (m) => '\\' + m);
+            const { data: existing, error: checkError } = await supabase
+                .from('profiles')
+                .select('id')
+                .ilike('username', escaped)
+                .neq('id', session.user.id)
+                .maybeSingle();
+            if (checkError) {
+                console.warn('Errore controllo username:', checkError.message);
+            } else if (existing) {
+                showAlertError('Username già in uso, scegline un altro.');
+                setLoading(false);
+                return;
+            }
+        }
+
         const { error } = await supabase
             .from('profiles')
             .update({
@@ -246,7 +264,8 @@ export default function Profile({ session }) {
             .eq('id', session.user.id);
 
         if (error) {
-            showAlertError("Errore nell'aggiornamento: " + error.message);
+            const isUsernameConflict = /duplicate key|profiles_username_unique_idx/i.test(error.message || '');
+            showAlertError(isUsernameConflict ? 'Username già in uso, scegline un altro.' : "Errore nell'aggiornamento: " + error.message);
         } else {
             success("Profilo aggiornato con successo!");
             // setIsEditing(false);

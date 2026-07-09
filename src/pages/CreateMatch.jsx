@@ -56,7 +56,7 @@ export default function CreateMatch() {
     };
 
     async function fetchCenters() {
-        const { data } = await supabase.from('profiles').select('id, username, full_name, business_address, lat, lng').eq('role', 'center');
+        const { data } = await supabase.from('profiles').select('id, username, full_name, business_address, lat, lng').eq('role', 'center').eq('is_visible', true);
         setCenters(data || []);
         // console.log("Centri affiliati:", data);
     }

@@ -984,20 +984,23 @@ Scopri di più qui: ${window.location.href}`;
                         </button> */}
                         <button
                             onClick={handleOpenInviteModal}
-                            className="p-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-100 transition-all"
+                            disabled={isMatchFinished}
+                            className="p-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-green-50"
                             title="Invita amici"
                         >
                             <UserPlus size={18} />
                         </button>
                         <button
                             onClick={() => navigate(`/modifica/${match.id}`)}
-                            className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
+                            disabled={isMatchFinished}
+                            className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-100"
                         >
                             <Pencil size={18} />
                         </button>
                         <button
                             onClick={handleDeleteMatch}
-                            className="p-2 text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-all"
+                            disabled={isMatchFinished}
+                            className="p-2 text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-50"
                         >
                             <Trash2 size={18} />
                         </button>
@@ -1007,7 +1010,8 @@ Scopri di più qui: ${window.location.href}`;
                         {isJoined && (
                             <button
                                 onClick={handleOpenInviteModal}
-                                className="p-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-100 transition-all"
+                                disabled={isMatchFinished}
+                                className="p-2 text-green-600 bg-green-50 rounded-xl hover:bg-green-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-green-50"
                                 title="Invita amici"
                             >
                                 <UserPlus size={18} />
@@ -1016,7 +1020,8 @@ Scopri di più qui: ${window.location.href}`;
                         {/* Tasto condividi standard se l'utente non è admin */}
                         <button
                             onClick={handleShare}
-                            className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all"
+                            disabled={isMatchFinished}
+                            className="p-2 text-slate-500 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-100"
                         >
                             <Share2 size={18} />
                         </button>
@@ -1273,7 +1278,8 @@ Scopri di più qui: ${window.location.href}`;
                                                     )}
                                                     <button
                                                         onClick={() => setIsRescheduleModalOpen(true)}
-                                                        className="w-full mt-3 py-3 bg-white border border-amber-200 text-amber-700 rounded-xl font-bold shadow-sm hover:bg-amber-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                                        disabled={isMatchFinished}
+                                                        className="w-full mt-3 py-3 bg-white border border-amber-200 text-amber-700 rounded-xl font-bold shadow-sm hover:bg-amber-50 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
                                                     >
                                                         🕐 Richiedi modifica orario
                                                     </button>
@@ -1325,7 +1331,8 @@ Scopri di più qui: ${window.location.href}`;
                                             )}
                                             <button
                                                 onClick={handleSendRequest}
-                                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-1"
+                                                disabled={isMatchFinished}
+                                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
                                             >
                                                 <span className="flex items-center gap-2">🚀 {status === 'rejected' ? 'Riprova Invia Richiesta' : 'Invia Richiesta al Centro Sportivo'}</span>
                                                 <span className="text-[10px] uppercase tracking-wider font-black opacity-80">
@@ -1534,14 +1541,16 @@ Scopri di più qui: ${window.location.href}`;
                             />
                         </div>
 
-                        <button
-                            onClick={generateRandomTeamsLocal}
-                            className={`w-full py-3 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 ${localTeams ? 'bg-indigo-500 shadow-indigo-200' : 'bg-indigo-600 shadow-indigo-300'}`}
-                        >
-                            <RefreshCw size={18} /> Genera Squadre Casuali
-                        </button>
+                        {!isMatchFinished && (
+                            <button
+                                onClick={generateRandomTeamsLocal}
+                                className={`w-full py-3 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 ${localTeams ? 'bg-indigo-500 shadow-indigo-200' : 'bg-indigo-600 shadow-indigo-300'}`}
+                            >
+                                <RefreshCw size={18} /> Genera Squadre Casuali
+                            </button>
+                        )}
 
-                        {(localTeams || (team1NameLocal.trim() || null) !== (match?.team1_name || null) || (team2NameLocal.trim() || null) !== (match?.team2_name || null)) && (
+                        {!isMatchFinished && (localTeams || (team1NameLocal.trim() || null) !== (match?.team1_name || null) || (team2NameLocal.trim() || null) !== (match?.team2_name || null)) && (
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleCancelEditTeams}
@@ -1552,7 +1561,7 @@ Scopri di più qui: ${window.location.href}`;
                                 <button
                                     onClick={handleSaveTeams}
                                     disabled={isSavingTeams}
-                                    className="flex-[2] py-3 bg-green-500 hover:bg-green-600 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-green-200 flex justify-center items-center gap-2"
+                                    className="flex-[2] py-3 bg-green-500 hover:bg-green-600 active:scale-95 transition-all text-white rounded-xl font-bold shadow-lg shadow-green-200 flex justify-center items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                                 >
                                     {isSavingTeams ? <Loader variant="inline" color="white" /> : 'Salva Modifiche Squadre'}
                                 </button>
@@ -1576,11 +1585,18 @@ Scopri di più qui: ${window.location.href}`;
                             onClick={() => { p.user_id !== user.id ? navigate(`/profile/${p.user_id}`) : navigate('/profile') }}
                         >
                             <div className="flex items-center gap-4 min-w-0 flex-1">
-                                <div className={`w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden flex-shrink-0 ${p.final_attendance ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}>
-                                    {p.profiles?.avatar_url ? (
-                                        <img src={p.profiles.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                                    ) : (
-                                        p.profiles?.username?.charAt(0).toUpperCase() || '?'
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                    <div className={`w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-black text-slate-500 overflow-hidden ${p.final_attendance ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}>
+                                        {p.profiles?.avatar_url ? (
+                                            <img src={p.profiles.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                        ) : (
+                                            p.profiles?.username?.charAt(0).toUpperCase() || '?'
+                                        )}
+                                    </div>
+                                    {p.user_id === match.creator_id && (
+                                        <span className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow border border-amber-200" title="Organizzatore">
+                                            <Crown size={11} className="text-amber-500 fill-amber-400" />
+                                        </span>
                                     )}
                                 </div>
 
@@ -1606,7 +1622,9 @@ Scopri di più qui: ${window.location.href}`;
                                         )}
                                     </div>
                                 </div>
+                            </div>
 
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 {isMatchFinished && p.user_id !== user.id && (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); openReviewModal(p.profiles, p.user_id); }}
@@ -1615,17 +1633,8 @@ Scopri di più qui: ${window.location.href}`;
                                         VOTA
                                     </button>
                                 )}
-                            </div>
 
-                            <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                {p.user_id === match.creator_id && (
-                                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-amber-600">
-                                        <Crown size={12} className="fill-amber-400" />
-                                        Organizzatore
-                                    </span>
-                                )}
-
-                                {user.id === match.creator_id && (
+                                {user.id === match.creator_id && !isMatchFinished && (
                                     <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                                         <button
                                             onClick={() => handleSetTeamLocal(p.id, 1)}

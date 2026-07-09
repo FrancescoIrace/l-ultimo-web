@@ -59,9 +59,29 @@ export default function Auth() {
     );
   }, [isSignUp, email, password, username, gender, locationData, dataConsent]);
 
+  const isUsernameTaken = async (uname) => {
+    const escaped = uname.trim().replace(/[%_\\]/g, (m) => '\\' + m);
+    const { data, error: checkError } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('username', escaped)
+      .maybeSingle();
+    if (checkError) {
+      console.warn('Errore controllo username:', checkError.message);
+      return false;
+    }
+    return !!data;
+  };
+
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    if (isSignUp && await isUsernameTaken(username)) {
+      error('Username già in uso, scegline un altro.');
+      setLoading(false);
+      return;
+    }
 
     const authData = isSignUp
       ? await supabase.auth.signUp({
@@ -84,7 +104,14 @@ export default function Auth() {
 
     const { error: authError, data } = authData;
 
-    if (authError) error(authError.message == 'Invalid login credentials' ? 'Credenziali non valide' : authError.message);
+    if (authError) {
+      const isUsernameConflict = /duplicate key|profiles_username_unique_idx/i.test(authError.message || '');
+      error(
+        isUsernameConflict
+          ? 'Username già in uso, scegline un altro.'
+          : authError.message == 'Invalid login credentials' ? 'Credenziali non valide' : authError.message
+      );
+    }
     else {
       if (isSignUp) {
         const userId = data?.user?.id;

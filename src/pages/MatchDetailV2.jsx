@@ -250,7 +250,13 @@ export default function MatchDetail({ user }) {
                 }
             )
             // 4. SUBSCRIBE
-            .subscribe();
+            // Log esplicito dello stato: senza questo, un CHANNEL_ERROR o un
+            // TIMED_OUT (RLS sul realtime, tabella non nella pubblicazione,
+            // token scaduto, ecc.) falliva in totale silenzio, senza nessun
+            // errore in console.
+            .subscribe((status, err) => {
+                console.log('🔌 Stato canale realtime match_page:', status, err || '');
+            });
 
         return () => {
             supabase.removeChannel(matchChannel);
@@ -442,6 +448,7 @@ export default function MatchDetail({ user }) {
             }
 
             success('Giocatore rimosso dalla partita.');
+            getDetails();
         });
     };
 
@@ -535,6 +542,7 @@ export default function MatchDetail({ user }) {
                     }
 
                     success('Hai abbandonato la partita!');
+                    getDetails();
                 } catch (err) {
                     console.error('❌ Errore generale:', err);
                     error('Errore: ' + err.message);
@@ -554,6 +562,7 @@ export default function MatchDetail({ user }) {
                     return;
                 } else {
                     success('✅ Hai rimosso la tua richiesta di partecipazione!');
+                    getDetails();
                 }
             });
         }
@@ -789,6 +798,11 @@ Scopri di più qui: ${window.location.href}`;
         if (status === 'confirmed' && confirmedPlayers.length + 1 >= match.max_players && match.creator_id !== user.id) {
             notifyMatchFull(match.id, match.title, match.creator_id);
         }
+
+        // Non fidarsi solo del canale realtime per mostrare subito la propria
+        // card: se il websocket ha un intoppo, chi si è appena iscritto resta
+        // con la UI vecchia finché non ricarica la pagina a mano.
+        getDetails();
     };
 
     const handleSendRequest = async () => {

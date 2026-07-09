@@ -676,7 +676,8 @@ export default function CreateMatch() {
                 <ChevronRight size={14} className="rotate-180" />
                 Indietro
             </button>
-            <h2 className="text-2xl font-black text-slate-800 mb-6 uppercase tracking-tight">Organizza Match</h2>
+            <h1 className="text-4xl font-black text-blue-600 mb-2 uppercase tracking-tight text-center">Organizza Match</h1>
+            <p className="text-sm text-slate-400 text-center mb-8">Crea la tua partita e trova compagni di gioco</p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* BADGE PARTITE ATTIVE - PREMIUM CARD STYLE */}

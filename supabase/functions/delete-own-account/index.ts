@@ -133,24 +133,35 @@ serve(async (req) => {
     // sorti delle squadre di cui era proprietario.
     await run('team_members:own', supabaseAdmin.from('team_members').delete().eq('user_id', userId));
 
-    // 4. Partite create dall'utente: restano visibili agli altri iscritti
+    // 4. La partecipazione dell'utente a QUALSIASI partita (comprese le
+    // proprie, di cui restava comunque partecipante come organizzatore) si
+    // cancella PRIMA di anonimizzare matches.creator_id qui sotto: un
+    // trigger DB su participants notifica l'organizzatore quando qualcuno
+    // esce, e se creator_id fosse già null a quel punto l'insert della
+    // notifica fallisce per via del vincolo NOT NULL su notifications.user_id.
+    await run('participants', supabaseAdmin.from('participants').delete().eq('user_id', userId));
+
+    // Partite create dall'utente: restano visibili agli altri iscritti
     // (matches.creator_id non ha FK, ma se la colonna è NOT NULL questo
     // step fallisce esplicitamente ora invece che in silenzio: in tal caso
     // le partite dell'utente andranno gestite diversamente, non azzerate).
     await run('matches:anonymize_creator', supabaseAdmin.from('matches').update({ creator_id: null }).eq('creator_id', userId));
 
-    // La partecipazione dell'utente a QUALSIASI partita (comprese le proprie,
-    // di cui restava comunque partecipante come organizzatore) si cancella.
-    await run('participants', supabaseAdmin.from('participants').delete().eq('user_id', userId));
+    // 5. Secondo giro su notifications: i trigger DB innescati dai delete/
+    // update qui sopra (es. "un giocatore ha abbandonato la partita") possono
+    // aver ricreato righe con user_id/sender_id = l'utente che stiamo
+    // cancellando, che altrimenti bloccherebbero il delete di profiles più
+    // sotto per via della foreign key notifications -> profiles.
+    await run('notifications:post_triggers', supabaseAdmin.from('notifications').delete().or(`user_id.eq.${userId},sender_id.eq.${userId}`));
 
-    // 5. Foto profilo su Storage (best-effort: se non esiste non è un errore,
+    // 6. Foto profilo su Storage (best-effort: se non esiste non è un errore,
     // non blocchiamo la cancellazione per questo)
     await supabaseAdmin.storage.from('avatars').remove([`${userId}/avatar.png`]);
 
-    // 6. Il profilo pubblico
+    // 7. Il profilo pubblico
     await run('profiles', supabaseAdmin.from('profiles').delete().eq('id', userId));
 
-    // 7. L'account Auth vero e proprio: senza questo passaggio l'utente
+    // 8. L'account Auth vero e proprio: senza questo passaggio l'utente
     // potrebbe ancora accedere con le stesse credenziali dopo la
     // cancellazione, ritrovandosi senza un profilo collegato.
     const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);

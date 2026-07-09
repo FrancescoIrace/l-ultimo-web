@@ -21,12 +21,32 @@ export function usePushNotifications(userId) {
   const checkSubscription = async () => {
     if (!userId) return;
     try {
-      const { data } = await supabase
+      let endpoint = null;
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        endpoint = subscription?.endpoint || null;
+      }
+
+      let query = supabase
         .from('push_subscriptions')
         .select('id')
         .eq('user_id', userId)
         .eq('is_active', true)
         .limit(1);
+
+      // Se riusciamo a identificare l'endpoint di QUESTO dispositivo,
+      // controlliamo solo quello (altrimenti il toggle risultava "ON" anche
+      // su un device che non si era mai iscritto, solo perché un altro
+      // device dello stesso utente lo era). Su iOS getSubscription() spesso
+      // non espone una vera Push subscription finché non si richiede di
+      // nuovo il token: in quel caso restiamo sul controllo "per utente" per
+      // non nascondere una sottoscrizione reale.
+      if (endpoint) {
+        query = query.eq('endpoint', endpoint);
+      }
+
+      const { data } = await query;
       setIsSubscribed(data && data.length > 0);
     } catch (err) {
       console.error('❌ Errore check sub:', err);
@@ -146,6 +166,7 @@ export function usePushNotifications(userId) {
       // 1. Ottieni la sottoscrizione corrente
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
+      let endpoint = subscription?.endpoint || null;
 
       // 2. Disiscrivi dal browser (se esiste)
       if (subscription) {
@@ -157,11 +178,31 @@ export function usePushNotifications(userId) {
         }
       }
 
-      // 3. Disattiva nel database
-      const { error: dbError } = await supabase
+      if (!endpoint) {
+        // iOS non crea una vera Push subscription: saveTokenToDB usa come
+        // endpoint un URL fittizio derivato dal token FCM, quindi lo
+        // ricaviamo allo stesso modo per identificare la riga di QUESTO
+        // dispositivo. Il permesso è già concesso a questo punto, quindi
+        // non riapre nessun prompt.
+        try {
+          const fcmToken = await getFCMToken();
+          if (fcmToken) endpoint = `https://fcm.googleapis.com/fcm/send/${fcmToken}`;
+        } catch (e) {
+          console.warn('⚠️ Impossibile ricavare l\'endpoint per la disiscrizione mirata', e);
+        }
+      }
+
+      // 3. Disattiva nel database: solo la subscription di QUESTO
+      // dispositivo quando riusciamo a identificarla, altrimenti (fallback)
+      // tutte quelle dell'utente come comportamento precedente.
+      let updateQuery = supabase
         .from('push_subscriptions')
         .update({ is_active: false })
         .eq('user_id', userId);
+      if (endpoint) {
+        updateQuery = updateQuery.eq('endpoint', endpoint);
+      }
+      const { error: dbError } = await updateQuery;
 
       if (dbError) {
         console.error('❌ Errore Database:', dbError.message);

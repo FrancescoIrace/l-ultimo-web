@@ -37,18 +37,36 @@ export default function ResetPassword() {
     const checkSession = async () => {
       try {
         // Supabase dovrebbe aver già autenticato l'utente dal link email
+        // (scambio automatico del `code` all'avvio del client)
         const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          // Controlla se c'è un codice nell'URL
-          const code = searchParams.get('code');
-          if (!code) {
-            error('Sessione non valida. Riprova dal link nell\'email.');
-            setTimeout(() => navigate('/login'), 2000);
-            return;
-          }
+
+        if (session) {
+          setCanReset(true);
+          return;
         }
-        
+
+        const code = searchParams.get('code');
+        if (!code) {
+          error('Sessione non valida. Riprova dal link nell\'email.');
+          setTimeout(() => navigate('/login'), 2000);
+          return;
+        }
+
+        // Niente sessione ma c'è un `code`: lo scambio automatico può non
+        // essere ancora avvenuto, oppure può essere fallito (es. link aperto
+        // su un dispositivo/browser diverso da quello che ha richiesto il
+        // reset - il code verifier PKCE è salvato solo lì). Lo tentiamo di
+        // nuovo esplicitamente invece di procedere alla cieca: prima il form
+        // veniva comunque mostrato come utilizzabile, e l'errore si scopriva
+        // solo al salvataggio della password, con un messaggio generico.
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          console.error('Errore scambio codice:', exchangeError);
+          error('Il link non è più valido, oppure è stato aperto su un dispositivo o browser diverso da quello con cui hai richiesto il reset. Richiedine uno nuovo.');
+          setTimeout(() => navigate('/forgot-password'), 2500);
+          return;
+        }
+
         setCanReset(true);
       } catch (err) {
         console.error('Errore validazione sessione:', err);

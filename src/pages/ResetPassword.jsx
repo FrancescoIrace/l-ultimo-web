@@ -45,6 +45,26 @@ export default function ResetPassword() {
           return;
         }
 
+        // Se il template email usa {{ .TokenHash }}, il link contiene
+        // token_hash+type invece di `code`: questa verifica NON richiede il
+        // code verifier PKCE salvato in locale, quindi funziona anche se il
+        // link viene aperto in un browser/dispositivo diverso da quello che
+        // ha richiesto il reset (es. l'app Mail che apre un browser in-app
+        // separato dalla PWA o da Safari) - il caso più comune su mobile.
+        const tokenHash = searchParams.get('token_hash');
+        const otpType = searchParams.get('type');
+        if (tokenHash && otpType) {
+          const { error: otpError } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: otpType });
+          if (otpError) {
+            console.error('Errore verifica token:', otpError);
+            error('Il link non è più valido o è scaduto. Richiedine uno nuovo.');
+            setTimeout(() => navigate('/forgot-password'), 2500);
+            return;
+          }
+          setCanReset(true);
+          return;
+        }
+
         const code = searchParams.get('code');
         if (!code) {
           error('Sessione non valida. Riprova dal link nell\'email.');

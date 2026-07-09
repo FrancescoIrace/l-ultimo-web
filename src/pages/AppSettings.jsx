@@ -67,7 +67,19 @@ export default function AppSettings({ session, userRole }) {
       // key: non può girare lato client, passa da una Edge Function che
       // pulisce tutte le tabelle collegate e poi elimina l'account Auth.
       const { error } = await supabase.functions.invoke('delete-own-account');
-      if (error) throw error;
+      if (error) {
+        // Su errore non-2xx, error.message di supabase-js è un generico
+        // "Edge Function returned a non-2xx status code": il motivo vero
+        // sta nel body della risposta, va letto a parte da error.context.
+        let detail = error.message;
+        try {
+          const body = await error.context?.json();
+          if (body?.error) detail = body.error;
+        } catch {
+          // body non leggibile/non JSON: teniamo il messaggio generico
+        }
+        throw new Error(detail);
+      }
 
       await supabase.auth.signOut();
       localStorage.removeItem('appSettings');

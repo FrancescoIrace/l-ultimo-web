@@ -270,6 +270,12 @@ function App() {
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/install-guide" element={<InstallGuide />} />
+            {/* Il click sul link di reset password stabilisce una sessione di
+            recupero mentre l'utente è ancora sulla pagina: l'app passa da
+            "non loggato" a "loggato" a metà flusso, quindi questa rotta va
+            registrata anche qui, non solo nel ramo per utenti non loggati -
+            altrimenti si finiva sul catch-all 404 qui sotto. */}
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* 5. Fallback per pagine non trovate */}
             <Route path="*" element={<NotFound />} />

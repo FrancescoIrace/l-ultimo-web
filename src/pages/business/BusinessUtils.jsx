@@ -92,7 +92,11 @@ export const validateBookingTime = async (supabase, dateTimeString, centerId) =>
     }
 
     const open = hoursData.open_time.slice(0, 5);
-    const close = hoursData.close_time.slice(0, 5);
+    // "00:00" come chiusura significa mezzanotte (fine giornata), non "aperto
+    // zero minuti": senza questo il confronto stringa trattava ogni orario
+    // serale come "dopo la chiusura".
+    const rawClose = hoursData.close_time.slice(0, 5);
+    const close = rawClose === '00:00' ? '24:00' : rawClose;
 
     // Ora il confronto è coerente: Locale vs Locale
     if (selectedTime < open || selectedTime > close) {

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { X, Save, Clock } from 'lucide-react';
+import { useAlert } from './AlertComponent';
 
 export default function ModalOrari({ isOpen, onClose, centerId }) {
   const [hours, setHours] = useState([]);
   const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+  const { error: showAlertError } = useAlert();
 
   useEffect(() => {
     if (isOpen) fetchHours();
@@ -21,10 +23,29 @@ export default function ModalOrari({ isOpen, onClose, centerId }) {
   }
 
   async function handleSave() {
+    for (const h of hours) {
+      if (h.is_closed) continue;
+      if (!h.open_time || !h.close_time) {
+        showAlertError(`Imposta sia l'apertura che la chiusura per ${days[h.day_of_week]}, oppure segnalo come chiuso.`);
+        return;
+      }
+      // "00:00" come chiusura significa mezzanotte (fine giornata), coerente
+      // con validateBookingTime in BusinessUtils.jsx.
+      const close = h.close_time === '00:00' ? '24:00' : h.close_time;
+      if (close <= h.open_time) {
+        showAlertError(`${days[h.day_of_week]}: l'orario di chiusura deve essere dopo quello di apertura.`);
+        return;
+      }
+    }
+
     const { error } = await supabase.from('business_hours').upsert(
       hours.map(h => ({ ...h, center_id: centerId }))
     );
-    if (!error) onClose();
+    if (error) {
+      showAlertError("Errore nel salvataggio degli orari: " + error.message);
+      return;
+    }
+    onClose();
   }
 
   if (!isOpen) return null;

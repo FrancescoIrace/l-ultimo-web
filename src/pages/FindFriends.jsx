@@ -58,6 +58,29 @@ export default function FindFriends({ user }) {
 
   const sendFriendRequest = async (profile) => {
     setActionLoading(profile.id);
+
+    // Race guard: se tra la lettura di friendshipMap e questo click è già
+    // comparsa una richiesta in una direzione qualsiasi (es. l'altro utente
+    // ha cliccato "Aggiungi" quasi nello stesso istante), non inseriamo una
+    // seconda riga reciproca duplicata.
+    const { data: existingRows } = await supabase
+      .from('friendships')
+      .select('id, user_id, status')
+      .or(`and(user_id.eq.${user.id},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${user.id})`)
+      .limit(1);
+    const existing = existingRows?.[0];
+
+    if (existing) {
+      setFriendshipMap(prev => ({
+        ...prev,
+        [profile.id]: existing.status === 'accepted'
+          ? 'accepted'
+          : (existing.user_id === user.id ? 'pending_sent' : 'pending_received')
+      }));
+      setActionLoading(null);
+      return;
+    }
+
     const { error } = await supabase
       .from('friendships')
       .insert({ user_id: user.id, friend_id: profile.id, status: 'pending' });

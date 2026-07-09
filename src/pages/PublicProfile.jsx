@@ -170,6 +170,7 @@ export default function PublicProfile() {
     }, []);
 
     if (loading) return <Loader variant="page" />;
+    if (!profile) return null;
 
     const handleSendRequest = async () => {
         if (!currentUser) return;
@@ -451,8 +452,12 @@ export default function PublicProfile() {
         );
     }
 
-    if (profile.role === 'player') {
-        return (
+    // Fallback: qualunque valore di role diverso da 'center' (player, ma
+    // anche null/non impostato - il flusso di signup in Auth.jsx non scrive
+    // mai questo campo) usa la vista giocatore standard. Prima il controllo
+    // esplicito `=== 'player'` lasciava la pagina bianca per i profili
+    // senza `role` impostato.
+    return (
             <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
                 {/* Tasto Indietro + menu contestuale */}
                 <div className="mb-4 flex items-center justify-between">
@@ -655,5 +660,4 @@ export default function PublicProfile() {
 
             </div>
         );
-    }
 }

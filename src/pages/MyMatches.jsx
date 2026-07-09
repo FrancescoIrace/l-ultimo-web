@@ -46,12 +46,18 @@ export default function MyMatches({ session }) {
         );
     }
 
-    const upcomingJoined = myMatches
+    // item.matches può tornare null (es. RLS che filtra la partita per
+    // questo utente pur lasciando visibile la riga participants): senza
+    // questo filtro qualunque accesso a item.matches.datetime crasherebbe
+    // l'intera pagina.
+    const validJoined = myMatches.filter(item => item.matches);
+
+    const upcomingJoined = validJoined
         .filter(item => new Date(item.matches.datetime) > new Date())
         .sort((a, b) => new Date(a.matches.datetime) - new Date(b.matches.datetime))
         .map(item => ({ ...item, isCreator: item.matches.creator_id === session.user.id }));
 
-    const pastJoined = myMatches
+    const pastJoined = validJoined
         .filter(item => new Date(item.matches.datetime) < new Date())
         .sort((a, b) => new Date(b.matches.datetime) - new Date(a.matches.datetime));
 

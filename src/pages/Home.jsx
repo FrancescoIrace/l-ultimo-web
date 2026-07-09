@@ -227,7 +227,6 @@ export default function Home({ session, isPWA }) {
     const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
     const now = new Date().getTime();
     const oneHourAgo = now - (60 * 60 * 1000);
-    const oneHourFromNow = now + (60 * 60 * 1000);
     const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
 
     if (showTodayMatches) {
@@ -237,10 +236,10 @@ export default function Home({ session, isPWA }) {
         return matchTimestamp >= startOfToday.getTime() && matchTimestamp < oneHourAgo;
       });
     } else if (showOngoingMatches) {
-      // Mostra solo partite in corso: ±1 ora rispetto ad ora
+      // Mostra solo partite in corso: già iniziate (max 1h fa) e non ancora finite
       filtered = filtered.filter((match) => {
         const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+        return matchTimestamp >= oneHourAgo && matchTimestamp <= now;
       });
     } else {
       // Default: partite future + in corso (non ancora concluse)
@@ -264,7 +263,6 @@ export default function Home({ session, isPWA }) {
     const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
     const now = new Date().getTime();
     const oneHourAgo = now - (60 * 60 * 1000);
-    const oneHourFromNow = now + (60 * 60 * 1000);
     const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
 
     let filtered = baseList;
@@ -276,7 +274,7 @@ export default function Home({ session, isPWA }) {
     } else if (showOngoingMatches) {
       filtered = filtered.filter((match) => {
         const matchTimestamp = parseLocalDatetime(match.datetime);
-        return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+        return matchTimestamp >= oneHourAgo && matchTimestamp <= now;
       });
     } else {
       filtered = filtered.filter((match) => {
@@ -324,7 +322,6 @@ export default function Home({ session, isPWA }) {
     const parseLocalDatetime = (dt) => new Date(dt.replace(' ', 'T')).getTime();
     const now = new Date().getTime();
     const oneHourAgo = now - (60 * 60 * 1000);
-    const oneHourFromNow = now + (60 * 60 * 1000);
     const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
 
     // Filtro giorno ha priorità sui filtri temporali
@@ -344,10 +341,10 @@ export default function Home({ session, isPWA }) {
       //   });
       // } else 
       if (showOngoingMatches) {
-        // Mostra solo partite in corso: ±1 ora rispetto ad ora
+        // Mostra solo partite in corso: già iniziate (max 1h fa) e non ancora finite
         filtered = filtered.filter((match) => {
           const matchTimestamp = parseLocalDatetime(match.datetime);
-          return matchTimestamp >= oneHourAgo && matchTimestamp <= oneHourFromNow;
+          return matchTimestamp >= oneHourAgo && matchTimestamp <= now;
         });
       } else {
         // Default: partite future + in corso (non ancora concluse)

@@ -42,6 +42,11 @@ export default function GestisciCampi({ centerId }) {
         const createPayload = {
             ...updatePayload,
             center_id: centerId,
+            // Esplicito: CenterCourtPicker.jsx filtra i campi con
+            // .eq('is_active', true) quando i giocatori scelgono un campo
+            // per una partita, quindi un campo nuovo senza questo valore
+            // rischia di non comparire mai se la colonna non ha un default.
+            is_active: true,
         };
 
         if (editingCourtId) {

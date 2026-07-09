@@ -909,7 +909,7 @@ Scopri di più qui: ${window.location.href}`;
         DTSTART:${formatICalDate(startTime)}
         DTEND:${formatICalDate(endTime)}
         SUMMARY:${match.title}
-        DESCRIPTION:${match.description.length > 64 ? `${match.description.slice(0, 64)}...` : match.description}
+        DESCRIPTION:${match.description ? (match.description.length > 64 ? `${match.description.slice(0, 64)}...` : match.description) : 'Nessuna descrizione'}
         LOCATION:${match.location}
         END:VEVENT
         END:VCALENDAR`;
@@ -1186,7 +1186,7 @@ Scopri di più qui: ${window.location.href}`;
 
                                     <div className="relative location-menu-btn mb-3">
                                         <button
-                                            onClick={() => navigate('//profile/:id'.replace(':id', match.sports_courts.center_id))}
+                                            onClick={() => navigate('//profile/:id'.replace(':id', match.sports_courts?.center_id))}
                                             className="text-slate-600 capitalize cursor-pointer hover:text-blue-600 transition-colors active:scale-95 text-left w-full flex items-center gap-2"
                                         >
                                             <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
@@ -1194,7 +1194,7 @@ Scopri di più qui: ${window.location.href}`;
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Centro Sportivo</p>
-                                                <p className="text-sm font-bold text-slate-800">{match.sports_courts.profiles.username}</p>
+                                                <p className="text-sm font-bold text-slate-800">{match.sports_courts?.profiles?.username}</p>
                                             </div>
                                         </button>
 
@@ -1235,7 +1235,7 @@ Scopri di più qui: ${window.location.href}`;
                         <div className={`mb-6 p-4 border rounded-2xl relative ${match.reservation_status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
                             <Info
                                 size={22}
-                                onClick={() => navigate('//profile/:id'.replace(':id', match.sports_courts.center_id))}
+                                onClick={() => navigate('//profile/:id'.replace(':id', match.sports_courts?.center_id))}
                                 className="cursor-pointer text-slate-600 hover:text-slate-600 transition-colors absolute top-3 right-3"
                             />
                             <h4 className={`text-sm font-black uppercase mb-3 flex items-center gap-2 ${match.reservation_status === 'rejected' ? 'text-red-700' : 'text-slate-700'}`}>
@@ -1243,10 +1243,10 @@ Scopri di più qui: ${window.location.href}`;
                             </h4>
                             <div className="mb-4 flex flex-col gap-1">
                                 <p className="text-sm font-medium text-slate-600 mb-1 tracking-tight">
-                                    Centro: <span className="font-bold text-slate-800">{match.sports_courts.profiles.username}</span>
+                                    Centro: <span className="font-bold text-slate-800">{match.sports_courts?.profiles?.username}</span>
                                 </p>
                                 <p className="text-sm font-medium text-slate-600 tracking-tight">
-                                    Campo: <span className="font-bold text-slate-800">{match.sports_courts.name}</span>
+                                    Campo: <span className="font-bold text-slate-800">{match.sports_courts?.name}</span>
                                 </p>
                             </div>
 

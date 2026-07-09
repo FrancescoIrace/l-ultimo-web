@@ -364,28 +364,6 @@ export default function Profile({ session }) {
         navigate('/login');
     };
 
-    const hasConsentToDataProcessing = Boolean(
-        profile?.data_consent ?? session.user?.user_metadata?.data_consent
-    );
-
-    const saveBusinessAddress = async (locationData) => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({
-                business_address: locationData.location,
-                lat: locationData.location_lat,
-                lng: locationData.location_lng
-            })
-            .eq('id', session.user.id);
-
-        if (!error) {
-            success("Indirizzo salvato!");
-            setIsEditingAddress(false);
-        } else {
-            showAlertError("Errore salvataggio indirizzo: " + error.message);
-        }
-    };
-
     // if (loading) return <div className="p-10 text-center uppercase font-black">Caricamento...</div>;
     if (loading && !isEditing) return <Loader variant="page" />;
 

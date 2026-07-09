@@ -34,7 +34,6 @@ export default function Auth() {
       try {
         const parsed = JSON.parse(draft);
         setEmail(parsed.email || '');
-        setPassword(parsed.password || '');
         setUsername(parsed.username || '');
         setGender(parsed.gender || '');
         setLocationData(parsed.locationData || {
@@ -53,11 +52,13 @@ export default function Auth() {
 
   useEffect(() => {
     if (!isSignUp) return;
+    // La password non va mai persistita in sessionStorage, nemmeno per la
+    // comodità di ripristinare la bozza dopo un refresh accidentale.
     sessionStorage.setItem(
       'authFormDraft',
-      JSON.stringify({ email, password, username, gender, locationData, dataConsent })
+      JSON.stringify({ email, username, gender, locationData, dataConsent })
     );
-  }, [isSignUp, email, password, username, gender, locationData, dataConsent]);
+  }, [isSignUp, email, username, gender, locationData, dataConsent]);
 
   const isUsernameTaken = async (uname) => {
     const escaped = uname.trim().replace(/[%_\\]/g, (m) => '\\' + m);

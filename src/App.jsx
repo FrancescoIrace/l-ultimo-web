@@ -263,7 +263,7 @@ function App() {
             {/* 4. Rotte comuni sempre accessibili */}
             <Route path="/match/:id" element={<MatchDetailV2 user={session.user} />} />
             <Route path="/profile" element={<Profile session={session} />} />
-            <Route path="/settings" element={<AppSettings session={session} />} />
+            <Route path="/settings" element={<AppSettings session={session} userRole={userRole} />} />
             <Route path="/admin" element={<AdminDashboard session={session} />} />
             <Route path="/profile/:id" element={<PublicProfile />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />

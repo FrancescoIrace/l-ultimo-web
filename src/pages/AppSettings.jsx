@@ -6,7 +6,7 @@ import UserLocationInput from '../components/UserLocationInput';
 import { AlertContext } from '../components/AlertComponent';
 import { Loader, ChevronRight, ShieldCheck } from 'lucide-react';
 
-export default function AppSettings({ session }) {
+export default function AppSettings({ session, userRole }) {
   const navigate = useNavigate();
   const { showAlert } = useContext(AlertContext);
   const [loading, setLoading] = useState(false);
@@ -56,21 +56,25 @@ export default function AppSettings({ session }) {
 
   const handleDeleteProfile = async () => {
     const confirmed = window.confirm(
-      'Sei sicuro di voler eliminare il profilo? Questa operazione rimuoverà i tuoi dati dal profilo e ti disconnetterà.'
+      'Sei sicuro di voler eliminare il profilo? Questa operazione è irreversibile: rimuove definitivamente il tuo account e tutti i tuoi dati, e ti disconnetterà.'
     );
     if (!confirmed) return;
 
     setLoading(true);
 
     try {
-      await supabase.from('participants').delete().eq('user_id', session.user.id);
-      await supabase.from('profiles').delete().eq('id', session.user.id);
+      // La cancellazione vera (auth.users incluso) richiede la service_role
+      // key: non può girare lato client, passa da una Edge Function che
+      // pulisce tutte le tabelle collegate e poi elimina l'account Auth.
+      const { error } = await supabase.functions.invoke('delete-own-account');
+      if (error) throw error;
+
       await supabase.auth.signOut();
       localStorage.removeItem('appSettings');
-      showAlert('Profilo eliminato. A presto!', 'success');
+      showAlert('Account eliminato. A presto!', 'success');
       navigate('/');
     } catch (error) {
-      showAlert('Errore durante la cancellazione del profilo: ' + error.message, 'error');
+      showAlert('Errore durante la cancellazione dell\'account: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -320,14 +324,23 @@ export default function AppSettings({ session }) {
 
       <section className="rounded-3xl border border-red-200 bg-red-50 p-5 ">
         <h2 className="text-xl font-bold text-red-700 mb-3">Elimina profilo</h2>
-        <p className="text-slate-700 mb-4">Questa azione rimuoverà il tuo profilo e le tue partecipazioni. Verrai disconnesso.</p>
-        <button
-          disabled={loading}
-          onClick={handleDeleteProfile}
-          className="w-full rounded-2xl bg-red-600 text-white py-3 font-bold hover:bg-red-700 transition-all disabled:opacity-50"
-        >
-          {loading ? 'Eliminazione in corso...' : 'Elimina il profilo'}
-        </button>
+        {userRole === 'center' ? (
+          <p className="text-slate-700">
+            Gli account centro non si possono eliminare da qui, perché la chiusura tocca anche le prenotazioni e i campi collegati. Scrivici a{' '}
+            <span className="font-semibold">irace.dev+ultimo@gmail.com</span> per richiedere la chiusura dell'account.
+          </p>
+        ) : (
+          <>
+            <p className="text-slate-700 mb-4">Questa azione elimina definitivamente il tuo account e tutti i tuoi dati. Verrai disconnesso.</p>
+            <button
+              disabled={loading}
+              onClick={handleDeleteProfile}
+              className="w-full rounded-2xl bg-red-600 text-white py-3 font-bold hover:bg-red-700 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Eliminazione in corso...' : 'Elimina il profilo'}
+            </button>
+          </>
+        )}
       </section>
     </div>
   );

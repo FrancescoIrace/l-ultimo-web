@@ -44,11 +44,12 @@ export default function PrivacyPolicy() {
           Quando ti registri e utilizzi l'app, raccogliamo:
         </p>
         <ul className="list-disc pl-5 text-slate-600 mt-3 space-y-2">
-          <li><strong>Identificativi:</strong> Email, Username,Cellulare e immagine profilo.</li>
+          <li><strong>Identificativi:</strong> Email, Username, Cellulare e immagine profilo.</li>
           <li><strong>Sicurezza:</strong> Password (criptata e gestita da <Link to="https://supabase.com" target="_blank" className='text-blue-600 underline' rel="noopener noreferrer">Supabase</Link>).</li>
           <li><strong>Caratteristiche:</strong> Genere e preferenze di gioco.</li>
-          <li><strong>Posizione:</strong> Coordinate geografiche (Lat/Lng) e località, usate esclusivamente per mostrarti i match vicini.</li>
-          <li><strong>Log Tecnici:</strong> Indirizzo IP e dati del browser per la prevenzione di abusi.</li>
+          <li><strong>Posizione:</strong> Coordinate geografiche (Lat/Lng) e località, usate per mostrarti i match vicini e le previsioni meteo delle tue partite.</li>
+          <li><strong>Notifiche push:</strong> Un identificativo del dispositivo/browser (endpoint), necessario per inviarti le notifiche che attivi tu stesso; puoi disattivarle in qualsiasi momento dalle Impostazioni.</li>
+          <li><strong>Log Tecnici:</strong> Indirizzo IP e dati del browser per la prevenzione di abusi, e segnalazioni automatiche di errori dell'app (senza dati personali associati).</li>
         </ul>
       </section>
 
@@ -65,16 +66,16 @@ export default function PrivacyPolicy() {
       </section>
 
       <section className="mb-8 border-t border-slate-100 pt-5">
-        <h2 className="text-xl font-bold mb-2 text-slate-800">Trasferimento e Sicurezza</h2>
+        <h2 className="text-xl font-bold mb-2 text-slate-800">Trasferimento, Sicurezza e Fornitori Terzi</h2>
         <p className="text-slate-600 leading-relaxed">
-          I dati sono ospitati su server protetti forniti da <strong>Supabase</strong> e <strong>Vercel</strong>. Tali fornitori operano in conformità alle clausole contrattuali standard dell'Unione Europea per il trasferimento dei dati extra-UE.
+          I dati sono ospitati su server protetti forniti da <strong>Supabase</strong> (database e autenticazione) e <strong>Vercel</strong> (hosting e statistiche d'uso aggregate tramite Vercel Analytics). Per le notifiche push utilizziamo <strong>Firebase Cloud Messaging (Google)</strong>. Per la ricerca di indirizzi e la visualizzazione delle mappe utilizziamo le <strong>API di Google Maps</strong>. Per le previsioni meteo delle partite utilizziamo <strong>Open-Meteo</strong> (servizio che non richiede né memorizza dati identificativi). Per il monitoraggio di errori tecnici dell'app utilizziamo <strong>Sentry</strong>, configurato per non raccogliere dati personali identificativi. Tutti questi fornitori operano in conformità alle clausole contrattuali standard dell'Unione Europea per l'eventuale trasferimento di dati extra-UE.
         </p>
       </section>
 
       <section className="mb-8">
         <h2 className="text-xl font-bold mb-2 text-slate-800">Conservazione</h2>
         <p className="text-slate-600 leading-relaxed text-justify">
-          I dati vengono conservati per l'intera durata della tua iscrizione. Qualora decidessi di eliminare il profilo, i tuoi dati personali saranno rimossi dai nostri sistemi entro 30 giorni, salvo obblighi di legge.
+          I dati vengono conservati per l'intera durata della tua iscrizione. Se elimini il profilo dalle Impostazioni, il tuo account e i tuoi dati personali vengono rimossi immediatamente dai nostri sistemi (salvo il contenuto di eventuali backup di sicurezza, cancellati secondo il normale ciclo di rotazione, e i casi in cui la legge ci obbliga a conservare specifiche informazioni).
         </p>
       </section>
 

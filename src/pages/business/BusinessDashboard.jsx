@@ -342,6 +342,51 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
         setProcessingId(matchId); // Inizia caricamento (mostra spinner sul bottone)
 
         try {
+            // Prima di confermare, verifichiamo che nessun'altra partita sia
+            // già confermata sullo stesso campo in un orario che si
+            // sovrappone (ogni partita occupa 1 ora, come isMatchFinished in
+            // MatchDetailV2.jsx). Senza questo controllo un centro poteva
+            // accettare due richieste in conflitto sullo stesso campo/slot.
+            if (isConfirming) {
+                const { data: targetMatch, error: targetError } = await supabase
+                    .from('matches')
+                    .select('court_id, datetime')
+                    .eq('id', matchId)
+                    .single();
+
+                if (targetError) throw targetError;
+
+                if (targetMatch?.court_id) {
+                    const ONE_HOUR_MS = 60 * 60 * 1000;
+                    const start = new Date(targetMatch.datetime);
+                    // La colonna datetime è "timestamp without time zone" e viene
+                    // trattata ovunque nell'app come ora locale ingenua (vedi
+                    // formatDatetimeForTimestamp): NON usare toISOString(), che
+                    // convertirebbe in UTC e sfaserebbe il confronto.
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const toDbFormat = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                    const windowStart = toDbFormat(new Date(start.getTime() - ONE_HOUR_MS + 1000));
+                    const windowEnd = toDbFormat(new Date(start.getTime() + ONE_HOUR_MS - 1000));
+
+                    const { data: conflicting, error: conflictError } = await supabase
+                        .from('matches')
+                        .select('id, title')
+                        .eq('court_id', targetMatch.court_id)
+                        .eq('reservation_status', 'confirmed')
+                        .neq('id', matchId)
+                        .gte('datetime', windowStart)
+                        .lte('datetime', windowEnd);
+
+                    if (conflictError) throw conflictError;
+
+                    if (conflicting && conflicting.length > 0) {
+                        error(`Questo campo ha già una prenotazione confermata (${conflicting[0].title || 'un\'altra partita'}) in un orario che si sovrappone. Rifiuta prima quella o proponi un altro slot.`);
+                        setProcessingId(null);
+                        return;
+                    }
+                }
+            }
+
             // Preparo l'oggetto per l'update
             const updatePayload = { reservation_status: newStatus };
             if (newStatus === 'rejected') {

@@ -73,4 +73,6 @@ if (error) {
 }
 
 console.log('✅ FCM_PRIVATE_KEY inserted successfully!');
-console.log(`📊 Inserted row: ${JSON.stringify(data, null, 2)}`);
+// Non stampare `data`: contiene il valore appena inserito (la chiave privata
+// in chiaro). Logghiamo solo metadati non sensibili.
+console.log(`📊 Row id: ${data?.[0]?.id}, updated_at: ${data?.[0]?.updated_at}`);

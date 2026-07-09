@@ -364,6 +364,38 @@ export default function CreateMatch() {
             return;
         }
 
+        // Se il centro ha già accettato (o sta valutando) la prenotazione sul
+        // campo attuale, l'orario non è modificabile da qui: cambiarlo
+        // silenziosamente lascerebbe la prenotazione "confermata" su un
+        // orario che il centro non ha mai approvato. Va usato il flusso
+        // dedicato "Richiedi modifica orario" (RescheduleRequestModal), che
+        // avvisa il centro e aspetta una risposta. Il controllo lato UI
+        // (input disabilitato quando isCourtLocked) può essere aggirato da
+        // uno stato client non aggiornato, quindi lo verifichiamo di nuovo
+        // qui contro l'ultimo stato noto della partita.
+        const courtChanged = (formData.court_id || null) !== (originalMatch?.court_id || null);
+        const wasLocked = !!originalMatch?.court_id &&
+            (originalMatch?.reservation_status === 'requested' || originalMatch?.reservation_status === 'confirmed');
+        if (!courtChanged && wasLocked && originalMatch?.datetime !== formData.datetime) {
+            error("Non puoi cambiare l'orario di una partita con una prenotazione già inviata o confermata. Usa \"Richiedi modifica orario\" dalla pagina della partita.");
+            setLoading(false);
+            return;
+        }
+
+        // Se stiamo agganciando un campo nuovo (o diverso da quello di
+        // partenza), verifichiamo che il centro sia aperto in quel giorno e
+        // orario, come già avviene in creazione.
+        if (courtChanged && formData.court_id && selectedCenter) {
+            const { isValid, isClosed, message } = await validateBookingTime(supabase, formData.datetime, selectedCenter);
+            if (!isValid) {
+                const targetCenterObj = centers.find(c => c.id === selectedCenter);
+                const nomeCampo = targetCenterObj ? (targetCenterObj.full_name || targetCenterObj.username) : "Il centro";
+                error(isClosed ? `Impossibile salvare, ${nomeCampo} è chiuso in questo giorno` : message);
+                setLoading(false);
+                return;
+            }
+        }
+
         const formattedDatetime = formatDatetimeForTimestamp(formData.datetime);
 
         // const date = new Date(formData.datetime.replace(' ', 'T'));
@@ -385,12 +417,12 @@ export default function CreateMatch() {
             description: formData.description,
             team_id: formData.team_id || null,
             court_id: formData.court_id || null,
+            max_players: formData.max_players,
         };
 
         // Se il campo è stato aggiunto, rimosso o cambiato, avviamo/azzeriamo
         // il ciclo di richiesta al centro sportivo. Se il campo non cambia,
         // non tocchiamo lo stato (es. una richiesta già inviata resta tale).
-        const courtChanged = (formData.court_id || null) !== (originalMatch?.court_id || null);
         if (courtChanged) {
             updatePayload.reservation_status = formData.court_id ? 'draft' : 'none';
             updatePayload.request_count = 0;
@@ -524,13 +556,19 @@ export default function CreateMatch() {
                             min={getMinDatetimeLocal()}
                             step="1800" // Mostra intervalli di 30 minuti sulla ghiera nativa
                             required
-                            className="w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800"
+                            disabled={isCourtLocked}
+                            className={`w-full p-3.5 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-slate-800 ${isCourtLocked ? 'bg-slate-100 border-slate-100 opacity-60 cursor-not-allowed' : ''}`}
                             value={formData.datetime || ''}
                             onChange={(e) => {
                                 const roundedValue = roundToHalfHour(e.target.value);
                                 setFormData({ ...formData, datetime: roundedValue });
                             }}
                         />
+                        {isCourtLocked && (
+                            <p className="text-[11px] text-slate-400 mt-2 leading-snug">
+                                Non modificabile: usa "Richiedi modifica orario" dalla pagina della partita per proporre un nuovo orario al centro.
+                            </p>
+                        )}
                     </div>
 
                     {/* GIOCATORI TOTALI */}

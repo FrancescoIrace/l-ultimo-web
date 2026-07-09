@@ -45,6 +45,9 @@ export default function TeamDetail({ session }) {
         secondary_color: '#1e40af'
     });
     const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordInput, setPasswordInput] = useState('');
+    const [verifyingPassword, setVerifyingPassword] = useState(false);
     const { success, error, confirm } = useAlert();
 
     const loadTeamDetails = async () => {
@@ -52,10 +55,11 @@ export default function TeamDetail({ session }) {
         setLoading(true);
 
         try {
-            // Carica i dettagli della squadra
+            // Carica i dettagli della squadra (mai la colonna password: la
+            // verifica per le squadre private passa dalla RPC verify_team_password)
             const { data: teamData, error: teamError } = await supabase
                 .from('teams')
-                .select('*')
+                .select('id, name, description, logo_url, invite_code, created_by, is_private, sport, citta, primary_color, secondary_color, created_at')
                 .eq('id', teamId)
                 .single();
 
@@ -297,12 +301,9 @@ export default function TeamDetail({ session }) {
         }
     };
 
-    const handleJoinTeam = async () => {
-        if (!userId) {
-            error('Devi essere loggato');
-            return;
-        }
-
+    // Inserimento effettivo in team_members (nessun controllo password: va
+    // fatto prima di chiamare questa funzione, vedi handleJoinTeam)
+    const performJoinTeam = async () => {
         try {
             setIsLoadingAction(true);
             const { error: joinError } = await supabase
@@ -323,6 +324,54 @@ export default function TeamDetail({ session }) {
             error('Errore nell\'unirsi alla squadra: ' + err.message);
         } finally {
             setIsLoadingAction(false);
+        }
+    };
+
+    const handleJoinTeam = async () => {
+        if (!userId) {
+            error('Devi essere loggato');
+            return;
+        }
+
+        // Squadra privata: chiedi la password prima di unirti
+        if (teamDetails.is_private) {
+            setPasswordInput('');
+            setShowPasswordModal(true);
+            return;
+        }
+
+        await performJoinTeam();
+    };
+
+    // Verifica password (lato server, via RPC) e unisce al team
+    const handleVerifyPassword = async () => {
+        if (!passwordInput.trim()) {
+            error('Inserisci la password');
+            return;
+        }
+
+        setVerifyingPassword(true);
+        try {
+            const { data: isCorrect, error: verifyErr } = await supabase.rpc('verify_team_password', {
+                p_team_id: teamId,
+                p_password: passwordInput
+            });
+
+            if (verifyErr) throw verifyErr;
+
+            if (!isCorrect) {
+                error('❌ Password errata!');
+                setPasswordInput('');
+                return;
+            }
+
+            await performJoinTeam();
+            setShowPasswordModal(false);
+            setPasswordInput('');
+        } catch (err) {
+            error('Errore nell\'unirsi alla squadra: ' + err.message);
+        } finally {
+            setVerifyingPassword(false);
         }
     };
 
@@ -875,6 +924,71 @@ export default function TeamDetail({ session }) {
                                         </>
                                     )}
                                 </motion.button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )
+            }
+
+            {/* MODALE PASSWORD SQUADRA PRIVATA */}
+            {
+                showPasswordModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-end z-50">
+                        <motion.div
+                            initial={{ y: 300, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 300, opacity: 0 }}
+                            className="w-full max-w-md mx-auto bg-white rounded-t-3xl p-6 space-y-4"
+                        >
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800">🔒 Squadra Privata</h2>
+                                <p className="text-sm text-slate-500 mt-2">
+                                    La squadra <strong>"{teamDetails.name}"</strong> è protetta da password
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                                    Inserisci Password (max 6 caratteri)
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Es: ABC123"
+                                    maxLength={6}
+                                    value={passwordInput}
+                                    onChange={(e) => setPasswordInput(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleVerifyPassword()}
+                                    className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center font-bold text-lg tracking-widest"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowPasswordModal(false);
+                                        setPasswordInput('');
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-all active:scale-95"
+                                >
+                                    Annulla
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleVerifyPassword}
+                                    disabled={verifyingPassword || !passwordInput.trim()}
+                                    className="flex-1 px-4 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl font-bold text-sm hover:shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {verifyingPassword ? (
+                                        <>
+                                            <Loader variant="inline" size={16} color="white" />
+                                            Verifica...
+                                        </>
+                                    ) : (
+                                        <>🔓 Sblocca</>
+                                    )}
+                                </button>
                             </div>
                         </motion.div>
                     </div>

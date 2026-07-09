@@ -148,8 +148,8 @@ export function NotificationBell({ userId }) {
 
     if (notification.link) {
       navigate(notification.link);
-      setIsOpen(false);
     }
+    setIsOpen(false);
   };
 
   return (
@@ -264,11 +264,7 @@ export function NotificationBell({ userId }) {
                       return (
                         <li
                           key={notification.id}
-                          onClick={() => {
-                            markAsRead(notification.id);
-                            navigate(notification.link);
-                            setIsOpen(false);
-                          }}
+                          onClick={() => handleNotificationClick(notification)}
                           className={`p-4 ${styles.hover} transition-colors cursor-pointer ${!notification.is_read ? 'bg-slate-50/50' : ''}`}
                         >
                           <div className="flex items-start gap-3">

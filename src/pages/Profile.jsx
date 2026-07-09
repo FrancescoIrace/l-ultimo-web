@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
@@ -25,6 +25,12 @@ export default function Profile({ session }) {
     const [friendCount, setFriendCount] = useState(0);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     const [squads, setSquads] = useState([]);
+
+    // Avatar: il file compresso resta "in sospeso" (solo anteprima locale)
+    // finche' non si preme Salva, cosi' Annulla non lascia comunque cambiato
+    // lo storage pubblico prima di una conferma esplicita.
+    const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+    const pendingAvatarPreviewRef = useRef(null);
 
     // Stato per il form di modifica
     const [editData, setEditData] = useState({
@@ -242,6 +248,28 @@ export default function Profile({ session }) {
             }
         }
 
+        // Se è stata scelta una nuova foto, la carichiamo su Storage solo ora
+        // (a conferma avvenuta): fino a questo momento esisteva solo come
+        // anteprima locale (blob: URL), mai vista da nessun altro utente.
+        let avatarUrlToSave = editData.avatar_url;
+        if (pendingAvatarFile) {
+            const fileName = `${session.user.id}/avatar.png`;
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, pendingAvatarFile, { upsert: true });
+
+            if (uploadError) {
+                showAlertError("Errore caricamento immagine: " + uploadError.message);
+                setLoading(false);
+                return;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+            avatarUrlToSave = `${publicUrl}?t=${Date.now()}`;
+        }
+
         const { error } = await supabase
             .from('profiles')
             .update({
@@ -254,7 +282,7 @@ export default function Profile({ session }) {
                 location_lat: editData.location_lat ? parseFloat(editData.location_lat) : null,
                 location_lng: editData.location_lng ? parseFloat(editData.location_lng) : null,
                 updated_at: new Date(),
-                avatar_url: editData.avatar_url,
+                avatar_url: avatarUrlToSave,
                 favorite_sport: editData.favorite_sport,
                 cellulare: cleanCellulare || null,
                 business_address: editData.business_address,
@@ -268,64 +296,64 @@ export default function Profile({ session }) {
             showAlertError(isUsernameConflict ? 'Username già in uso, scegline un altro.' : "Errore nell'aggiornamento: " + error.message);
         } else {
             success("Profilo aggiornato con successo!");
+            if (pendingAvatarPreviewRef.current) {
+                URL.revokeObjectURL(pendingAvatarPreviewRef.current);
+                pendingAvatarPreviewRef.current = null;
+            }
+            setPendingAvatarFile(null);
             // setIsEditing(false);
             // fetchAllData(); // Ricarica i dati aggiornati
-            setProfile({ ...profile, ...editData });
+            setProfile({ ...profile, ...editData, avatar_url: avatarUrlToSave });
+            setEditData(prev => ({ ...prev, avatar_url: avatarUrlToSave }));
             setIsEditing(false);
         }
         setLoading(false);
     };
 
+    // Scarta l'anteprima locale della foto (se presente) senza toccare lo
+    // Storage: usata dai due bottoni "Annulla" del form di modifica.
+    const discardPendingAvatar = () => {
+        if (pendingAvatarPreviewRef.current) {
+            URL.revokeObjectURL(pendingAvatarPreviewRef.current);
+            pendingAvatarPreviewRef.current = null;
+        }
+        setPendingAvatarFile(null);
+        setEditData(prev => ({ ...prev, avatar_url: profile?.avatar_url ?? null }));
+    };
+
+    // Comprime l'immagine e la tiene solo in anteprima locale (blob: URL):
+    // l'upload vero su Storage avviene solo al momento del Salva, cosi'
+    // Annulla non lascia comunque cambiata la foto pubblica.
     const uploadAvatar = async (event) => {
         try {
             setLoading(true);
-            const originalFile = event.target.files[0]; // Usiamo un nome chiaro
+            const originalFile = event.target.files[0];
 
             if (!originalFile) return;
 
-            // Opzioni di compressione
             const options = {
                 maxSizeMB: 0.5,
                 maxWidthOrHeight: 500,
                 useWebWorker: true
             };
 
-            // Creiamo una NUOVA variabile per il file compresso
             const compressedFile = await imageCompression(originalFile, options);
 
-            // Usiamo un nome fisso per l'utente, così ogni upload sovrascrive il precedente
-            // Esempio: "ID_UTENTE/avatar.png"
-            const fileName = `${session.user.id}/avatar.png`;
-            // 1. Upload del file COMPRESSO
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(fileName, compressedFile, {
-                    upsert: true // <--- FONDAMENTALE: permette di sovrascrivere il file esistente
-                });
-            if (uploadError) throw uploadError;
+            // Revoca l'anteprima precedente prima di sostituirla, per non
+            // accumulare blob URL non liberati in memoria
+            if (pendingAvatarPreviewRef.current) {
+                URL.revokeObjectURL(pendingAvatarPreviewRef.current);
+            }
+            const previewUrl = URL.createObjectURL(compressedFile);
+            pendingAvatarPreviewRef.current = previewUrl;
 
-            // 2. Ottieni l'URL pubblico
-            const { data: { publicUrl } } = supabase.storage
-                .from('avatars')
-                .getPublicUrl(fileName);
-
-            // Aggiungiamo ?t=timestamp per forzare il browser a mostrare la nuova immagine 
-            // anche se il nome del file è identico
-            const finalUrl = `${publicUrl}?t=${Date.now()}`;
-
-            // SALVA NELLO STATO L'URL PULITO
+            setPendingAvatarFile(compressedFile);
             setEditData(prev => ({
                 ...prev,
-                avatar_url: publicUrl
+                avatar_url: previewUrl
             }));
-
-            // 3. Aggiorna lo stato per l'anteprima
-            // setEditData({ ...editData, avatar_url: finalUrl });
-
-            success("Immagine caricata con successo!");
-
         } catch (error) {
-            showAlertError("Errore caricamento immagine: " + error.message);
+            showAlertError("Errore nella preparazione dell'immagine: " + error.message);
         } finally {
             setLoading(false);
         }
@@ -425,7 +453,10 @@ export default function Profile({ session }) {
                                         {editData.avatar_url ? (
                                             <img
                                                 // src={editData.avatar_url}
-                                                src={`${editData.avatar_url}?t=${Date.now()}`} // Il timestamp lo mettiamo solo qui!
+                                                // Niente query string di cache-bust qui: editData.avatar_url puo'
+                                                // essere un blob: URL locale (anteprima non ancora salvata), che
+                                                // smetterebbe di funzionare se gli si appende ?t=...
+                                                src={editData.avatar_url}
                                                 className="w-full h-full object-cover"
                                                 alt="Anteprima avatar"
                                                 referrerPolicy="no-referrer"
@@ -583,7 +614,7 @@ export default function Profile({ session }) {
                                 <div className="flex gap-3 pt-4">
                                     <button
                                         type="button"
-                                        onClick={() => setIsEditing(false)}
+                                        onClick={() => { discardPendingAvatar(); setIsEditing(false); }}
                                         className="flex-1 p-3 uppercase cursor-pointer bg-slate-100 text-slate-600 border border-slate-600 rounded-2xl font-bold shadow-lg shadow-black-200 hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         Annulla
@@ -864,7 +895,9 @@ export default function Profile({ session }) {
                                     <div className="w-20 h-20 bg-slate-200 rounded-full mb-3 overflow-hidden border-2 border-blue-500">
                                         {editData.avatar_url ? (
                                             <img
-                                                src={`${editData.avatar_url}?t=${Date.now()}`}
+                                                // Niente cache-bust: editData.avatar_url puo' essere un blob: URL
+                                                // locale (anteprima non ancora salvata)
+                                                src={editData.avatar_url}
                                                 className="w-full h-full object-cover"
                                                 alt="Anteprima avatar"
                                                 referrerPolicy="no-referrer"
@@ -1005,7 +1038,7 @@ export default function Profile({ session }) {
                                 <div className="flex gap-3 pt-4">
                                     <button
                                         type="button"
-                                        onClick={() => setIsEditing(false)}
+                                        onClick={() => { discardPendingAvatar(); setIsEditing(false); }}
                                         className="flex-1 p-4 uppercase cursor-pointer bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all active:scale-95"
                                     >
                                         Annulla

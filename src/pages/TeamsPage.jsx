@@ -134,7 +134,6 @@ export default function TeamsPage({ session }) {
         invite_code,
         created_by,
         is_private,
-        password,
         sport,
         citta,
         primary_color,
@@ -194,23 +193,28 @@ export default function TeamsPage({ session }) {
         await performJoinTeam(team);
     };
 
-    // Verifica password e unisce al team
+    // Verifica password (lato server, via RPC) e unisce al team
     const handleVerifyPassword = async () => {
-        // console.log('Verifying password for team:', selectedTeamForPassword.password);
-        // console.log('Entered password:', passwordInput);
         if (!passwordInput.trim()) {
             error('Inserisci la password');
             return;
         }
 
-        if (passwordInput !== selectedTeamForPassword.password) {
-            error('❌ Password errata!');
-            setPasswordInput('');
-            return;
-        }
-
         setVerifyingPassword(true);
         try {
+            const { data: isCorrect, error: verifyErr } = await supabase.rpc('verify_team_password', {
+                p_team_id: selectedTeamForPassword.id,
+                p_password: passwordInput
+            });
+
+            if (verifyErr) throw verifyErr;
+
+            if (!isCorrect) {
+                error('❌ Password errata!');
+                setPasswordInput('');
+                return;
+            }
+
             await performJoinTeam(selectedTeamForPassword);
             setShowPasswordModal(false);
             setPasswordInput('');

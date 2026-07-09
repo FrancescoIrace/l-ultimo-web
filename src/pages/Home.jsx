@@ -26,6 +26,7 @@ export default function Home({ session, isPWA }) {
   const [showTodayMatches, setShowTodayMatches] = useState(false);
   const [selectedSport, setSelectedSport] = useState(''); // Nuovo: filtro sport
   const [selectedDay, setSelectedDay] = useState(''); // Nuovo: filtro giorno
+  const [showOnlyMyMatches, setShowOnlyMyMatches] = useState(false); // Solo le partite create da me
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -362,13 +363,20 @@ export default function Home({ session, isPWA }) {
       );
     }
 
+    // Solo le partite create da me (combinato con il filtro temporale sopra,
+    // che di default esclude già le partite passate: risultato "prossime
+    // partite create da me")
+    if (showOnlyMyMatches) {
+      filtered = filtered.filter((match) => match.creator_id === session.user.id);
+    }
+
     if (!searchQuery.trim()) return filtered;
 
     const normalizedSearch = normalizeSearch(searchQuery);
     return filtered.filter((match) =>
       normalizeSearch(match.title || '').includes(normalizedSearch)
     );
-  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedSport, selectedDay]);
+  }, [matches, nearbyMatches, showNearby, distances, searchQuery, showOngoingMatches, showTodayMatches, selectedSport, selectedDay, showOnlyMyMatches, session.user.id]);
 
   if (isPWA) {
     return <PWADashboard user={session.user} onLogout={() => supabase.auth.signOut()} />;
@@ -405,6 +413,8 @@ export default function Home({ session, isPWA }) {
         matchesFoundCount={matchList.length}
         selectedDay={selectedDay}
         onDayChange={setSelectedDay}
+        showOnlyMyMatches={showOnlyMyMatches}
+        onShowOnlyMyMatchesChange={setShowOnlyMyMatches}
       />
 
       {(loading || geoLoading) ? (

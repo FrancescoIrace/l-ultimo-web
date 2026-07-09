@@ -65,12 +65,24 @@ export default function ModalOrari({ isOpen, onClose, centerId }) {
         {/* Lista Giorni */}
         <div className="p-6 overflow-y-auto space-y-4">
           {hours.map((item, index) => (
-            <div key={index} className="flex items-center justify-between gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100 ">
-              <span className="font-bold text-slate-700 w-24">{days[item.day_of_week]}</span>
-              
+            <div key={index} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-slate-700">{days[item.day_of_week]}</span>
+                <button
+                  onClick={() => {
+                    const newHours = [...hours];
+                    newHours[index].is_closed = !newHours[index].is_closed;
+                    setHours(newHours);
+                  }}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase transition-colors ${item.is_closed ? 'bg-red-100 text-red-600 ' : 'bg-green-100 text-green-600 '}`}
+                >
+                  {item.is_closed ? 'Chiuso' : 'Aperto'}
+                </button>
+              </div>
+
               <div className="flex items-center gap-2">
-                <input 
-                  type="time" 
+                <input
+                  type="time"
                   value={item.open_time}
                   disabled={item.is_closed}
                   onChange={(e) => {
@@ -78,11 +90,11 @@ export default function ModalOrari({ isOpen, onClose, centerId }) {
                     newHours[index].open_time = e.target.value;
                     setHours(newHours);
                   }}
-                  className="bg-white border rounded-lg p-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 "
+                  className="w-full min-w-0 flex-1 bg-white border rounded-lg p-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
-                <span className="text-slate-400 ">-</span>
-                <input 
-                  type="time" 
+                <span className="flex-shrink-0 text-slate-400">-</span>
+                <input
+                  type="time"
                   value={item.close_time}
                   disabled={item.is_closed}
                   onChange={(e) => {
@@ -90,20 +102,9 @@ export default function ModalOrari({ isOpen, onClose, centerId }) {
                     newHours[index].close_time = e.target.value;
                     setHours(newHours);
                   }}
-                  className="bg-white border rounded-lg p-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 "
+                  className="w-full min-w-0 flex-1 bg-white border rounded-lg p-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
               </div>
-
-              <button 
-                onClick={() => {
-                  const newHours = [...hours];
-                  newHours[index].is_closed = !newHours[index].is_closed;
-                  setHours(newHours);
-                }}
-                className={`px-3 py-1 rounded-full text-[10px] font-black uppercase transition-colors ${item.is_closed ? 'bg-red-100 text-red-600 ' : 'bg-green-100 text-green-600 '}`}
-              >
-                {item.is_closed ? 'Chiuso' : 'Aperto'}
-              </button>
             </div>
           ))}
         </div>

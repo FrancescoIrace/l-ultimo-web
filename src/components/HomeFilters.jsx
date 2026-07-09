@@ -39,6 +39,8 @@ export default function HomeFilters({
     onDayChange,
     sportsCounts = {},
     matchesFoundCount = 0,
+    showOnlyMyMatches,
+    onShowOnlyMyMatchesChange,
 }) {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [searchValue, setSearchValue] = useState(searchQuery);
@@ -197,6 +199,26 @@ export default function HomeFilters({
             {/* Collapsible Filters */}
             {isFilterOpen && (
                 <div className="rounded-2xl bg-white border border-slate-200 p-4 mb-3 space-y-4 shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* Toggle: Only Matches Created By Me */}
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-semibold text-slate-700">Solo le mie partite create</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Prossime partite di cui sei organizzatore</p>
+                        </div>
+                        <button
+                            onClick={() => onShowOnlyMyMatchesChange(!showOnlyMyMatches)}
+                            className={`relative w-12 h-7 rounded-full transition-colors ${showOnlyMyMatches ? 'bg-blue-600' : 'bg-slate-300'
+                                }`}
+                        >
+                            <div
+                                className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform shadow-sm ${showOnlyMyMatches ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="border-t border-slate-200" />
+
                     {/* Toggle: Only Ongoing Matches */}
                     {/* <div className="flex items-center justify-between">
                         <div>
@@ -434,10 +456,11 @@ export default function HomeFilters({
             )}
 
             {/* Info Message when filters are available */}
-            {!isFilterOpen && (showOngoingMatches || showTodayMatches) && (
+            {!isFilterOpen && (showOngoingMatches || showTodayMatches || showOnlyMyMatches) && (
                 <div className="text-xs text-blue-600 font-medium">
                     {showOngoingMatches && '⏱️ Mostrando solo partite in corso'}
                     {showTodayMatches && '📅 Mostrando solo partite concluse oggi'}
+                    {showOnlyMyMatches && '🙋 Mostrando solo le tue partite create'}
                 </div>
             )}
         </div>

@@ -8,7 +8,7 @@ import { useAlert } from '../../components/AlertComponent';
 
 export default function GestisciCampi({ centerId }) {
     const [courts, setCourts] = useState([]);
-    const [newCourt, setNewCourt] = useState({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true });
+    const [newCourt, setNewCourt] = useState({ name: '', sport_type: 'Calcio', price_p_p: '', isOutdoor: true });
     const [openAdd, setOpenAdd] = useState(false);
     const [editingCourtId, setEditingCourtId] = useState(null);
     const { alert, success, error, confirm, confirmDangerous } = useAlert();
@@ -56,7 +56,7 @@ export default function GestisciCampi({ centerId }) {
                 .eq('id', editingCourtId);
 
             if (!err) {
-                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
+                setNewCourt({ name: '', sport_type: 'Calcio', price_p_p: '', isOutdoor: true, hasCamera: false });
                 setEditingCourtId(null);
                 setOpenAdd(false);
                 fetchCourts();
@@ -70,7 +70,7 @@ export default function GestisciCampi({ centerId }) {
                 .insert([createPayload]);
 
             if (!err) {
-                setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
+                setNewCourt({ name: '', sport_type: 'Calcio', price_p_p: '', isOutdoor: true, hasCamera: false });
                 setOpenAdd(false);
                 fetchCourts();
                 success('Campo creato!');
@@ -120,7 +120,7 @@ export default function GestisciCampi({ centerId }) {
                     value={newCourt.sport_type}
                     onChange={e => setNewCourt({ ...newCourt, sport_type: e.target.value })}
                 >
-                    <option value="Calcio a 5">Calcio a 5</option>
+                    <option value="Calcio">Calcio</option>
                     <option value="Padel">Padel</option>
                     <option value="Basket">Basket</option>
                     <option value="Tennis">Tennis</option>
@@ -165,7 +165,7 @@ export default function GestisciCampi({ centerId }) {
                 <button
                     onClick={() => {
                         setEditingCourtId(null);
-                        setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
+                        setNewCourt({ name: '', sport_type: 'Calcio', price_p_p: '', isOutdoor: true, hasCamera: false });
                         setOpenAdd(false);
                     }}
                     className="w-full text-slate-500 font-bold p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors text-sm"
@@ -191,11 +191,11 @@ export default function GestisciCampi({ centerId }) {
                         if (openAdd) {
                             setOpenAdd(false);
                             setEditingCourtId(null);
-                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
+                            setNewCourt({ name: '', sport_type: 'Calcio', price_p_p: '', isOutdoor: true, hasCamera: false });
                         } else {
                             setOpenAdd(true);
                             setEditingCourtId(null);
-                            setNewCourt({ name: '', sport_type: 'Calcio a 5', price_p_p: '', isOutdoor: true, hasCamera: false });
+                            setNewCourt({ name: '', sport_type: 'Calcio', price_p_p: '', isOutdoor: true, hasCamera: false });
                         }
                     }}
                     className={`lg:hidden ${openAdd ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'} text-white p-3 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all`}

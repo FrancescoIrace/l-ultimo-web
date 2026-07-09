@@ -82,14 +82,20 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
     }
 
     async function fetchOrganizerMessages() {
+        // Serve entrambe le direzioni: solo recipient_id = centro mostrava
+        // esclusivamente i messaggi ricevuti, quindi il riepilogo restava
+        // fermo all'ultimo messaggio dell'organizzatore anche dopo che il
+        // centro aveva risposto (la sua risposta, con sender_id = centro,
+        // non veniva mai inclusa).
         const { data, error } = await supabase
             .from('match_messages')
             .select(`
-                id, match_id, sender_id, content, created_at, read_at,
+                id, match_id, sender_id, recipient_id, content, created_at, read_at,
                 matches ( title, sport, datetime, sports_courts ( name ) ),
-                sender:sender_id ( username, full_name )
+                sender:sender_id ( username, full_name ),
+                recipient:recipient_id ( username, full_name )
             `)
-            .eq('recipient_id', user.id)
+            .or(`recipient_id.eq.${user.id},sender_id.eq.${user.id}`)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -1341,16 +1347,24 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                         ) : (
                             <div className="space-y-2">
                                 {organizerMessages.map(m => {
-                                    const unread = !m.read_at;
-                                    const senderName = m.sender?.full_name || m.sender?.username || 'Organizzatore';
+                                    // Il thread è identificato dall'organizzatore (l'altra parte),
+                                    // non da chi ha scritto per ultimo: se l'ultimo messaggio è
+                                    // una risposta del centro, sender_id è il centro stesso.
+                                    const sentByMe = m.sender_id === user.id;
+                                    const organizerProfile = sentByMe ? m.recipient : m.sender;
+                                    const organizerId = sentByMe ? m.recipient_id : m.sender_id;
+                                    const organizerName = organizerProfile?.full_name || organizerProfile?.username || 'Organizzatore';
+                                    // "Non letto" ha senso solo se l'ultimo a scrivere è stato
+                                    // l'organizzatore: se è il centro, non c'è nulla di nuovo da leggere.
+                                    const unread = !sentByMe && !m.read_at;
                                     const matchInfo = m.matches;
                                     return (
                                         <button
                                             key={m.match_id}
                                             onClick={() => setActiveMessageThread({
                                                 matchId: m.match_id,
-                                                otherUserId: m.sender_id,
-                                                otherUserName: senderName,
+                                                otherUserId: organizerId,
+                                                otherUserName: organizerName,
                                                 matchLabel: matchInfo
                                                     ? `${matchInfo.sport} — ${new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — ${matchInfo.sports_courts?.name || ''}`
                                                     : '',
@@ -1358,7 +1372,7 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                             className={`w-full text-left p-4 rounded-2xl border transition-colors ${unread ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
                                         >
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className="font-bold text-slate-800 text-sm truncate">{senderName}</span>
+                                                <span className="font-bold text-slate-800 text-sm truncate">{organizerName}</span>
                                                 {unread && <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />}
                                             </div>
                                             {matchInfo && (
@@ -1366,7 +1380,7 @@ export default function BusinessDashboard({ user, name, isSupported, isSubscribe
                                                     {matchInfo.sport} — {new Date(matchInfo.datetime).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} — {matchInfo.sports_courts?.name}
                                                 </p>
                                             )}
-                                            <p className="text-xs text-slate-600 mt-1 truncate">{m.content}</p>
+                                            <p className="text-xs text-slate-600 mt-1 truncate">{sentByMe ? 'Tu: ' : ''}{m.content}</p>
                                         </button>
                                     );
                                 })}

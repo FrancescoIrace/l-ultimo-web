@@ -339,7 +339,7 @@ export default function AppSettings({ session, userRole }) {
         {userRole === 'center' ? (
           <p className="text-slate-700">
             Gli account centro non si possono eliminare da qui, perché la chiusura tocca anche le prenotazioni e i campi collegati. Scrivici a{' '}
-            <span className="font-semibold">irace.dev+ultimo@gmail.com</span> per richiedere la chiusura dell'account.
+            <span className="font-semibold">info@lultimo.app</span> per richiedere la chiusura dell'account.
           </p>
         ) : (
           <>

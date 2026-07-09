@@ -34,7 +34,7 @@ export default function PrivacyPolicy() {
       <section className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm">
         <h2 className="text-lg font-bold mb-2">Titolare del Trattamento</h2>
         <p className="text-slate-600 leading-relaxed">
-          Il titolare del trattamento è <strong>L'ULTIMO</strong>. Per qualsiasi richiesta relativa alla privacy, puoi scriverci a: <span className="text-blue-600 font-medium">irace.dev+ultimo@gmail.com</span>
+          Il titolare del trattamento è <strong>L'ULTIMO</strong>. Per qualsiasi richiesta relativa alla privacy, puoi scriverci a: <span className="text-blue-600 font-medium">info@lultimo.app</span>
         </p>
       </section>
 

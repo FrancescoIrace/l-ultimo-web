@@ -102,7 +102,7 @@ export default function TermsOfService() {
         <h2 className="text-xl font-bold mb-2 text-slate-800">Legge applicabile e contatti</h2>
         <p className="text-slate-600 leading-relaxed">
           Questi Termini sono regolati dalla legge italiana. Per qualsiasi domanda scrivici a{' '}
-          <span className="text-blue-600 font-medium">irace.dev+ultimo@gmail.com</span>.
+          <span className="text-blue-600 font-medium">info@lultimo.app</span>.
         </p>
       </section>
 

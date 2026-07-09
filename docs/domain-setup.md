@@ -75,6 +75,25 @@ Authentication → Settings → SMTP Settings → Enable Custom SMTP:
 Verificato funzionante: email di reset password arrivata, link cliccato,
 form di nuova password mostrato correttamente.
 
+## Cloudflare Email Routing — `info@lultimo.app`
+
+Indirizzo di contatto pubblico (Privacy Policy, Termini, Linee Guida
+Community, "Elimina profilo" in Impostazioni), inoltrato via Cloudflare
+Email Routing alla vera casella email personale. Gratuito, separato da
+Resend (che gestisce solo l'invio automatico da `noreply@mail.lultimo.app`,
+non la ricezione).
+
+Setup: Cloudflare → `lultimo.app` → Email → Email Routing:
+1. **Destination Addresses**: aggiunta e verificata (via email di conferma)
+   la vera casella personale — **non** `info@lultimo.app` stesso, quello è
+   solo la "vetrina" pubblica, non una casella reale.
+2. **Routing rules**: regola `info@lultimo.app` → Send to → la destinazione
+   verificata al punto 1.
+
+`info@lultimo.app` ha sostituito `irace.dev+ultimo@gmail.com` in tutti i
+punti dell'app dove compariva (`PrivacyPolicy.jsx`, `TermsOfService.jsx`,
+`CommunityGuidelines.jsx`, `AppSettings.jsx`).
+
 ## Bug scoperti e risolti durante il setup
 
 **404 dopo il click sul link di reset password.** `/reset-password` era

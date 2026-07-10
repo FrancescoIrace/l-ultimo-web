@@ -96,7 +96,7 @@ export default function CommunityGuidelines() {
         <p className="text-slate-600 leading-relaxed">
           Per segnalare situazioni non gestibili dal menu di segnalazione, fare ricorso su una decisione
           presa, o per qualsiasi dubbio su queste linee guida, scrivici a{' '}
-          <span className="text-blue-600 font-medium">info@lultimo.app</span>.
+          <a href="mailto:info@lultimo.app" className="text-blue-600 font-medium underline">info@lultimo.app</a>.
         </p>
       </section>
 

@@ -5,12 +5,6 @@
   "lang": "it",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "monochrome"
-    },
-    {
       "src": "/android-chrome-192x192.png",
       "type": "image/png",
       "sizes": "192x192",

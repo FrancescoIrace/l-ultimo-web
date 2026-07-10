@@ -17,6 +17,7 @@ build/
 !package.json
 !package-lock.json
 !manifest.json
+!public/.well-known/assetlinks.json
 
 # Altro
 .DS_Store

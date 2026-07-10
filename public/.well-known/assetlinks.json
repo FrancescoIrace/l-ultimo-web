@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.lultimo.twa",
+        "sha256_cert_fingerprints": ["0F:DA:7E:1F:8B:3F:CF:5B:C7:5F:C5:4C:F9:3D:7F:E1:7F:45:5A:54:CE:1A:6B:27:5B:BE:41:C0:09:B7:E4:94"]
+      }
+    }]

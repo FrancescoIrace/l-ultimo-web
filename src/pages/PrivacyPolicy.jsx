@@ -79,6 +79,31 @@ export default function PrivacyPolicy() {
         </p>
       </section>
 
+      <section className="mb-10 border-t border-slate-100 pt-5">
+        <h2 className="text-xl font-bold mb-2 text-slate-800">Come eliminare l'account su L'ULTIMO</h2>
+        <p className="text-slate-600 leading-relaxed mb-3">
+          Puoi eliminare in autonomia il tuo account e tutti i dati associati direttamente dall'app, in
+          pochi passaggi:
+        </p>
+        <ol className="list-decimal pl-5 text-slate-600 space-y-1 mb-4">
+          <li>Apri L'ULTIMO ed effettua l'accesso al tuo account.</li>
+          <li>Vai su <strong>Impostazioni</strong>.</li>
+          <li>Scorri fino alla sezione <strong>"Elimina profilo"</strong>.</li>
+          <li>Tocca <strong>"Elimina il profilo"</strong> e conferma l'operazione.</li>
+        </ol>
+        <p className="text-slate-600 leading-relaxed mb-3">
+          L'account e i dati personali vengono rimossi <strong>immediatamente</strong> dai nostri sistemi
+          (salvo il contenuto di eventuali backup di sicurezza, cancellati secondo il normale ciclo di
+          rotazione, e i casi in cui la legge ci obbliga a conservare specifiche informazioni, es. per
+          adempimenti fiscali).
+        </p>
+        <p className="text-slate-600 leading-relaxed">
+          Se non riesci ad accedere all'app o all'account, puoi richiedere la cancellazione scrivendo a{' '}
+          <a href="mailto:info@lultimo.app" className="text-blue-600 font-medium underline">info@lultimo.app</a>{' '}
+          indicando l'indirizzo email registrato: elaboreremo la richiesta entro pochi giorni lavorativi.
+        </p>
+      </section>
+
       <section className="mb-10">
         <h2 className="text-xl font-bold mb-2 text-slate-800">I tuoi diritti (GDPR)</h2>
         <p className="text-slate-600 leading-relaxed">

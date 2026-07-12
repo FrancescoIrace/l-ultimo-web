@@ -11,6 +11,7 @@ export default function SfidaGiornaliera() {
     const [currentIdx, setCurrentIdx] = useState(0);
     const [score, setScore] = useState(0);
     const [earnedPoints, setEarnedPoints] = useState(0);
+    const [answers, setAnswers] = useState([]);
     const [timeLeft, setTimeLeft] = useState(30);
     const [isProcessing, setIsProcessing] = useState(false);
     // const [domande] = useState(questions); // Carica le domande dal JSON
@@ -79,7 +80,8 @@ export default function SfidaGiornaliera() {
     const handleAnswer = async (selectedIndex) => {
         if (isProcessing) return;
 
-        const isCorrect = selectedIndex === quizSet[currentIdx].correctIndex;
+        const currentQuestion = quizSet[currentIdx];
+        const isCorrect = selectedIndex === currentQuestion.correctIndex;
         let newScore = score;
         let newPoints = earnedPoints;
 
@@ -89,6 +91,15 @@ export default function SfidaGiornaliera() {
             setScore(newScore);
             setEarnedPoints(newPoints);
         }
+
+        const newAnswers = [...answers, {
+            question: currentQuestion.question,
+            options: currentQuestion.options,
+            selectedIndex,
+            correctIndex: currentQuestion.correctIndex,
+            isCorrect,
+        }];
+        setAnswers(newAnswers);
 
         // Passa alla prossima o finisci
         if (currentIdx < 2) {
@@ -215,6 +226,32 @@ export default function SfidaGiornaliera() {
                     {isPerfect && (
                         <p className="text-emerald-600 font-bold mb-6 animate-bounce">🔥 Campione del Giorno! 🔥</p>
                     )}
+
+                    <div className="w-full text-left mb-8 space-y-3">
+                        {answers.map((a, i) => (
+                            <div key={i} className={`bg-white rounded-2xl p-4 shadow-sm border ${a.isCorrect ? 'border-emerald-100' : 'border-red-100'}`}>
+                                <div className="flex items-start gap-2 mb-2">
+                                    {a.isCorrect ? (
+                                        <CheckCircle2 className="text-emerald-500 flex-shrink-0 mt-0.5" size={18} />
+                                    ) : (
+                                        <XCircle className="text-red-500 flex-shrink-0 mt-0.5" size={18} />
+                                    )}
+                                    <p className="text-sm font-bold text-slate-800 leading-snug">{a.question}</p>
+                                </div>
+                                <p className="text-xs text-slate-500 pl-6">
+                                    Risposta corretta: <span className="font-bold text-emerald-600">{a.options[a.correctIndex]}</span>
+                                </p>
+                                {!a.isCorrect && a.selectedIndex >= 0 && (
+                                    <p className="text-xs text-slate-500 pl-6 mt-0.5">
+                                        La tua risposta: <span className="font-bold text-red-500">{a.options[a.selectedIndex]}</span>
+                                    </p>
+                                )}
+                                {!a.isCorrect && a.selectedIndex === -1 && (
+                                    <p className="text-xs text-slate-500 pl-6 mt-0.5">Tempo scaduto, nessuna risposta data.</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
 
                     <button onClick={() => navigate(-1)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-all uppercase tracking-wider">
                         Continua

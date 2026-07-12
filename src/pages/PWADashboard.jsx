@@ -163,7 +163,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   // lasciando un gap in fondo alla modale): si blocca il body in position
   // fixed alla posizione di scroll corrente e la si ripristina alla chiusura.
   useEffect(() => {
-    if (!isMatchesModalOpen) return;
+    if (!isMatchesModalOpen && !contactModalType) return;
     const scrollY = window.scrollY;
     const { position, top, width, overflow } = document.body.style;
     document.body.style.position = 'fixed';
@@ -177,7 +177,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
       document.body.style.overflow = overflow;
       window.scrollTo(0, scrollY);
     };
-  }, [isMatchesModalOpen]);
+  }, [isMatchesModalOpen, contactModalType]);
 
   let matchBanner = null;
   if (upcomingMatch) {

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -511,6 +511,30 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
 
           <ChevronRight
             className="text-white flex-shrink-0 opacity-75 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+            size={22}
+          />
+        </button>
+
+        {/* Banner Tutorial */}
+        <button
+          type="button"
+          onClick={() => navigate('/tutorial')}
+          className="group flex items-center justify-between p-5 mx-4 my-2 bg-white border border-gray-100 rounded-2xl shadow-md active:scale-[0.99] transition-transform duration-200 text-left"
+        >
+          <div className="flex items-center gap-4 max-w-[85%]">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors duration-200 flex-shrink-0">
+              <BookOpen size={22} />
+            </div>
+            <div className="flex flex-col">
+              <p className="text-slate-900 font-bold text-sm">Come funziona L'app</p>
+              <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">
+                Una guida rapida alle azioni principali: partite, squadre, amici e quiz.
+              </p>
+            </div>
+          </div>
+
+          <ChevronRight
+            className="text-slate-400 flex-shrink-0 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200"
             size={22}
           />
         </button>

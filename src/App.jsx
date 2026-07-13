@@ -26,6 +26,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const PublicProfile = lazy(() => import('./pages/PublicProfile'));
 const AppSettings = lazy(() => import('./pages/AppSettings'));
 const InstallGuide = lazy(() => import('./pages/InstallGuide'));
+const Tutorial = lazy(() => import('./pages/Tutorial'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const CommunityGuidelines = lazy(() => import('./pages/CommunityGuidelines'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -155,6 +156,7 @@ function App() {
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/install-guide" element={<InstallGuide />} />
+            <Route path="/tutorial" element={<Tutorial />} />
             <Route path="/match/:id" element={<PublicMatchLanding />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -270,6 +272,7 @@ function App() {
             <Route path="/community-guidelines" element={<CommunityGuidelines />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/install-guide" element={<InstallGuide />} />
+            <Route path="/tutorial" element={<Tutorial />} />
             {/* Il click sul link di reset password stabilisce una sessione di
             recupero mentre l'utente è ancora sulla pagina: l'app passa da
             "non loggato" a "loggato" a metà flusso, quindi questa rotta va

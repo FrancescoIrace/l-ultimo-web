@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { ChevronRight } from 'lucide-react';
 
 export default function PrivacyPolicy() {
   const location = useLocation();
@@ -15,9 +16,10 @@ export default function PrivacyPolicy() {
       <button
         type="button"
         onClick={() => window.history.back()}
-        className="mb-6 inline-flex items-center justify-center rounded-2xl bg-red-600 px-4 py-3 text-sm font-bold text-white hover:bg-red-700 transition-all active:scale-95"
+        className="mb-6 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
       >
-        TORNA INDIETRO
+        <ChevronRight size={14} className="rotate-180" />
+        Indietro
       </button>
 
       <h1 className="text-3xl font-black text-slate-900 mb-6">

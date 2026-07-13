@@ -232,17 +232,18 @@ export default function TeamDetail({ session }) {
     const loadFriends = async () => {
         if (!userId) return;
         try {
-            // Carica gli amici dell'utente
+            // Carica gli amici dell'utente (l'amicizia puo' essere stata avviata
+            // da lui o da te: va cercata in entrambe le direzioni)
             const { data: friendships, error: friendsError } = await supabase
                 .from('friendships')
-                .select('friend_id')
-                .eq('user_id', userId)
+                .select('user_id, friend_id')
+                .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
                 .eq('status', 'accepted');
 
             if (friendsError) throw friendsError;
 
             if (friendships && friendships.length > 0) {
-                const friendIds = friendships.map(f => f.friend_id);
+                const friendIds = friendships.map(f => f.user_id === userId ? f.friend_id : f.user_id);
                 // Carica i profili degli amici
                 const { data: friendProfiles, error: profilesError } = await supabase
                     .from('profiles')

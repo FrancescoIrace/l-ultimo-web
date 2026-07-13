@@ -651,13 +651,14 @@ Scopri di più qui: ${window.location.href}`;
         await shareFallback();
     };
 
-    // Carica gli amici accettati dell'utente per il modale "Invita amici",
-    // stesso pattern di loadFriends in TeamDetail.jsx.
+    // Carica gli amici accettati dell'utente per il modale "Invita amici".
+    // L'amicizia puo' essere stata avviata da lui o da te, va cercata in
+    // entrambe le direzioni (stesso fix applicato a loadFriends in TeamDetail.jsx).
     const loadInviteFriends = async () => {
         const { data: friendships, error: friendsError } = await supabase
             .from('friendships')
-            .select('friend_id')
-            .eq('user_id', user.id)
+            .select('user_id, friend_id')
+            .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
             .eq('status', 'accepted');
 
         if (friendsError) {
@@ -665,7 +666,7 @@ Scopri di più qui: ${window.location.href}`;
             return;
         }
 
-        const friendIds = (friendships || []).map(f => f.friend_id);
+        const friendIds = (friendships || []).map(f => f.user_id === user.id ? f.friend_id : f.user_id);
         if (friendIds.length === 0) {
             setInviteFriends([]);
             return;

@@ -7,12 +7,13 @@ import { motion } from 'framer-motion';
 import { AlertContext } from '../components/AlertComponent';
 import { InstagramEmbed } from './PagesUtils/utils';
 import ContactRequestModal from '../components/ContactRequestModal';
+import { useDailyQuizStatus } from '../hooks/useDailyQuizStatus';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA }) {
   const navigate = useNavigate();
-  const [status, setStatus] = useState('LOADING'); // LOADING, ALREADY_PLAYED, PLAYING, RESULTS, ERROR
+  const dailyQuizStatus = useDailyQuizStatus();
   const { showAlert } = useContext(AlertContext);
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const [upcomingMatch, setUpcomingMatch] = useState(null);
@@ -20,7 +21,6 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   const [isMatchesModalOpen, setIsMatchesModalOpen] = useState(false);
   const [, setTick] = useState(0); // forza il re-render per aggiornare countdown/stato live
   const [contactModalType, setContactModalType] = useState(null); // 'advertising' | 'suggestion' | null
-  const getCurrentDate = () => new Date().toISOString().split('T')[0];
   // Su iOS le notifiche push funzionano solo se l'app è stata aggiunta alla Home
   // (standalone mode, iOS 16.4+): chiedere il permesso da una tab Safari normale fallisce sempre.
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -56,37 +56,6 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
       showAlert('❌ Errore: ' + error.message, 'error');
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const todayDateStr = getCurrentDate();
-
-        // 1. Check record su daily_game_attempts
-        const { data: attempt, error: attemptError } = await supabase
-          .from('daily_game_attempts')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('played_at', todayDateStr)
-          .maybeSingle();
-
-        if (attemptError) throw attemptError;
-
-        if (attempt) {
-          setStatus('ALREADY_PLAYED');
-          // console.log('Utente ha già giocato oggi');
-        } else {
-          setStatus('PLAYING');
-          // console.log('Utente non ha giocato oggi, pronto per giocare');
-        }
-      } catch (err) {
-        console.error('Errore durante il caricamento del quiz:', err);
-        setStatus('ERROR');
-      }
-    };
-
-    fetchData();
-  }, [user]);
 
   // Trova, tra le partite a cui l'utente partecipa (confermato), quella che sta per
   // iniziare (entro 1 ora) o è già in corso, per mostrare il banner sotto.
@@ -426,7 +395,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
         </div>
 
         {/* Banner Gamification - Sfida Giornaliera */}
-        {status === 'PLAYING' ? (
+        {dailyQuizStatus.status === 'AVAILABLE' ? (
           <>
             <div
               onClick={() => navigate('/sfida')}
@@ -449,6 +418,11 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
                   <p className="text-indigo-100/90 text-xs font-medium mt-1 leading-snug">
                     Sblocca fino a <span className="bg-white/20 px-1.5 py-0.5 rounded text-amber-300 font-bold border border-white/10">+60 pt</span> rispondendo a 3 domande flash!
                   </p>
+                  {dailyQuizStatus.streakDays > 0 && (
+                    <p className="text-amber-300 text-xs font-bold mt-1.5">
+                      🔥 Non perdere la tua streak di {dailyQuizStatus.streakDays} {dailyQuizStatus.streakDays === 1 ? 'giorno' : 'giorni'}!
+                    </p>
+                  )}
                 </div>
 
                 {/* Freccetta d'azione */}
@@ -459,7 +433,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
               </div>
             </div>
           </>
-        ) : (
+        ) : dailyQuizStatus.status === 'ALREADY_PLAYED' ? (
           <>
             <div
               onClick={() => navigate('/leaderboard')}
@@ -492,7 +466,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
               </div>
             </div>
           </>
-        )}
+        ) : null}
 
         {/* Banner Richiesta Sponsorizzazione */}
         <button

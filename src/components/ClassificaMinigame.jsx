@@ -69,7 +69,7 @@ export default function ClassificaMinigame() {
           <h1 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
             Classifica <Trophy className="text-yellow-500" size={20} />
           </h1>
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Top 3 Giocatori</p>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Classifica Generale</p>
         </div>
       </div>
 

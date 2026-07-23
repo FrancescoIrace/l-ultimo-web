@@ -57,6 +57,7 @@ function App() {
   const { isSupported, isSubscribed, subscribeToPushNotifications } = usePushNotifications(session?.user?.id);
 
   const [userRole, setUserRole] = useState(null); // Nuovo stato per il ruolo
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Durata minima dello splash: anche se la sessione/il profilo sono già
   // pronti prima, l'animazione della "U" resta visibile per intero invece
@@ -90,16 +91,17 @@ function App() {
       return;
     }
 
-    // Recupero Dati Profilo (Avatar e Ruolo)
+    // Recupero Dati Profilo (Avatar, Ruolo e permessi admin)
     supabase
       .from('profiles')
-      .select('avatar_url, role')
+      .select('avatar_url, role, is_admin')
       .eq('id', session.user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setSession(prev => ({ ...prev, avatar_url: data.avatar_url }));
           setUserRole(data.role); // Imposta il ruolo dal DB
+          setIsAdmin(!!data.is_admin);
         } else {
           setUserRole('player'); // Fallback se il profilo non esiste
         }
@@ -177,7 +179,7 @@ function App() {
       )} */}
       {/* QUESTO COMPONENTE NON CI SARA' PIU' QUANDO L'APP SI TROVERA' SUL PLAY STORE */}
       <PWAInstallBanner />
-      <div className={`w-full mx-auto bg-slate-50 min-h-screen ${userRole === 'center' ? '' : 'max-w-md'}`}>
+      <div className={`w-full mx-auto bg-slate-50 min-h-screen ${userRole === 'center' || isAdmin ? '' : 'max-w-md'}`}>
         <header className="bg-white border-blue-400 border-b-2 p-1 flex justify-between items-center sticky top-0 z-50">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 pl-4 cursor-pointer hover:scale-105 transition-transform">
             <h1 className="text-4xl font-black text-blue-600 tracking-tighter flex items-center">
@@ -229,6 +231,7 @@ function App() {
                     isSubscribed={isSubscribed}
                     subscribeToPushNotifications={subscribeToPushNotifications}
                     isPWA={isPWA}
+                    isAdmin={isAdmin}
                   />
                 )
               }

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4 di default lega dark: a prefers-color-scheme (il tema del sistema
+   operativo). Il toggle notte manuale nel pannello admin richiede invece che
+   dark: segua la presenza della classe .dark su un antenato, non l'OS. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 
 @keyframes customSpin {
   from {

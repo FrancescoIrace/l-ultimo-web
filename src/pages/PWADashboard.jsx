@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -11,7 +11,7 @@ import { useDailyQuizStatus } from '../hooks/useDailyQuizStatus';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
-export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA }) {
+export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA, isAdmin }) {
   const navigate = useNavigate();
   const dailyQuizStatus = useDailyQuizStatus();
   const { showAlert } = useContext(AlertContext);
@@ -193,6 +193,20 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
 
       {/* Main Content */}
       <div className="max-w-md mx-auto p-4 space-y-4 pb-20">
+        {/* Accesso rapido area admin */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="w-full flex items-center gap-3 p-4 bg-slate-900 text-white rounded-2xl shadow-lg active:scale-[0.99] transition-transform"
+          >
+            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <ShieldCheck size={20} className="text-indigo-400" />
+            </div>
+            <span className="flex-1 text-left font-bold text-sm">Pannello Admin</span>
+            <ChevronRight size={20} className="text-white/60" />
+          </button>
+        )}
+
         {/* Notification Activation Box */}
         {isSupported && !isSubscribed && (
           needsInstallForNotifications ? (
@@ -413,7 +427,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
                 {/* Testi e Badge Punti */}
                 <div className="flex-1">
                   <h3 className="text-white font-black text-md leading-tight flex items-center gap-2 mb-3">
-                    Quiz del Giorno ⚡️<br /> Mondiali 2026 🏆
+                    Quiz del Giorno ⚡️<br /> Speciale Calcio 🏆
                   </h3>
                   <p className="text-indigo-100/90 text-xs font-medium mt-1 leading-snug">
                     Sblocca fino a <span className="bg-white/20 px-1.5 py-0.5 rounded text-amber-300 font-bold border border-white/10">+60 pt</span> rispondendo a 3 domande flash!

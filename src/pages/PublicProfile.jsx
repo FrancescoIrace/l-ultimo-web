@@ -2,9 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationService';
-import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical, ShieldCheck, Award } from 'lucide-react';
 import Loader from '../components/Loader';
 import { useAlert } from '../components/AlertComponent';
+
+// Stessa mappatura di Profile.jsx/ClassificaMinigame.jsx: rank 1/2/3 = podio,
+// rank nullo = ha comunque partecipato alla stagione.
+const SEASON_RANK_META = {
+    1: { label: 'Oro', className: 'bg-yellow-400 text-yellow-900' },
+    2: { label: 'Argento', className: 'bg-slate-300 text-slate-700' },
+    3: { label: 'Bronzo', className: 'bg-amber-600 text-white' },
+    default: { label: 'Partecipante', className: 'bg-slate-100 text-slate-500' },
+};
 
 export default function PublicProfile() {
     const { id } = useParams(); // Prende l'ID dall'URL
@@ -28,6 +37,8 @@ export default function PublicProfile() {
     const [blockActionLoading, setBlockActionLoading] = useState(false);
     const [blockMenuOpen, setBlockMenuOpen] = useState(false);
     const blockMenuRef = useRef(null);
+    const [isEarlyTester, setIsEarlyTester] = useState(false);
+    const [seasonBadges, setSeasonBadges] = useState([]);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -46,12 +57,30 @@ export default function PublicProfile() {
                 if (data.role === 'center') {
                     const { data: courtsData } = await supabase.from('sports_courts').select('*').eq('center_id', id);
                     if (courtsData) setCourts(courtsData);
-                    
+
                     const { data: hoursData } = await supabase.from('business_hours').select('*').eq('center_id', id);
                     if (hoursData) setBusinessHours(hoursData);
                 }
             }
             setLoading(false);
+        }
+
+        // Badge: "Tester Interno" + podi delle stagioni classifica passate,
+        // visibili anche agli altri utenti (stessa logica di Profile.jsx).
+        async function getBadges() {
+            const { data: earlyTesterRow } = await supabase
+                .from('early_testers')
+                .select('profile_id')
+                .eq('profile_id', id)
+                .maybeSingle();
+            setIsEarlyTester(!!earlyTesterRow);
+
+            const { data: seasonResultsData } = await supabase
+                .from('quiz_season_results')
+                .select('rank, points, quiz_seasons(name)')
+                .eq('profile_id', id)
+                .order('created_at', { ascending: false });
+            setSeasonBadges(seasonResultsData || []);
         }
 
         async function getSquads() {
@@ -110,6 +139,7 @@ export default function PublicProfile() {
 
         if (id) {
             getPublicProfile();
+            getBadges();
             getProfileStats();
             getSquads();
             fetchReviews();
@@ -597,6 +627,29 @@ export default function PublicProfile() {
                 </div>
             </div> */}
 
+                {/* ── BADGE ── */}
+                {(isEarlyTester || seasonBadges.length > 0) && (
+                    <div className="mb-4 p-4 bg-slate-50 rounded-3xl">
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Badge</p>
+                        <div className="flex flex-wrap gap-2">
+                            {isEarlyTester && (
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">
+                                    <ShieldCheck size={13} />
+                                    Tester Interno
+                                </span>
+                            )}
+                            {seasonBadges.map((badge, i) => {
+                                const meta = SEASON_RANK_META[badge.rank] || SEASON_RANK_META.default;
+                                return (
+                                    <span key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black ${meta.className}`}>
+                                        <Award size={13} />
+                                        {meta.label} · {badge.quiz_seasons?.name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* ── SQUADS (SOLO SE HA SQUADS) ── */}
                 {squads.length > 0 && (

@@ -13,6 +13,7 @@
         location_lat: data?.location_lat ?? null,
         location_lng: data?.location_lng ?? null,
         favorite_sport: data?.favorite_sport ?? '',
+        experience_level: data?.experience_level ?? '',
         cellulare: data?.cellulare ?? '',
         role: data?.role ?? '',
         business_address: data?.business_address ?? '',

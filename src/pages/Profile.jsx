@@ -45,6 +45,7 @@ export default function Profile({ session }) {
         updated_at: '',
         avatar_url: null,
         favorite_sport: '',
+        experience_level: '',
         cellulare: null,
         role: '',
         business_address: '',
@@ -284,6 +285,7 @@ export default function Profile({ session }) {
                 updated_at: new Date(),
                 avatar_url: avatarUrlToSave,
                 favorite_sport: editData.favorite_sport,
+                experience_level: editData.experience_level,
                 cellulare: cleanCellulare || null,
                 business_address: editData.business_address,
                 lat: editData.lat ? parseFloat(editData.lat) : null,
@@ -703,6 +705,7 @@ export default function Profile({ session }) {
                                 { icon: <Mail size={15} className="text-blue-500" />, label: 'Email', value: session.user.email },
                                 { icon: <User size={15} className="text-purple-500" />, label: 'Genere', value: profile?.gender === 'M' ? 'Uomo' : profile?.gender === 'F' ? 'Donna' : 'Altro' },
                                 { icon: <Dumbbell size={15} className="text-green-500" />, label: 'Sport preferito', value: profile?.favorite_sport || '—' },
+                                { icon: <Trophy size={15} className="text-amber-500" />, label: 'Livello', value: profile?.experience_level || '—' },
                                 { icon: <ShieldCheck size={15} className="text-slate-400" />, label: 'Stato account', value: 'Attivo' },
                             ].map(({ icon, label, value }, i, arr) => (
                                 <div key={label} className={`flex items-center gap-3 px-4 py-3 ${i < arr.length - 1 ? 'border-b border-slate-50' : 'pb-4'}`}>
@@ -974,6 +977,23 @@ export default function Profile({ session }) {
                                         <option>Volley</option>
                                         <option>Corsa</option>
                                         <option>Palestra</option>
+                                    </select>
+                                </div>
+
+                                {/* Livello di esperienza */}
+                                <div>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Livello di esperienza</label>
+                                    <select
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        value={editData.experience_level || 'Amatoriale'}
+                                        onChange={(e) => setEditData({ ...editData, experience_level: e.target.value })}
+                                    >
+                                        <option>Principiante</option>
+                                        <option>Amatoriale</option>
+                                        <option>Intermedio</option>
+                                        <option>Esperto</option>
+                                        <option>Professionista</option>
+                                        <option>Veterano</option>
                                     </select>
                                 </div>
 

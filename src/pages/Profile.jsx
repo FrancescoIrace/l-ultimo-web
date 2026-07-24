@@ -4,12 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import { normalizeProfileData } from './PagesUtils/utils';
 import imageCompression from 'browser-image-compression';
 import { AccordionItem, AccordionCreatedMatches, AccorditionReviews } from '../components/MatchesAccordion';
-import { Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck, Users } from 'lucide-react';
+import { Info, MapPin, Mail, User, Dumbbell, CalendarDays, Trophy, PencilLine, Settings, LogOut, ChevronRight, ShieldCheck, Users, Award } from 'lucide-react';
 import Loader from '../components/Loader';
 import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
 import { SPORT_ROLES } from '../lib/sportRoles';
+
+// Colore/etichetta badge di fine stagione: rank 1/2/3 = podio, rank nullo =
+// ha comunque partecipato (vedi quiz_season_results, stessa logica di
+// ClassificaMinigame's Albo d'Oro).
+const SEASON_RANK_META = {
+    1: { label: 'Oro', className: 'bg-yellow-400 text-yellow-900' },
+    2: { label: 'Argento', className: 'bg-slate-300 text-slate-700' },
+    3: { label: 'Bronzo', className: 'bg-amber-600 text-white' },
+    default: { label: 'Partecipante', className: 'bg-slate-100 text-slate-500' },
+};
 
 export default function Profile({ session }) {
     const { success, error: showAlertError } = useAlert();
@@ -25,6 +35,8 @@ export default function Profile({ session }) {
     const [friendCount, setFriendCount] = useState(0);
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     const [squads, setSquads] = useState([]);
+    const [isEarlyTester, setIsEarlyTester] = useState(false);
+    const [seasonBadges, setSeasonBadges] = useState([]);
 
     // Avatar: il file compresso resta "in sospeso" (solo anteprima locale)
     // finche' non si preme Salva, cosi' Annulla non lascia comunque cambiato
@@ -121,6 +133,22 @@ export default function Profile({ session }) {
         setProfile(profileData);
         console.log("Dati profilo caricati:", profileData);
         setEditData(normalizeProfileData(profileData)); // Pre-compila il form con i dati attuali del profilo
+
+        // Badge: "Tester Interno" (chi c'era prima del lancio) + podi delle
+        // stagioni classifica passate (vedi Albo d'Oro in ClassificaMinigame).
+        const { data: earlyTesterRow } = await supabase
+            .from('early_testers')
+            .select('profile_id')
+            .eq('profile_id', session.user.id)
+            .maybeSingle();
+        setIsEarlyTester(!!earlyTesterRow);
+
+        const { data: seasonResultsData } = await supabase
+            .from('quiz_season_results')
+            .select('rank, points, quiz_seasons(name)')
+            .eq('profile_id', session.user.id)
+            .order('created_at', { ascending: false });
+        setSeasonBadges(seasonResultsData || []);
 
         //Se l'utente è un centro sportivo, non carichiamo le partite a cui partecipa, ma solo quelle inerenti al suo centro.
         if (profileData?.role === 'center') {
@@ -695,6 +723,30 @@ export default function Profile({ session }) {
                                 </button>
                             </div>
                         </div>
+
+                        {/* ── BADGE ── */}
+                        {(isEarlyTester || seasonBadges.length > 0) && (
+                            <div className="mx-4 mb-4 bg-white rounded-3xl shadow-sm overflow-hidden p-4">
+                                <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Badge</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {isEarlyTester && (
+                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">
+                                            <ShieldCheck size={13} />
+                                            Tester Interno
+                                        </span>
+                                    )}
+                                    {seasonBadges.map((badge, i) => {
+                                        const meta = SEASON_RANK_META[badge.rank] || SEASON_RANK_META.default;
+                                        return (
+                                            <span key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black ${meta.className}`}>
+                                                <Award size={13} />
+                                                {meta.label} · {badge.quiz_seasons?.name}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
 
                         {/* ── INFO CARD ── */}
                         <div className="mx-4 mb-4 bg-white rounded-3xl shadow-sm overflow-hidden">

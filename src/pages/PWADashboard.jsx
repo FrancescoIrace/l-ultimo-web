@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen, ShieldCheck } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen, ShieldCheck, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -8,12 +8,14 @@ import { AlertContext } from '../components/AlertComponent';
 import { InstagramEmbed } from './PagesUtils/utils';
 import ContactRequestModal from '../components/ContactRequestModal';
 import { useDailyQuizStatus } from '../hooks/useDailyQuizStatus';
+import { useCurrentSeason } from '../hooks/useCurrentSeason';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA, isAdmin }) {
   const navigate = useNavigate();
   const dailyQuizStatus = useDailyQuizStatus();
+  const currentSeason = useCurrentSeason();
   const { showAlert } = useContext(AlertContext);
   const [isTorneiNotReady, setIsTorneiNotReady] = useState(false);
   const [upcomingMatch, setUpcomingMatch] = useState(null);
@@ -205,6 +207,37 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             <span className="flex-1 text-left font-bold text-sm">Pannello Admin</span>
             <ChevronRight size={20} className="text-white/60" />
           </button>
+        )}
+
+        {/* Banner stagione classifica */}
+        {(currentSeason.status === 'upcoming' || currentSeason.status === 'active' || currentSeason.status === 'active-urgent') && (
+          <div
+            onClick={() => navigate('/leaderboard')}
+            className={`relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl shadow-lg cursor-pointer active:scale-[0.99] transition-transform ${currentSeason.status === 'active-urgent' ? 'bg-gradient-to-r from-amber-500 to-red-600' : 'bg-gradient-to-r from-violet-600 to-indigo-700'}`}
+          >
+            <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Sparkles className="text-amber-300" size={20} />
+            </div>
+            <div className="flex-1">
+              {currentSeason.status === 'upcoming' && (
+                <>
+                  <p className="text-white font-black text-sm leading-tight">Sta arrivando: {currentSeason.season.name}! 🎉</p>
+                  <p className="text-indigo-100/90 text-xs font-medium mt-0.5">
+                    Dal {new Date(`${currentSeason.season.starts_on}T00:00:00`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })} i punti si azzerano per tutti: si riparte alla pari!
+                  </p>
+                </>
+              )}
+              {(currentSeason.status === 'active' || currentSeason.status === 'active-urgent') && (
+                <>
+                  <p className="text-white font-black text-sm leading-tight">{currentSeason.season.name} è in corso! 🔥</p>
+                  <p className="text-white/90 text-xs font-bold mt-0.5">
+                    {currentSeason.daysLeft === 1 ? 'Ultimo giorno per scalare la classifica!' : `Mancano ${currentSeason.daysLeft} giorni per scalare la classifica!`}
+                  </p>
+                </>
+              )}
+            </div>
+            <ChevronRight className="text-white/60 flex-shrink-0" size={20} />
+          </div>
         )}
 
         {/* Notification Activation Box */}

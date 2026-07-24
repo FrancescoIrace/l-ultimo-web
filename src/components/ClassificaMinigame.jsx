@@ -1,18 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Trophy, Medal, ChevronLeft, MapPin, Crown } from 'lucide-react';
+import { Trophy, Medal, ChevronLeft, MapPin, Crown, Award } from 'lucide-react';
 import Loader from './Loader';
+
+const RANK_STYLES = {
+  1: { label: 'Oro', badgeClass: 'bg-yellow-400 text-yellow-900' },
+  2: { label: 'Argento', badgeClass: 'bg-slate-300 text-slate-700' },
+  3: { label: 'Bronzo', badgeClass: 'bg-amber-600 text-white' },
+};
 
 export default function ClassificaMinigame() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('classifica'); // 'classifica' | 'albo'
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [pastSeasons, setPastSeasons] = useState([]);
+  const [albiLoading, setAlbiLoading] = useState(false);
+  const [albiLoaded, setAlbiLoaded] = useState(false);
 
   useEffect(() => {
     fetchLeaderboard();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'albo' && !albiLoaded) fetchAlboDoro();
+  }, [activeTab, albiLoaded]);
+
+  // Albo d'Oro: stagioni concluse con il relativo podio (rank 1/2/3). E'
+  // l'unico posto dove il podio di una stagione resta visibile dopo che
+  // profiles.total_points viene azzerato per quella successiva.
+  const fetchAlboDoro = async () => {
+    setAlbiLoading(true);
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { data: seasons, error: seasonsError } = await supabase
+        .from('quiz_seasons')
+        .select('id, name, starts_on, ends_on')
+        .lt('ends_on', todayStr)
+        .order('starts_on', { ascending: false });
+
+      if (seasonsError) throw seasonsError;
+      if (!seasons || seasons.length === 0) {
+        setPastSeasons([]);
+        return;
+      }
+
+      const { data: results, error: resultsError } = await supabase
+        .from('quiz_season_results')
+        .select('season_id, rank, points, profiles(username, avatar_url)')
+        .in('season_id', seasons.map(s => s.id))
+        .not('rank', 'is', null)
+        .order('rank', { ascending: true });
+
+      if (resultsError) throw resultsError;
+
+      const seasonsWithPodium = seasons.map(season => ({
+        ...season,
+        podium: (results || []).filter(r => r.season_id === season.id),
+      }));
+      setPastSeasons(seasonsWithPodium);
+    } catch (err) {
+      console.error("Errore fetch Albo d'Oro:", err);
+    } finally {
+      setAlbiLoading(false);
+      setAlbiLoaded(true);
+    }
+  };
 
   const fetchLeaderboard = async () => {
     try {
@@ -73,10 +128,31 @@ export default function ClassificaMinigame() {
         </div>
       </div>
 
-      <div className="flex-1 px-4 py-6 max-w-md mx-auto w-full">
+      {/* Tab Classifica / Albo d'Oro */}
+      <div className="flex gap-2 px-4 max-w-md mx-auto w-full border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab('classifica')}
+          className={`px-4 py-2.5 text-xs font-black uppercase tracking-widest border-b-2 transition-colors ${activeTab === 'classifica' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          Classifica
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('albo')}
+          className={`px-4 py-2.5 text-xs font-black uppercase tracking-widest border-b-2 transition-colors flex items-center gap-1.5 ${activeTab === 'albo' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+        >
+          <Award size={14} />
+          Albo d'Oro
+        </button>
+      </div>
+
+      <div className="flex-1 px-4 pt-10 pb-6 max-w-md mx-auto w-full">
+        {activeTab === 'classifica' && (
+        <>
         {/* Podio (Top 3) */}
         {leaderboard.length >= 3 && (
-          <div className="flex items-end justify-center gap-4 mb-10 mt-4 px-2">
+          <div className="flex items-end justify-center gap-4 mb-10 mt-6 px-2">
             {/* Secondo Posto */}
             <div className="flex flex-col items-center flex-1">
               <div className="relative mb-2">
@@ -173,6 +249,47 @@ export default function ClassificaMinigame() {
           </div>
           <Trophy className="absolute -bottom-4 -right-4 text-white/10" size={120} />
         </div>
+        </>
+        )}
+
+        {activeTab === 'albo' && (
+          <div>
+            {albiLoading ? (
+              <div className="flex flex-col items-center py-10">
+                <Loader variant="inline" size={40} className="mb-3" />
+                <p className="text-slate-500 font-medium text-sm">Caricamento Albo d'Oro...</p>
+              </div>
+            ) : pastSeasons.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 text-center border border-slate-100 shadow-sm">
+                <Award className="mx-auto text-slate-300 mb-3" size={40} />
+                <p className="font-bold text-slate-600 mb-1">Nessuna stagione conclusa ancora</p>
+                <p className="text-xs text-slate-400">Il podio della prima stagione comparirà qui appena finisce.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pastSeasons.map(season => (
+                  <div key={season.id} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+                    <p className="font-black text-slate-800 mb-0.5">{season.name}</p>
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-3">
+                      {new Date(`${season.starts_on}T00:00:00`).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - {new Date(`${season.ends_on}T00:00:00`).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}
+                    </p>
+                    <div className="space-y-2">
+                      {season.podium.map(entry => (
+                        <div key={entry.rank} className="flex items-center gap-3">
+                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${RANK_STYLES[entry.rank]?.badgeClass}`}>
+                            {entry.rank}
+                          </span>
+                          <span className="flex-1 font-bold text-sm text-slate-800 truncate">{entry.profiles?.username || 'Utente eliminato'}</span>
+                          <span className="text-xs font-bold text-slate-400">{entry.points} PT</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

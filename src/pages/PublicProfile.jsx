@@ -5,6 +5,7 @@ import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationSe
 import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical, Award } from 'lucide-react';
 import Loader from '../components/Loader';
 import { useAlert } from '../components/AlertComponent';
+import { SPORT_OPTIONS, LEVEL_OPTIONS } from '../lib/profileFieldOptions';
 
 // Stessa mappatura di Profile.jsx/ClassificaMinigame.jsx: rank 1/2/3 = podio,
 // rank nullo = ha comunque partecipato alla stagione.
@@ -615,17 +616,45 @@ export default function PublicProfile() {
                     )}
                 </div>
 
-                {/* Info aggiuntive */}
-                {/* <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="bg-slate-50 p-4 rounded-2xl text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase">Sport Preferito</p>
-                    <p className="font-bold text-slate-700">{profile?.favorite_sport ?? 'Non definito'}</p>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase">Affidabilità</p>
-                    <p className="font-bold text-green-600">100%</p>
-                </div>
-            </div> */}
+                {/* Sport preferito & Livello di esperienza */}
+                {(profile?.favorite_sport || profile?.experience_level) && (
+                    <div className="flex gap-3 mb-4">
+                        {profile?.favorite_sport && (() => {
+                            const sportOpt = SPORT_OPTIONS.find((o) => o.value === profile.favorite_sport);
+                            return (
+                                <div className="flex-1 bg-slate-50 rounded-3xl p-4 flex flex-col items-center text-center gap-2">
+                                    <span
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                        style={{ background: sportOpt?.bg ?? '#F1F5F9', color: sportOpt?.fg ?? '#64748B' }}
+                                    >
+                                        {sportOpt?.icon}
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sport preferito</p>
+                                        <p className="font-black text-slate-700 text-sm mt-0.5">{profile.favorite_sport}</p>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                        {profile?.experience_level && (() => {
+                            const levelOpt = LEVEL_OPTIONS.find((o) => o.value === profile.experience_level);
+                            return (
+                                <div className="flex-1 bg-slate-50 rounded-3xl p-4 flex flex-col items-center text-center gap-2">
+                                    <span
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                        style={{ background: levelOpt?.bg ?? '#F1F5F9', color: levelOpt?.fg ?? '#64748B' }}
+                                    >
+                                        {levelOpt?.icon}
+                                    </span>
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Livello</p>
+                                        <p className="font-black text-slate-700 text-sm mt-0.5">{profile.experience_level}</p>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
 
                 {/* ── BADGE ── */}
                 {(isEarlyTester || seasonBadges.length > 0) && (

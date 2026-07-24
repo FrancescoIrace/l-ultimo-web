@@ -22,7 +22,7 @@ const SEASON_RANK_META = {
 };
 
 export default function Profile({ session }) {
-    const { success, error: showAlertError } = useAlert();
+    const { success, error: showAlertError, alert } = useAlert();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
@@ -730,10 +730,15 @@ export default function Profile({ session }) {
                                 <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-3">Badge</p>
                                 <div className="flex flex-wrap gap-2">
                                     {isEarlyTester && (
-                                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">
-                                            <ShieldCheck size={13} />
+                                        <button
+                                            type="button"
+                                            onClick={() => alert('Badge acquisito come Tester Ultimo 2026')}
+                                            title="Badge acquisito come Tester Ultimo 2026"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700"
+                                        >
+                                            <img src="/badges/badge-tester.svg" alt="" className="w-[15px] h-[15px]" />
                                             Tester Interno
-                                        </span>
+                                        </button>
                                     )}
                                     {seasonBadges.map((badge, i) => {
                                         const meta = SEASON_RANK_META[badge.rank] || SEASON_RANK_META.default;

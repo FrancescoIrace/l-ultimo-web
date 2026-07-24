@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { notifyFriendRequest, notifyFriendAccepted } from '../lib/notificationService';
-import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical, ShieldCheck, Award } from 'lucide-react';
+import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Phone, Globe, Info, Dumbbell, Calendar, MessageCircle, Navigation, MoreVertical, Award } from 'lucide-react';
 import Loader from '../components/Loader';
 import { useAlert } from '../components/AlertComponent';
 
@@ -18,7 +18,7 @@ const SEASON_RANK_META = {
 export default function PublicProfile() {
     const { id } = useParams(); // Prende l'ID dall'URL
     const navigate = useNavigate();
-    const { success, error: showError, confirmDangerous } = useAlert();
+    const { success, error: showError, confirmDangerous, alert } = useAlert();
     const [profile, setProfile] = useState(null);
     const [courts, setCourts] = useState([]);
     const [businessHours, setBusinessHours] = useState([]);
@@ -633,10 +633,15 @@ export default function PublicProfile() {
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Badge</p>
                         <div className="flex flex-wrap gap-2">
                             {isEarlyTester && (
-                                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">
-                                    <ShieldCheck size={13} />
+                                <button
+                                    type="button"
+                                    onClick={() => alert('Badge acquisito come Tester Ultimo 2026')}
+                                    title="Badge acquisito come Tester Ultimo 2026"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700"
+                                >
+                                    <img src="/badges/badge-tester.svg" alt="" className="w-[15px] h-[15px]" />
                                     Tester Interno
-                                </span>
+                                </button>
                             )}
                             {seasonBadges.map((badge, i) => {
                                 const meta = SEASON_RANK_META[badge.rank] || SEASON_RANK_META.default;

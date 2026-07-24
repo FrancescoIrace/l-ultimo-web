@@ -10,6 +10,8 @@ import UserLocationInput from '../components/UserLocationInput';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
 import { SPORT_ROLES } from '../lib/sportRoles';
+import { CardOptionPicker, PickerTrigger } from '../components/CardOptionPicker';
+import { LEVEL_OPTIONS, GENDER_OPTIONS, SPORT_OPTIONS } from '../lib/profileFieldOptions';
 
 // Colore/etichetta badge di fine stagione: rank 1/2/3 = podio, rank nullo =
 // ha comunque partecipato (vedi quiz_season_results, stessa logica di
@@ -37,6 +39,9 @@ export default function Profile({ session }) {
     const [squads, setSquads] = useState([]);
     const [isEarlyTester, setIsEarlyTester] = useState(false);
     const [seasonBadges, setSeasonBadges] = useState([]);
+    const [genderPickerOpen, setGenderPickerOpen] = useState(false);
+    const [sportPickerOpen, setSportPickerOpen] = useState(false);
+    const [levelPickerOpen, setLevelPickerOpen] = useState(false);
 
     // Avatar: il file compresso resta "in sospeso" (solo anteprima locale)
     // finche' non si preme Salva, cosi' Annulla non lascia comunque cambiato
@@ -65,8 +70,7 @@ export default function Profile({ session }) {
         lng: null
     });
 
-    const handleSportChange = (e) => {
-        const selectedSport = e.target.value;
+    const handleSportChange = (selectedSport) => {
         setEditData({
             ...editData,
             favorite_sport: selectedSport
@@ -600,23 +604,11 @@ export default function Profile({ session }) {
                                 {/* Sport preferito */}
                                 <div>
                                     <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Sport preferito</label>
-                                    <select
-                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                        value={editData.favorite_sport ?? 'Calcetto'}
-                                        onChange={(e) => handleSportChange(e)}
-                                    >
-                                        <option>Calcetto</option>
-                                        <option>Calcio a 7</option>
-                                        <option>Calcio a 11</option>
-                                        <option>Padel</option>
-                                        <option>Basket (3vs3)</option>
-                                        <option>Basket (5vs5)</option>
-                                        <option>Tennis singolo</option>
-                                        <option>Tennis doppio</option>
-                                        <option>Volley</option>
-                                        <option>Corsa</option>
-                                        <option>Palestra</option>
-                                    </select>
+                                    <PickerTrigger
+                                        option={SPORT_OPTIONS.find((o) => o.value === (editData.favorite_sport ?? 'Calcetto'))}
+                                        placeholder="Scegli uno sport"
+                                        onClick={() => setSportPickerOpen(true)}
+                                    />
                                 </div>
 
                                 <div className="flex gap-3 pt-4">
@@ -643,6 +635,14 @@ export default function Profile({ session }) {
 
 
                 </div>
+                <CardOptionPicker
+                    isOpen={sportPickerOpen}
+                    onClose={() => setSportPickerOpen(false)}
+                    title="Sport preferito"
+                    options={SPORT_OPTIONS}
+                    value={editData.favorite_sport ?? 'Calcetto'}
+                    onSelect={handleSportChange}
+                />
             </>
 
         );
@@ -993,15 +993,11 @@ export default function Profile({ session }) {
                                 {/* Genere */}
                                 <div>
                                     <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Genere</label>
-                                    <select
-                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                        value={editData.gender ?? 'Other'}
-                                        onChange={(e) => setEditData({ ...editData, gender: e.target.value })}
-                                    >
-                                        <option value="M">Uomo</option>
-                                        <option value="F">Donna</option>
-                                        <option value="Other">Altro</option>
-                                    </select>
+                                    <PickerTrigger
+                                        option={GENDER_OPTIONS.find((o) => o.value === (editData.gender ?? 'Other'))}
+                                        placeholder="Scegli il genere"
+                                        onClick={() => setGenderPickerOpen(true)}
+                                    />
                                 </div>
 
                                 {/* Cellulare */}
@@ -1017,40 +1013,21 @@ export default function Profile({ session }) {
                                 {/* Sport preferito */}
                                 <div>
                                     <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Sport preferito</label>
-                                    <select
-                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                        value={editData.favorite_sport ?? 'Calcetto'}
-                                        onChange={(e) => handleSportChange(e)}
-                                    >
-                                        <option>Calcetto</option>
-                                        <option>Calcio a 7</option>
-                                        <option>Calcio a 11</option>
-                                        <option>Padel</option>
-                                        <option>Basket (3vs3)</option>
-                                        <option>Basket (5vs5)</option>
-                                        <option>Tennis singolo</option>
-                                        <option>Tennis doppio</option>
-                                        <option>Volley</option>
-                                        <option>Corsa</option>
-                                        <option>Palestra</option>
-                                    </select>
+                                    <PickerTrigger
+                                        option={SPORT_OPTIONS.find((o) => o.value === (editData.favorite_sport ?? 'Calcetto'))}
+                                        placeholder="Scegli uno sport"
+                                        onClick={() => setSportPickerOpen(true)}
+                                    />
                                 </div>
 
                                 {/* Livello di esperienza */}
                                 <div>
                                     <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Livello di esperienza</label>
-                                    <select
-                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
-                                        value={editData.experience_level || 'Amatoriale'}
-                                        onChange={(e) => setEditData({ ...editData, experience_level: e.target.value })}
-                                    >
-                                        <option>Principiante</option>
-                                        <option>Amatoriale</option>
-                                        <option>Intermedio</option>
-                                        <option>Esperto</option>
-                                        <option>Professionista</option>
-                                        <option>Veterano</option>
-                                    </select>
+                                    <PickerTrigger
+                                        option={LEVEL_OPTIONS.find((o) => o.value === (editData.experience_level || 'Amatoriale'))}
+                                        placeholder="Scegli il livello"
+                                        onClick={() => setLevelPickerOpen(true)}
+                                    />
                                 </div>
 
                                 {/* Ruoli preferiti */}
@@ -1114,6 +1091,30 @@ export default function Profile({ session }) {
                     </>
                 )
                 }
+                <CardOptionPicker
+                    isOpen={genderPickerOpen}
+                    onClose={() => setGenderPickerOpen(false)}
+                    title="Genere"
+                    options={GENDER_OPTIONS}
+                    value={editData.gender ?? 'Other'}
+                    onSelect={(v) => setEditData({ ...editData, gender: v })}
+                />
+                <CardOptionPicker
+                    isOpen={sportPickerOpen}
+                    onClose={() => setSportPickerOpen(false)}
+                    title="Sport preferito"
+                    options={SPORT_OPTIONS}
+                    value={editData.favorite_sport ?? 'Calcetto'}
+                    onSelect={handleSportChange}
+                />
+                <CardOptionPicker
+                    isOpen={levelPickerOpen}
+                    onClose={() => setLevelPickerOpen(false)}
+                    title="Livello di esperienza"
+                    options={LEVEL_OPTIONS}
+                    value={editData.experience_level || 'Amatoriale'}
+                    onSelect={(v) => setEditData({ ...editData, experience_level: v })}
+                />
             </div>
         );
     }

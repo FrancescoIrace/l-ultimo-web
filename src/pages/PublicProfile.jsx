@@ -637,10 +637,9 @@ export default function PublicProfile() {
                                     type="button"
                                     onClick={() => alert('Badge acquisito come Tester Ultimo 2026')}
                                     title="Badge acquisito come Tester Ultimo 2026"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700"
+                                    className="flex items-center justify-center p-1"
                                 >
-                                    <img src="/badges/badge-tester.svg" alt="" className="w-[15px] h-[15px]" />
-                                    Tester Interno
+                                    <img src="/badges/badge-tester.svg" alt="Tester Interno" className="w-12 h-12" />
                                 </button>
                             )}
                             {seasonBadges.map((badge, i) => {

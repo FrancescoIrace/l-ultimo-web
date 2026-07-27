@@ -975,13 +975,17 @@ Scopri di più qui: ${window.location.href}`;
                 </button>
             </div> */}
             {/* HEADER FISSO SUPERIORE - Azioni Admin (Invio reminder, modifica, elimina) - azioni Utente ordinario (condividi) */}
-            <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+            <div className="bg-white border-b border-gray-100 sticky top-0 z-30 px-4 py-3">
+                {/* Riga 1: solo Indietro */}
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all"
+                    className="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all mb-2"
                 >
                     ‹ Indietro
                 </button>
+
+                {/* Riga 2: sport a sinistra, azioni a destra */}
+                <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-widest px-3 py-1 bg-blue-50 text-blue-600 rounded-full">
                     {match.sport}
                 </span>
@@ -1042,6 +1046,7 @@ Scopri di più qui: ${window.location.href}`;
                         </button>
                     </div>
                 )}
+                </div>
             </div>
 
             {/* CONTENUTO DELLA PAGINA */}

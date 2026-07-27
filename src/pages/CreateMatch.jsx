@@ -5,9 +5,10 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
-import { Info, ChevronRight, Building2 } from 'lucide-react';
+import { Info, ChevronRight, Building2, Trees } from 'lucide-react';
 import Loader from '../components/Loader';
 import CenterCourtPicker from '../components/CenterCourtPicker';
+import PublicCourtPicker from '../components/PublicCourtPicker';
 import GetSportStyle, { validateBookingTime, getSportCategoryForMatch } from '../pages/business/BusinessUtils';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { notifyMatchUpdate } from '../lib/notificationService';
@@ -36,6 +37,8 @@ export default function CreateMatch() {
     const [selectedCenter, setSelectedCenter] = useState(null); // sempre l'id (stringa) del centro, mai l'oggetto
     const [selectedCourtInfo, setSelectedCourtInfo] = useState(null); // {id, name, sport_type} solo per la label del bottone
     const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [selectedPublicCourt, setSelectedPublicCourt] = useState(null); // {id, name} solo per la label del bottone
+    const [isPublicCourtPickerOpen, setIsPublicCourtPickerOpen] = useState(false);
     const [myTeams, setMyTeams] = useState([]);
     const [originalMatch, setOriginalMatch] = useState(null); // Snapshot pre-modifica, per capire cosa notificare
 
@@ -74,6 +77,7 @@ export default function CreateMatch() {
     function handlePickerSelect(center, court) {
         setSelectedCenter(center.id);
         setSelectedCourtInfo({ id: court.id, name: court.name, sport_type: court.sport_type });
+        setSelectedPublicCourt(null); // mutuamente esclusivo col campo pubblico
         setFormData(prev => ({
             ...prev,
             court_id: court.id,
@@ -82,6 +86,24 @@ export default function CreateMatch() {
             location_lng: center.lng != null ? parseFloat(center.lng) : prev.location_lng,
         }));
         setIsPickerOpen(false);
+    }
+
+    // Gestisce la selezione fatta dalla modale campi pubblici: valorizza solo
+    // il "Luogo" (stessi campi che scrive anche LocationPicker per un
+    // indirizzo libero) - niente court_id/reservation_status, un campo
+    // pubblico e' gratuito e senza gestore da cui aspettare un'approvazione.
+    function handlePublicCourtSelect(court) {
+        setSelectedPublicCourt({ id: court.id, name: court.name });
+        setSelectedCenter(null); // mutuamente esclusivo col centro affiliato
+        setSelectedCourtInfo(null);
+        setFormData(prev => ({
+            ...prev,
+            court_id: null,
+            location: court.address ? `${court.name} — ${court.address}` : court.name,
+            location_lat: court.lat,
+            location_lng: court.lng,
+        }));
+        setIsPublicCourtPickerOpen(false);
     }
 
     // Solo in creazione (in modifica lo sport è bloccato): se cambia lo sport dopo
@@ -627,6 +649,36 @@ export default function CreateMatch() {
                         onSelect={handlePickerSelect}
                     />
 
+                    {/* SELEZIONE CAMPO PUBBLICO */}
+                    <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                Campo pubblico <span className="lowercase italic normal-case font-normal text-slate-400">(opzionale)</span>
+                            </label>
+                        </div>
+                        <button
+                            type="button"
+                            disabled={isCourtLocked}
+                            onClick={() => setIsPublicCourtPickerOpen(true)}
+                            className={`w-full p-3 border rounded-xl text-left text-sm flex items-center justify-between gap-2 transition-colors ${isCourtLocked ? 'bg-slate-100 border-slate-100 opacity-60 cursor-not-allowed' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+                        >
+                            <span className="flex items-center gap-2 min-w-0">
+                                <Trees size={16} className="text-slate-400 flex-shrink-0" />
+                                <span className="truncate text-slate-800 font-medium">
+                                    {selectedPublicCourt ? selectedPublicCourt.name : 'Scegli un campetto gratuito...'}
+                                </span>
+                            </span>
+                            <ChevronRight size={16} className="text-slate-400 flex-shrink-0" />
+                        </button>
+                    </div>
+
+                    <PublicCourtPicker
+                        isOpen={isPublicCourtPickerOpen}
+                        onClose={() => setIsPublicCourtPickerOpen(false)}
+                        userId={userId}
+                        onSelect={handlePublicCourtSelect}
+                    />
+
                     {/* LUOGO E DESCRIZIONE */}
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Luogo</label>
@@ -857,6 +909,35 @@ export default function CreateMatch() {
                     userId={userId}
                     initialCenterId={selectedCenter}
                     onSelect={handlePickerSelect}
+                />
+
+                {/* SELEZIONE CAMPO PUBBLICO */}
+                <div className="p-4 bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-3">
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Campo pubblico <span className="lowercase italic normal-case font-normal text-slate-400">(opzionale)</span>
+                        </label>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setIsPublicCourtPickerOpen(true)}
+                        className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-left text-sm flex items-center justify-between gap-2 hover:bg-slate-100 transition-colors"
+                    >
+                        <span className="flex items-center gap-2 min-w-0">
+                            <Trees size={16} className="text-slate-400 flex-shrink-0" />
+                            <span className="truncate text-slate-800 font-medium">
+                                {selectedPublicCourt ? selectedPublicCourt.name : 'Scegli un campetto gratuito...'}
+                            </span>
+                        </span>
+                        <ChevronRight size={16} className="text-slate-400 flex-shrink-0" />
+                    </button>
+                </div>
+
+                <PublicCourtPicker
+                    isOpen={isPublicCourtPickerOpen}
+                    onClose={() => setIsPublicCourtPickerOpen(false)}
+                    userId={userId}
+                    onSelect={handlePublicCourtSelect}
                 />
 
                 {/* LUOGO E DESCRIZIONE */}

@@ -6,6 +6,7 @@ import { ChevronLeft, ShieldAlert, Trash2, Ban, ShieldCheck, Search, MessageCirc
 import Loader from '../components/Loader';
 import LocationPicker from '../components/LocationPicker';
 import GestisciCampi from './business/GestisciCampi';
+import GestisciCampiPubblici from '../components/GestisciCampiPubblici';
 
 const PAGE_SIZE = 30;
 
@@ -571,6 +572,7 @@ export default function AdminDashboard({ session }) {
         { key: 'reports', label: 'Segnalazioni', count: reports.length + chatReports.length },
         { key: 'users', label: 'Utenti', count: null },
         { key: 'centers', label: 'Centri', count: centers.length },
+        { key: 'publicCourts', label: 'Campi Pubblici', count: null },
     ];
 
     return (
@@ -982,6 +984,13 @@ export default function AdminDashboard({ session }) {
                         )}
                     </div>
                 </section>
+            )}
+
+            {/* ── CAMPI PUBBLICI ── */}
+            {activeTab === 'publicCourts' && (
+                <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+                    <GestisciCampiPubblici />
+                </div>
             )}
 
             {isCreateCenterOpen && (

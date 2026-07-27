@@ -97,7 +97,7 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   }, [user]);
 
   // Partite future organizzate dall'utente, per la sezione "Prossime partite"
-  // sopra "Centri Associati" — nascosta del tutto se non ce n'è nessuna.
+  // sopra "Centri e Campi Pubblici" — nascosta del tutto se non ce n'è nessuna.
   useEffect(() => {
     const fetchMyMatches = async () => {
       const pad = (n) => String(n).padStart(2, '0');
@@ -429,8 +429,8 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
               <Building2 size={24} />
             </div>
             <div>
-              <h3 className="text-slate-900 font-bold text-base">Centri Associati</h3>
-              <p className="text-slate-500 text-xs mt-0.5">Scopri i nostri partner ufficiali</p>
+              <h3 className="text-slate-900 font-bold text-base">Centri e Campi Pubblici</h3>
+              <p className="text-slate-500 text-xs mt-0.5">Strutture affiliate e campetti gratuiti vicino a te</p>
             </div>
           </div>
 

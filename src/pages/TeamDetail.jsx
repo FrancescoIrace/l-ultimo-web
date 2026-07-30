@@ -840,25 +840,28 @@ export default function TeamDetail({ session }) {
                             {templates.map((t) => {
                                 const day = WEEKDAYS.find((d) => d.value === t.default_weekday)?.label;
                                 return (
-                                    <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-black text-slate-800 text-sm truncate">{t.name || t.sport}</p>
-                                            <p className="text-[11px] text-slate-400 font-bold">
-                                                {t.sport}{day ? ` · ${day}` : ''}{t.default_time ? ` ${t.default_time}` : ''}
-                                            </p>
+                                    <div key={t.id} className="p-3 bg-slate-50 rounded-2xl">
+                                        <div className="flex items-start justify-between gap-2 mb-2.5">
+                                            <div className="min-w-0">
+                                                <p className="font-black text-slate-800 text-sm truncate">{t.name || t.sport}</p>
+                                                <p className="text-[11px] text-slate-400 font-bold">
+                                                    {t.sport}{day ? ` · ${day}` : ''}{t.default_time ? ` ${t.default_time}` : ''}
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-1 flex-shrink-0">
+                                                <button onClick={() => { setEditingTemplate(t); setTemplateFormOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-colors" title="Modifica">
+                                                    <Edit size={16} />
+                                                </button>
+                                                <button onClick={() => deleteTemplate(t)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Elimina">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                         <button
                                             onClick={() => setSpawnTemplate(t)}
-                                            title="Programma la prossima"
-                                            className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 font-black rounded-xl uppercase text-[10px] tracking-widest hover:bg-blue-100 transition-colors active:scale-95 flex-shrink-0"
+                                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-600 text-white font-black rounded-xl uppercase text-[11px] tracking-widest hover:bg-blue-700 transition-colors active:scale-95"
                                         >
-                                            <Rocket size={13} /> Programma
-                                        </button>
-                                        <button onClick={() => { setEditingTemplate(t); setTemplateFormOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0" title="Modifica">
-                                            <Edit size={16} />
-                                        </button>
-                                        <button onClick={() => deleteTemplate(t)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0" title="Elimina">
-                                            <Trash2 size={16} />
+                                            <Rocket size={14} /> Programma la prossima
                                         </button>
                                     </div>
                                 );

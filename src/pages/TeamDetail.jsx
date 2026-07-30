@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit } from 'lucide-react';
+import { Plus, Users, Search, Copy, Check, ArrowLeft, ChevronRight, Lock, Info, UserPlus, UserMinus, Share2, Trash2, Edit, Repeat, Rocket } from 'lucide-react';
 import Loader from '../components/Loader';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../components/AlertComponent';
 import { useNavigate, useParams } from 'react-router-dom';
 import { notifyTeamInvite, notifyTeamMemberJoined } from '../lib/notificationService';
+import RecurringMatchForm from '../components/RecurringMatchForm';
+import SpawnRecurringMatchModal from '../components/SpawnRecurringMatchModal';
+import { WEEKDAYS } from '../lib/matchSports';
 
 // Funzione helper per determinare il colore del testo in base all'esadecimale di sfondo
 const getTextColorClass = (hexColor) => {
@@ -48,7 +51,30 @@ export default function TeamDetail({ session }) {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordInput, setPasswordInput] = useState('');
     const [verifyingPassword, setVerifyingPassword] = useState(false);
+    const [templates, setTemplates] = useState([]);
+    const [templateFormOpen, setTemplateFormOpen] = useState(false);
+    const [editingTemplate, setEditingTemplate] = useState(null);
+    const [spawnTemplate, setSpawnTemplate] = useState(null);
     const { success, error, confirm } = useAlert();
+
+    const isCreator = teamDetails?.created_by === userId;
+
+    async function loadTemplates() {
+        const { data } = await supabase
+            .from('match_templates')
+            .select('*')
+            .eq('team_id', teamId)
+            .order('created_at', { ascending: true });
+        setTemplates(data || []);
+    }
+
+    async function deleteTemplate(t) {
+        confirm('Eliminare questa partita ricorrente?', async () => {
+            const { error: err } = await supabase.from('match_templates').delete().eq('id', t.id);
+            if (!err) { success('Partita ricorrente eliminata'); loadTemplates(); }
+            else error("Errore durante l'eliminazione");
+        });
+    }
 
     const loadTeamDetails = async () => {
         if (!teamId) return;
@@ -112,6 +138,12 @@ export default function TeamDetail({ session }) {
         if (!teamId) return;
         loadTeamDetails();
     }, [teamId, userId]);
+
+    // Template ricorrenti: caricati solo per il creatore (unico a gestirli/lanciarli).
+    useEffect(() => {
+        if (teamDetails && teamDetails.created_by === userId) loadTemplates();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [teamDetails, userId]);
 
     useEffect(() => {
         if (showInviteModal && !friends.length) {
@@ -778,6 +810,64 @@ export default function TeamDetail({ session }) {
                 )
             }
 
+            {/* PARTITE RICORRENTI (solo il creatore) */}
+            {isCreator && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                    className="bg-white rounded-2xl p-6 shadow-md mb-6"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Repeat size={20} className="text-slate-700" />
+                            <h2 className="text-lg font-black text-slate-800">Partite ricorrenti</h2>
+                        </div>
+                        <button
+                            onClick={() => { setEditingTemplate(null); setTemplateFormOpen(true); }}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white font-black rounded-xl uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-colors active:scale-95"
+                        >
+                            <Plus size={14} /> Nuova
+                        </button>
+                    </div>
+
+                    {templates.length === 0 ? (
+                        <p className="text-slate-400 text-sm text-center py-3">
+                            Crea la tua partita fissa (es. "Calcetto del martedì"): poi la riprogrammi ogni settimana con un tap.
+                        </p>
+                    ) : (
+                        <div className="space-y-2.5">
+                            {templates.map((t) => {
+                                const day = WEEKDAYS.find((d) => d.value === t.default_weekday)?.label;
+                                return (
+                                    <div key={t.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-black text-slate-800 text-sm truncate">{t.name || t.sport}</p>
+                                            <p className="text-[11px] text-slate-400 font-bold">
+                                                {t.sport}{day ? ` · ${day}` : ''}{t.default_time ? ` ${t.default_time}` : ''}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setSpawnTemplate(t)}
+                                            title="Programma la prossima"
+                                            className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 font-black rounded-xl uppercase text-[10px] tracking-widest hover:bg-blue-100 transition-colors active:scale-95 flex-shrink-0"
+                                        >
+                                            <Rocket size={13} /> Programma
+                                        </button>
+                                        <button onClick={() => { setEditingTemplate(t); setTemplateFormOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0" title="Modifica">
+                                            <Edit size={16} />
+                                        </button>
+                                        <button onClick={() => deleteTemplate(t)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0" title="Elimina">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </motion.div>
+            )}
+
             {/* MEMBRI */}
             <motion.div
                 initial={{ opacity: 0 }}
@@ -995,6 +1085,20 @@ export default function TeamDetail({ session }) {
                     </div>
                 )
             }
+
+            {/* Modali partite ricorrenti */}
+            <RecurringMatchForm
+                isOpen={templateFormOpen}
+                onClose={() => setTemplateFormOpen(false)}
+                teamId={teamId}
+                existing={editingTemplate}
+                onSaved={loadTemplates}
+            />
+            <SpawnRecurringMatchModal
+                isOpen={!!spawnTemplate}
+                onClose={() => setSpawnTemplate(null)}
+                template={spawnTemplate}
+            />
         </div >
     );
 }

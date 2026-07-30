@@ -11,7 +11,7 @@ import LocationPicker from '../components/LocationPicker';
 import { useAlert } from '../components/AlertComponent';
 import { SPORT_ROLES } from '../lib/sportRoles';
 import { CardOptionPicker, PickerTrigger } from '../components/CardOptionPicker';
-import { LEVEL_OPTIONS, GENDER_OPTIONS, SPORT_OPTIONS } from '../lib/profileFieldOptions';
+import { LEVEL_OPTIONS, GENDER_OPTIONS, SPORT_OPTIONS, AVAILABILITY_OPTIONS } from '../lib/profileFieldOptions';
 
 // Colore/etichetta badge di fine stagione: rank 1/2/3 = podio, rank nullo =
 // ha comunque partecipato (vedi quiz_season_results, stessa logica di
@@ -42,6 +42,8 @@ export default function Profile({ session }) {
     const [genderPickerOpen, setGenderPickerOpen] = useState(false);
     const [sportPickerOpen, setSportPickerOpen] = useState(false);
     const [levelPickerOpen, setLevelPickerOpen] = useState(false);
+    const [matchesPlayed, setMatchesPlayed] = useState(0);
+    const [matchesOrganized, setMatchesOrganized] = useState(0);
 
     // Avatar: il file compresso resta "in sospeso" (solo anteprima locale)
     // finche' non si preme Salva, cosi' Annulla non lascia comunque cambiato
@@ -63,12 +65,28 @@ export default function Profile({ session }) {
         avatar_url: null,
         favorite_sport: '',
         experience_level: '',
+        soprannome: '',
+        bio: '',
+        availability: [],
         cellulare: null,
         role: '',
         business_address: '',
         lat: null,
         lng: null
     });
+
+    // Toggle di una fascia di disponibilità nel form (chip multi-select).
+    const toggleAvailability = (slot) => {
+        setEditData((prev) => {
+            const current = prev.availability || [];
+            return {
+                ...prev,
+                availability: current.includes(slot)
+                    ? current.filter((s) => s !== slot)
+                    : [...current, slot],
+            };
+        });
+    };
 
     const handleSportChange = (selectedSport) => {
         setEditData({
@@ -153,6 +171,14 @@ export default function Profile({ session }) {
             .eq('profile_id', session.user.id)
             .order('created_at', { ascending: false });
         setSeasonBadges(seasonResultsData || []);
+
+        // Statistiche "carriera": giocate (fino alla fine) + organizzate.
+        // Calcolate server-side (RPC) per coerenza con la vista pubblica.
+        const { data: statsData } = await supabase
+            .rpc('get_profile_stats', { p_profile_id: session.user.id })
+            .maybeSingle();
+        setMatchesPlayed(statsData?.matches_played ?? 0);
+        setMatchesOrganized(statsData?.matches_organized ?? 0);
 
         //Se l'utente è un centro sportivo, non carichiamo le partite a cui partecipa, ma solo quelle inerenti al suo centro.
         if (profileData?.role === 'center') {
@@ -318,6 +344,9 @@ export default function Profile({ session }) {
                 avatar_url: avatarUrlToSave,
                 favorite_sport: editData.favorite_sport,
                 experience_level: editData.experience_level,
+                soprannome: editData.soprannome?.trim() || null,
+                bio: editData.bio?.trim() || null,
+                availability: editData.availability?.length ? editData.availability : null,
                 cellulare: cleanCellulare || null,
                 business_address: editData.business_address,
                 lat: editData.lat ? parseFloat(editData.lat) : null,
@@ -653,76 +682,131 @@ export default function Profile({ session }) {
                 {!isEditing ? (
                     <>
                         {/* ── HEADER ── */}
-                        <div className="bg-white px-6 pt-6 pb-5 mb-4">
-                            <button
-                                onClick={() => navigate(-1)}
-                                type="button"
-                                className="mb-4 flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
-                            >
-                                <ChevronRight size={14} className="rotate-180" />
-                                Indietro
-                            </button>
+                        <div className="mb-4">
+                            {/* Cover */}
+                            <div className="relative h-28 bg-gradient-to-br from-blue-600 to-blue-500">
+                                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(255,255,255,0.18) 22px 23px)' }} />
+                                <button
+                                    onClick={() => navigate(-1)}
+                                    type="button"
+                                    className="absolute top-4 left-4 flex items-center gap-1.5 text-xs font-bold uppercase text-white/90 hover:text-white transition"
+                                >
+                                    <ChevronRight size={14} className="rotate-180" />
+                                    Indietro
+                                </button>
+                            </div>
 
-                            <div className="flex items-center gap-4 mb-5">
-                                <div className="w-20 h-20 bg-blue-100 rounded-full flex-shrink-0 flex items-center justify-center text-3xl font-black text-blue-600 border-4 border-white shadow-lg overflow-hidden">
+                            {/* Card profilo sovrapposta alla cover */}
+                            <div className="relative z-10 bg-white px-5 pb-5">
+                                <div className="w-24 h-24 -mt-12 bg-blue-100 rounded-full flex items-center justify-center text-3xl font-black text-blue-600 border-4 border-white shadow-lg overflow-hidden">
                                     {profile?.avatar_url
                                         ? <img src={profile.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                                         : profile?.username?.charAt(0).toUpperCase()
                                     }
                                 </div>
-                                <div className="min-w-0 flex-1">
+
+                                <div className="mt-3">
                                     <h2 className="text-2xl font-black uppercase tracking-tight text-slate-900 leading-tight truncate">{profile?.username}</h2>
-                                    <p className="text-slate-400 text-xs font-bold mt-0.5">
+                                    {profile?.soprannome && (
+                                        <p className="text-blue-600 font-black text-sm leading-tight">"{profile.soprannome}"</p>
+                                    )}
+                                    <p className="text-slate-400 text-xs font-bold mt-1">
                                         📍 {profile?.location || profile?.province}
                                         {profile?.location && profile?.zip_code ? ` (${profile.zip_code})` : ''}
                                     </p>
-                                    <p className="text-slate-300 text-[10px] font-bold mt-1 uppercase">
+                                    <p className="text-slate-300 text-[10px] font-bold mt-0.5 uppercase">
                                         Iscritto il {new Date(session?.user.created_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </p>
                                 </div>
-                            </div>
 
-                            {/* Stats row */}
-                            <div className="flex items-center rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm">
-                                <button
-                                    onClick={() => navigate('/richieste-amici', { state: { tab: 'friends' } })}
-                                    className="flex-1 flex flex-col items-center py-3 border-r border-slate-100 hover:bg-blue-50 transition active:scale-95"
-                                >
-                                    <span className="text-xl font-black text-slate-800">{friendCount}</span>
-                                    <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Amici</span>
-                                </button>
-                                {/* <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
-                                    <span className="text-xl font-black text-slate-800">{myReviews.length}</span>
-                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
+                                {/* Chip sport preferito + livello */}
+                                {(profile?.favorite_sport || profile?.experience_level) && (
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                        {profile?.favorite_sport && (() => {
+                                            const s = SPORT_OPTIONS.find(o => o.value === profile.favorite_sport);
+                                            return (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black" style={{ background: s?.bg ?? '#F1F5F9', color: s?.fg ?? '#64748B' }}>
+                                                    {s?.icon}{profile.favorite_sport}
+                                                </span>
+                                            );
+                                        })()}
+                                        {profile?.experience_level && (() => {
+                                            const l = LEVEL_OPTIONS.find(o => o.value === profile.experience_level);
+                                            return (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black" style={{ background: l?.bg ?? '#F1F5F9', color: l?.fg ?? '#64748B' }}>
+                                                    {l?.icon}{profile.experience_level}
+                                                </span>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
+
+                                {/* Statistiche di carriera */}
+                                <div className="grid grid-cols-2 gap-2 mt-4">
+                                    <div className="flex flex-col items-center py-3 rounded-2xl bg-blue-50 border border-blue-100">
+                                        <span className="text-2xl font-black text-blue-700 tabular-nums">{matchesPlayed}</span>
+                                        <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Giocate</span>
+                                    </div>
+                                    <div className="flex flex-col items-center py-3 rounded-2xl bg-blue-50 border border-blue-100">
+                                        <span className="text-2xl font-black text-blue-700 tabular-nums">{matchesOrganized}</span>
+                                        <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Organizzate</span>
+                                    </div>
                                 </div>
-                                <div className="flex-1 flex flex-col items-center py-3">
-                                    <span className="text-xl font-black text-yellow-500">
-                                        {myReviews.length > 0
-                                            ? (myReviews.reduce((acc, r) => acc + r.rating, 0) / myReviews.length).toFixed(1)
-                                            : '—'}
-                                    </span>
-                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
-                                </div> */}
-                                <button
-                                    onClick={() => navigate('/recensioni')}
-                                    className="flex-1 flex flex-col items-center py-3 border-r border-slate-100 hover:bg-blue-50 transition active:scale-95"
-                                >
-                                    <span className="text-xl font-black text-slate-800">{myReviews.length}</span>
-                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
-                                </button>
-                                <button
-                                    onClick={() => navigate('/recensioni')}
-                                    className="flex-1 flex flex-col items-center py-3 hover:bg-blue-50 transition active:scale-95"
-                                >
-                                    <span className="text-xl font-black text-yellow-500">
-                                        {myReviews.length > 0
-                                            ? (myReviews.reduce((acc, r) => acc + r.rating, 0) / myReviews.length).toFixed(1)
-                                            : '—'}
-                                    </span>
-                                    <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
-                                </button>
+
+                                {/* Amici / Recensioni / Media voti */}
+                                <div className="grid grid-cols-3 gap-2 mt-2">
+                                    <button
+                                        onClick={() => navigate('/richieste-amici', { state: { tab: 'friends' } })}
+                                        className="flex flex-col items-center py-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition active:scale-95"
+                                    >
+                                        <span className="text-lg font-black text-slate-800 tabular-nums">{friendCount}</span>
+                                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Amici</span>
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/recensioni')}
+                                        className="flex flex-col items-center py-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition active:scale-95"
+                                    >
+                                        <span className="text-lg font-black text-slate-800 tabular-nums">{myReviews.length}</span>
+                                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Recensioni</span>
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/recensioni')}
+                                        className="flex flex-col items-center py-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition active:scale-95"
+                                    >
+                                        <span className="text-lg font-black text-yellow-500 tabular-nums">
+                                            {myReviews.length > 0
+                                                ? (myReviews.reduce((acc, r) => acc + r.rating, 0) / myReviews.length).toFixed(1)
+                                                : '—'}
+                                        </span>
+                                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Media voti</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
+                        {/* ── SU DI ME + DISPONIBILITÀ ── */}
+                        {(profile?.bio || (profile?.availability?.length > 0)) && (
+                            <div className="mx-4 mb-4 bg-white rounded-3xl shadow-sm p-4 space-y-4">
+                                {profile?.bio && (
+                                    <div>
+                                        <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-2">Su di me</p>
+                                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
+                                    </div>
+                                )}
+                                {profile?.availability?.length > 0 && (
+                                    <div>
+                                        <p className="text-[14px] font-black uppercase text-slate-400 tracking-widest mb-2">Disponibilità</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {profile.availability.map((slot) => (
+                                                <span key={slot} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                                    <CalendarDays size={13} />{slot}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* ── BADGE ── */}
                         {(isEarlyTester || seasonBadges.length > 0) && (
@@ -977,6 +1061,18 @@ export default function Profile({ session }) {
                                     />
                                 </div>
 
+                                {/* Soprannome */}
+                                <div>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Soprannome</label>
+                                    <input
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                                        placeholder='es. "Bomber"'
+                                        maxLength={24}
+                                        value={editData.soprannome ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, soprannome: e.target.value })}
+                                    />
+                                </div>
+
                                 {/* Posizione di base */}
                                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                                     <p className="text-sm font-semibold text-slate-700 mb-2">Posizione di base</p>
@@ -1028,6 +1124,42 @@ export default function Profile({ session }) {
                                         placeholder="Scegli il livello"
                                         onClick={() => setLevelPickerOpen(true)}
                                     />
+                                </div>
+
+                                {/* Bio "Su di me" */}
+                                <div>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Su di me</label>
+                                    <textarea
+                                        rows={3}
+                                        maxLength={300}
+                                        placeholder="Due righe su di te: come giochi, cosa cerchi..."
+                                        className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-600 font-bold resize-none"
+                                        value={editData.bio ?? ''}
+                                        onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
+                                    />
+                                </div>
+
+                                {/* Disponibilità */}
+                                <div>
+                                    <label className="text-xs font-black uppercase text-slate-400 ml-2 mb-1.5 block">Disponibilità</label>
+                                    <p className="text-xs text-slate-500 ml-2 mb-3">Quando giochi di solito — aiuta gli altri a trovarti.</p>
+                                    <div className="flex flex-wrap gap-2 p-4 bg-slate-50 rounded-2xl">
+                                        {AVAILABILITY_OPTIONS.map((slot) => {
+                                            const active = (editData.availability || []).includes(slot);
+                                            return (
+                                                <button
+                                                    key={slot}
+                                                    type="button"
+                                                    onClick={() => toggleAvailability(slot)}
+                                                    className={`px-3 py-1.5 rounded-full text-sm font-bold border transition-all ${active
+                                                        ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}
+                                                >
+                                                    {slot}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                                 {/* Ruoli preferiti */}

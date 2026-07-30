@@ -40,6 +40,8 @@ export default function PublicProfile() {
     const blockMenuRef = useRef(null);
     const [isEarlyTester, setIsEarlyTester] = useState(false);
     const [seasonBadges, setSeasonBadges] = useState([]);
+    const [matchesPlayed, setMatchesPlayed] = useState(0);
+    const [matchesOrganized, setMatchesOrganized] = useState(0);
 
     useEffect(() => {
         async function getPublicProfile() {
@@ -138,10 +140,21 @@ export default function PublicProfile() {
             }
         }
 
+        // Statistiche di carriera (giocate fino alla fine + organizzate),
+        // calcolate server-side per bypassare le RLS su participants/matches.
+        async function getMatchStats() {
+            const { data } = await supabase
+                .rpc('get_profile_stats', { p_profile_id: id })
+                .maybeSingle();
+            setMatchesPlayed(data?.matches_played ?? 0);
+            setMatchesOrganized(data?.matches_organized ?? 0);
+        }
+
         if (id) {
             getPublicProfile();
             getBadges();
             getProfileStats();
+            getMatchStats();
             getSquads();
             fetchReviews();
 
@@ -490,23 +503,24 @@ export default function PublicProfile() {
     // senza `role` impostato.
     return (
             <div className="max-w-md mx-auto p-6 bg-white min-h-screen">
-                {/* Tasto Indietro + menu contestuale */}
-                <div className="mb-4 flex items-center justify-between">
+                {/* ── HEADER con cover ── */}
+                <div className="-mx-6 -mt-6 relative h-28 bg-gradient-to-br from-blue-600 to-blue-500">
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(255,255,255,0.18) 22px 23px)' }} />
                     <button
                         onClick={() => navigate(-1)}
                         type="button"
-                        className="flex items-center gap-1.5 text-xs font-bold uppercase text-slate-400 hover:text-slate-600 transition"
+                        className="absolute top-4 left-4 flex items-center gap-1.5 text-xs font-bold uppercase text-white/90 hover:text-white transition"
                     >
                         <ChevronRight size={14} className="rotate-180" />
                         Indietro
                     </button>
 
                     {currentUser && currentUser.id !== id && (
-                        <div className="relative" ref={blockMenuRef}>
+                        <div className="absolute top-3 right-4" ref={blockMenuRef}>
                             <button
                                 type="button"
                                 onClick={() => setBlockMenuOpen(!blockMenuOpen)}
-                                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+                                className="text-white/90 hover:text-white transition-colors p-1"
                                 aria-label="Altre opzioni"
                                 disabled={blockActionLoading}
                             >
@@ -540,23 +554,40 @@ export default function PublicProfile() {
                     )}
                 </div>
 
-                <div className="flex flex-col items-center mb-6">
-                    <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4 border-4 border-blue-50 shadow-xl overflow-hidden">
+                <div className="relative z-10 mb-6">
+                    <div className="w-24 h-24 -mt-12 bg-slate-100 rounded-full flex items-center justify-center text-4xl border-4 border-white shadow-xl overflow-hidden">
                         {profile?.avatar_url ? (
                             <img src={profile.avatar_url} alt="avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                         ) : (
                             <span className="font-black text-blue-600">{profile?.username?.charAt(0).toUpperCase()}</span>
                         )}
                     </div>
-                    <h2 className="w-full px-2 text-3xl font-black uppercase tracking-tighter text-slate-800 text-center truncate">
-                        {profile?.username}
-                    </h2>
-                    <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mt-1">
-                        {profile?.province}
-                    </p>
+                    <div className="mt-3">
+                        <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-800 leading-tight truncate">
+                            {profile?.username}
+                        </h2>
+                        {profile?.soprannome && (
+                            <p className="text-blue-600 font-black text-sm leading-tight">"{profile.soprannome}"</p>
+                        )}
+                        {profile?.province && (
+                            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">📍 {profile.province}</p>
+                        )}
+                    </div>
+
+                    {/* Statistiche di carriera */}
+                    <div className="flex items-center mt-4 w-full border border-blue-100 rounded-2xl overflow-hidden bg-blue-50 shadow-sm">
+                        <div className="flex-1 flex flex-col items-center py-3 border-r border-blue-100">
+                            <span className="text-xl font-black text-blue-700 tabular-nums">{matchesPlayed}</span>
+                            <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Giocate</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center py-3">
+                            <span className="text-xl font-black text-blue-700 tabular-nums">{matchesOrganized}</span>
+                            <span className="text-[10px] font-bold uppercase text-blue-500 tracking-wide">Organizzate</span>
+                        </div>
+                    </div>
 
                     {/* Stats row — stile Instagram */}
-                    <div className="flex items-center gap-0 mt-5 w-full border border-slate-100 rounded-2xl overflow-hidden bg-slate-50 shadow-sm">
+                    <div className="flex items-center gap-0 mt-2 w-full border border-slate-100 rounded-2xl overflow-hidden bg-slate-50 shadow-sm">
                         <div className="flex-1 flex flex-col items-center py-3 border-r border-slate-100">
                             <span className="text-xl font-black text-slate-800">{friendCount}</span>
                             <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wide">Amici</span>
@@ -615,6 +646,30 @@ export default function PublicProfile() {
                         </div>
                     )}
                 </div>
+
+                {/* Su di me + Disponibilità */}
+                {(profile?.bio || (profile?.availability?.length > 0)) && (
+                    <div className="mb-4 p-4 bg-slate-50 rounded-3xl space-y-4">
+                        {profile?.bio && (
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Su di me</p>
+                                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{profile.bio}</p>
+                            </div>
+                        )}
+                        {profile?.availability?.length > 0 && (
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Disponibilità</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {profile.availability.map((slot) => (
+                                        <span key={slot} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                            <Calendar size={13} />{slot}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Sport preferito & Livello di esperienza */}
                 {(profile?.favorite_sport || profile?.experience_level) && (

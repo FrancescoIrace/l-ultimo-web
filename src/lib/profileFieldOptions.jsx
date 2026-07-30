@@ -39,3 +39,14 @@ export const SPORT_OPTIONS = [
     { value: 'Corsa', label: 'Corsa', icon: <RunningIcon />, fg: '#E11D48', bg: '#FCE7EB' },
     { value: 'Palestra', label: 'Palestra', icon: <DumbbellIcon />, fg: '#7C3AED', bg: '#F1EBFD' },
 ];
+
+// Disponibilità tipica del giocatore: chip multi-select (salvate come text[]
+// in profiles.availability). Sole label, nessuna icona: è un semplice tag.
+export const AVAILABILITY_OPTIONS = [
+    'Sere infrasettimanali',
+    'Pausa pranzo',
+    'Weekend mattina',
+    'Weekend pomeriggio',
+    'Presto la mattina',
+    'Flessibile',
+];

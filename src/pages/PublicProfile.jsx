@@ -6,6 +6,7 @@ import { UserPlus, UserCheck, Clock, UserX, ChevronRight, MapPin, Building2, Pho
 import Loader from '../components/Loader';
 import { useAlert } from '../components/AlertComponent';
 import { SPORT_OPTIONS, LEVEL_OPTIONS } from '../lib/profileFieldOptions';
+import SeasonBadge from '../components/SeasonBadge';
 
 // Stessa mappatura di Profile.jsx/ClassificaMinigame.jsx: rank 1/2/3 = podio,
 // rank nullo = ha comunque partecipato alla stagione.
@@ -80,7 +81,7 @@ export default function PublicProfile() {
 
             const { data: seasonResultsData } = await supabase
                 .from('quiz_season_results')
-                .select('rank, points, quiz_seasons(name)')
+                .select('rank, points, quiz_seasons(name, season_number)')
                 .eq('profile_id', id)
                 .order('created_at', { ascending: false });
             setSeasonBadges(seasonResultsData || []);
@@ -715,26 +716,26 @@ export default function PublicProfile() {
                 {(isEarlyTester || seasonBadges.length > 0) && (
                     <div className="mb-4 p-4 bg-slate-50 rounded-3xl">
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Badge</p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap items-start gap-3">
                             {isEarlyTester && (
                                 <button
                                     type="button"
                                     onClick={() => alert('Badge acquisito come Tester Ultimo 2026')}
                                     title="Badge acquisito come Tester Ultimo 2026"
-                                    className="flex items-center justify-center p-1"
+                                    className="flex flex-col items-center gap-1 w-16 p-1"
                                 >
-                                    <img src="/badges/badge-tester.svg" alt="Tester Interno" className="w-12 h-12" />
+                                    <img src="/badges/badge-tester.svg" alt="Tester Interno" className="w-14 h-14" />
+                                    <span className="text-[9px] font-bold text-slate-500 text-center leading-tight">Tester Interno</span>
                                 </button>
                             )}
-                            {seasonBadges.map((badge, i) => {
-                                const meta = SEASON_RANK_META[badge.rank] || SEASON_RANK_META.default;
-                                return (
-                                    <span key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black ${meta.className}`}>
-                                        <Award size={13} />
-                                        {meta.label} · {badge.quiz_seasons?.name}
-                                    </span>
-                                );
-                            })}
+                            {seasonBadges.map((badge, i) => (
+                                <SeasonBadge
+                                    key={i}
+                                    rank={badge.rank}
+                                    seasonNumber={badge.quiz_seasons?.season_number}
+                                    seasonName={badge.quiz_seasons?.name}
+                                />
+                            ))}
                         </div>
                     </div>
                 )}

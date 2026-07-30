@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Trophy, Medal, ChevronLeft, MapPin, Crown, Award } from 'lucide-react';
 import Loader from './Loader';
+import SeasonBadge from './SeasonBadge';
 
 const RANK_STYLES = {
   1: { label: 'Oro', badgeClass: 'bg-yellow-400 text-yellow-900' },
@@ -37,7 +38,7 @@ export default function ClassificaMinigame() {
       const todayStr = new Date().toISOString().split('T')[0];
       const { data: seasons, error: seasonsError } = await supabase
         .from('quiz_seasons')
-        .select('id, name, starts_on, ends_on')
+        .select('id, name, starts_on, ends_on, season_number')
         .lt('ends_on', todayStr)
         .order('starts_on', { ascending: false });
 
@@ -276,9 +277,7 @@ export default function ClassificaMinigame() {
                     <div className="space-y-2">
                       {season.podium.map(entry => (
                         <div key={entry.rank} className="flex items-center gap-3">
-                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 ${RANK_STYLES[entry.rank]?.badgeClass}`}>
-                            {entry.rank}
-                          </span>
+                          <SeasonBadge rank={entry.rank} seasonNumber={season.season_number} showName={false} size={32} />
                           <span className="flex-1 font-bold text-sm text-slate-800 truncate">{entry.profiles?.username || 'Utente eliminato'}</span>
                           <span className="text-xs font-bold text-slate-400">{entry.points} PT</span>
                         </div>

@@ -1,4 +1,4 @@
-import { Bell, Building2, Calendar, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown, MessageCircle } from 'lucide-react';
+import { Bell, Building2, Calendar, MapPin, Pencil, Share2, Trash2, UserMinus, UserPlus, CircleQuestionMark, ChevronRight, RefreshCw, Info, Crown, MessageCircle, Printer } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAlert } from '../components/AlertComponent';
@@ -18,6 +18,8 @@ export default function MatchDetail({ user }) {
     const [match, setMatch] = useState(null);
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [fieldNoteDraft, setFieldNoteDraft] = useState(''); // bozza nota "prenotazione campo" (organizzatore)
+    const [savingFieldBooking, setSavingFieldBooking] = useState(false);
     const [isJoined, setIsJoined] = useState(false);
     const navigate = useNavigate();
     const { alert, success, error, confirm, confirmDangerous } = useAlert();
@@ -119,6 +121,7 @@ export default function MatchDetail({ user }) {
         };
 
         setMatch(fullMatchData);
+        setFieldNoteDraft(fullMatchData.field_booking_note || '');
         setTeam1NameLocal(fullMatchData.team1_name || '');
         setTeam2NameLocal(fullMatchData.team2_name || '');
         setParticipants(partData || []);
@@ -959,6 +962,71 @@ Scopri di più qui: ${window.location.href}`;
         return `geo:${match.location_lat},${match.location_lng}?q=${encodeURIComponent(match.location)}`;
     };
 
+    // Aggiorna lo stato "prenotazione campo" (solo organizzatore, campi non affiliati).
+    async function updateFieldBooking(nextStatus, nextNote) {
+        if (savingFieldBooking) return;
+        setSavingFieldBooking(true);
+        const note = nextStatus && nextStatus !== 'not_needed' ? (nextNote ?? fieldNoteDraft) : null;
+        const { error: err } = await supabase
+            .from('matches')
+            .update({ field_booking_status: nextStatus || null, field_booking_note: note })
+            .eq('id', match.id);
+        setSavingFieldBooking(false);
+        if (err) { error('Errore nel salvataggio dello stato campo'); return; }
+        setMatch((prev) => (prev ? { ...prev, field_booking_status: nextStatus || null, field_booking_note: note } : prev));
+    }
+
+    const FIELD_BOOKING_META = {
+        booked: { label: 'Prenotato', icon: '✅', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+        to_book: { label: 'Da prenotare', icon: '⏳', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+        not_needed: { label: 'Non serve prenotare', icon: '➖', className: 'bg-slate-50 text-slate-600 border-slate-200' },
+    };
+
+    // Stampa/esporta la lista giocatori (titolari + coda) in una finestra
+    // print-friendly, per l'organizzatore/centro (foglio presenze al campo).
+    function printPlayerList() {
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const when = match.datetime
+            ? new Date(match.datetime.replace(' ', 'T')).toLocaleString('it-IT', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+            : '';
+        const teamFor = (n) => n === 1 ? (match.team1_name || 'Squadra A') : n === 2 ? (match.team2_name || 'Squadra B') : '—';
+        const roleFor = (uid) => (participantRoles[uid] || []).join(', ');
+        const bookMeta = { booked: 'Prenotato ✅', to_book: 'Da prenotare ⏳', not_needed: 'Non serve prenotare' };
+
+        const confirmedRows = confirmedPlayers.map((p, i) => `
+            <tr><td>${i + 1}</td><td>${esc(p.profiles?.username || '—')}</td><td>${esc(teamFor(p.team_number))}</td><td>${esc(roleFor(p.user_id))}</td><td class="c">${p.final_attendance ? '✓' : ''}</td></tr>`).join('');
+        const waitRows = waitingPlayers.map((p, i) => `
+            <tr><td>${i + 1}</td><td>${esc(p.profiles?.username || '—')}</td></tr>`).join('');
+
+        const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><title>Lista giocatori — ${esc(match.title || match.sport)}</title>
+        <style>
+            *{box-sizing:border-box} body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:32px;font-size:13px}
+            h1{font-size:20px;margin:0 0 2px} .meta{color:#444;margin:0 0 2px}
+            h2{font-size:14px;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #111;padding-bottom:4px}
+            table{width:100%;border-collapse:collapse;margin-top:6px} th,td{border:1px solid #999;padding:6px 8px;text-align:left}
+            th{background:#f0f0f0;font-size:11px;text-transform:uppercase;letter-spacing:.04em} td.c{text-align:center}
+            .muted{color:#666} @media print{body{margin:12mm}}
+        </style></head><body>
+            <h1>${esc(match.title || match.sport)}</h1>
+            <p class="meta">${esc(match.sport)}${when ? ' · ' + esc(when) : ''}</p>
+            ${match.location ? `<p class="meta">📍 ${esc(match.location)}</p>` : ''}
+            ${!match.court_id && match.field_booking_status ? `<p class="meta">Campo: ${esc(bookMeta[match.field_booking_status] || '')}${match.field_booking_note ? ' — ' + esc(match.field_booking_note) : ''}</p>` : ''}
+
+            <h2>Giocatori (${confirmedPlayers.length}/${match.max_players})</h2>
+            ${confirmedPlayers.length ? `<table><thead><tr><th>#</th><th>Giocatore</th><th>Squadra</th><th>Ruolo</th><th>Presente</th></tr></thead><tbody>${confirmedRows}</tbody></table>` : '<p class="muted">Nessun giocatore.</p>'}
+
+            <h2>Lista d'attesa (${waitingPlayers.length})</h2>
+            ${waitingPlayers.length ? `<table><thead><tr><th>#</th><th>Giocatore</th></tr></thead><tbody>${waitRows}</tbody></table>` : '<p class="muted">Nessuno in coda.</p>'}
+        </body></html>`;
+
+        const w = window.open('', '_blank');
+        if (!w) { error('Consenti i popup per stampare la lista.'); return; }
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        setTimeout(() => w.print(), 200);
+    }
+
     if (loading) return <Loader variant="page" />;
     if (!match) return <div className="p-10 text-center">Partita non trovata <button onClick={() => navigate('/')} className="text-blue-500 underline">Torna alla Home</button></div>;
 
@@ -1251,6 +1319,64 @@ Scopri di più qui: ${window.location.href}`;
                     }
 
 
+                    {/* STATO PRENOTAZIONE CAMPO (solo campi non affiliati) */}
+                    {!match?.court_id && (match?.creator_id === user.id || match?.field_booking_status) && (
+                        <div className="mb-6 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-3">Prenotazione campo</h4>
+
+                            {match?.creator_id === user.id ? (
+                                <>
+                                    <div className="flex gap-2">
+                                        {['booked', 'to_book', 'not_needed'].map((s) => {
+                                            const meta = FIELD_BOOKING_META[s];
+                                            const active = match.field_booking_status === s;
+                                            return (
+                                                <button
+                                                    key={s}
+                                                    type="button"
+                                                    disabled={savingFieldBooking}
+                                                    onClick={() => updateFieldBooking(active ? null : s)}
+                                                    className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-xs font-bold border transition-all disabled:opacity-50 ${active ? meta.className : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'}`}
+                                                >
+                                                    <span>{meta.icon}</span>{meta.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {match.field_booking_status && match.field_booking_status !== 'not_needed' && (
+                                        <div className="flex gap-2 mt-2">
+                                            <input
+                                                className="flex-1 p-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-1 focus:ring-blue-500 text-sm font-medium"
+                                                placeholder="Nota per i giocatori (opzionale)"
+                                                maxLength={120}
+                                                value={fieldNoteDraft}
+                                                onChange={(e) => setFieldNoteDraft(e.target.value)}
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={savingFieldBooking || fieldNoteDraft === (match.field_booking_note || '')}
+                                                onClick={() => updateFieldBooking(match.field_booking_status, fieldNoteDraft)}
+                                                className="px-4 rounded-xl bg-blue-600 text-white font-black text-xs uppercase tracking-wide disabled:opacity-40"
+                                            >
+                                                Salva
+                                            </button>
+                                        </div>
+                                    )}
+                                    <p className="mt-2 text-[11px] text-slate-400">Tienilo aggiornato così i giocatori sanno sempre se il campo è prenotato.</p>
+                                </>
+                            ) : (
+                                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-black border ${FIELD_BOOKING_META[match.field_booking_status]?.className || ''}`}>
+                                    <span>{FIELD_BOOKING_META[match.field_booking_status]?.icon}</span>
+                                    {FIELD_BOOKING_META[match.field_booking_status]?.label}
+                                </div>
+                            )}
+
+                            {match.field_booking_status && match.field_booking_status !== 'not_needed' && match.field_booking_note && (
+                                <p className="mt-2 text-sm text-slate-600 font-medium">“{match.field_booking_note}”</p>
+                            )}
+                        </div>
+                    )}
+
                     {match?.creator_id === user.id && match?.court_id && (
                         <div className={`mb-6 p-4 border rounded-2xl relative ${match.reservation_status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
                             <Info
@@ -1536,7 +1662,19 @@ Scopri di più qui: ${window.location.href}`;
                     </div>
                 )}
 
-                <h3 className="font-bold text-lg mb-4">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-lg">Giocatori ({confirmedPlayers.length}/{match.max_players})</h3>
+                    {user.id === match?.creator_id && (
+                        <button
+                            type="button"
+                            onClick={printPlayerList}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 font-black rounded-xl uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-colors active:scale-95"
+                            title="Stampa la lista (titolari + coda)"
+                        >
+                            <Printer size={13} /> Stampa lista
+                        </button>
+                    )}
+                </div>
 
                 {/* Controlli Organizzatore per Random e Salvataggio */}
                 {user.id === match?.creator_id && confirmedPlayers.length > 0 && (

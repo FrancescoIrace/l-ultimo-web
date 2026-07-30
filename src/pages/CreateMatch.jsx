@@ -31,7 +31,9 @@ export default function CreateMatch() {
         location_lng: null,
         max_players: 10, // Default per Calcetto
         description: '',
-        team_id: null
+        team_id: null,
+        field_booking_status: '', // '' | 'booked' | 'to_book' | 'not_needed' (solo per campi non affiliati)
+        field_booking_note: ''
     });
     const [centers, setCenters] = useState([]);
     const [selectedCenter, setSelectedCenter] = useState(null); // sempre l'id (stringa) del centro, mai l'oggetto
@@ -320,7 +322,11 @@ export default function CreateMatch() {
                 court_id: formData.court_id || null,
                 creator_id: user.id,
                 team_id: formData.team_id || null,
-                reservation_status: formData.court_id ? (id ? undefined : 'draft') : 'none'
+                reservation_status: formData.court_id ? (id ? undefined : 'draft') : 'none',
+                // Stato prenotazione manuale: solo per campi NON affiliati (per i
+                // centri c'è già reservation_status). Con un campo affiliato si azzera.
+                field_booking_status: formData.court_id ? null : (formData.field_booking_status || null),
+                field_booking_note: formData.court_id ? null : (formData.field_booking_note?.trim() || null)
                 // Nota: se è un update, potresti voler NON sovrascrivere lo stato della prenotazione
             };
 
@@ -499,6 +505,45 @@ export default function CreateMatch() {
     // risposta) o accettata, il campo non è più modificabile: cambiarlo ora
     // lascerebbe il vecchio campo prenotato mentre la partita punta altrove.
     const isCourtLocked = !!id && (formData.reservation_status === 'requested' || formData.reservation_status === 'confirmed');
+
+    // Selettore "prenotazione campo": mostrato solo per campi NON affiliati
+    // (per i centri c'è già il flusso reservation_status). L'organizzatore
+    // dichiara se il campo è prenotato/da prenotare, così avvisa i giocatori.
+    const BOOKING_OPTIONS = [
+        { value: 'booked', label: 'Prenotato', icon: '✅' },
+        { value: 'to_book', label: 'Da prenotare', icon: '⏳' },
+        { value: 'not_needed', label: 'Non serve', icon: '➖' },
+    ];
+    const fieldBookingSelector = !formData.court_id ? (
+        <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Prenotazione campo</label>
+            <div className="flex gap-2">
+                {BOOKING_OPTIONS.map((o) => {
+                    const active = formData.field_booking_status === o.value;
+                    return (
+                        <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => setFormData((prev) => ({ ...prev, field_booking_status: active ? '' : o.value }))}
+                            className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-xl text-sm font-bold border transition-all ${active ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'}`}
+                        >
+                            <span>{o.icon}</span>{o.label}
+                        </button>
+                    );
+                })}
+            </div>
+            {formData.field_booking_status && formData.field_booking_status !== 'not_needed' && (
+                <input
+                    className="w-full mt-2 p-3 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium"
+                    placeholder="Nota (es. 'prenotato a nome Marco', 'prenoto io entro giovedì')"
+                    maxLength={120}
+                    value={formData.field_booking_note || ''}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, field_booking_note: e.target.value }))}
+                />
+            )}
+            <p className="mt-1.5 text-[11px] text-slate-400">Facoltativo: avvisa i giocatori se il campo è già prenotato.</p>
+        </div>
+    ) : null;
 
     // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
@@ -687,6 +732,8 @@ export default function CreateMatch() {
                             onChange={(locationData) => setFormData(prev => ({ ...prev, ...locationData }))}
                         />
                     </div>
+
+                    {fieldBookingSelector}
 
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -948,6 +995,8 @@ export default function CreateMatch() {
                         onChange={(locationData) => setFormData(prev => ({ ...prev, ...locationData }))}
                     />
                 </div>
+
+                {fieldBookingSelector}
 
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">

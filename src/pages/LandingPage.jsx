@@ -125,64 +125,47 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* BETA TESTER (Android closed beta) */}
-            <section id="beta" className="bg-slate-900 text-white py-14 md:py-20">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-10 md:gap-12 items-center">
-                    <div>
-                        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-lime-300 bg-lime-300/10 px-3 py-1.5 rounded-full mb-5">
-                            ● Beta chiusa · Android
-                        </span>
-                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">Provala in anteprima. Diventa tester.</h2>
-                        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
-                            Cerchiamo tester Android. La provi prima di tutti e ti resta il badge <span className="text-lime-300 font-bold">Tester Interno</span> — che poi non si potrà più ottenere.
-                        </p>
-                        <ol className="space-y-2.5 mb-8">
-                            {[
-                                { n: '1', t: 'Iscriviti al gruppo tester', d: 'due click, self-service', href: 'https://groups.google.com/g/ultimo-app-testers' },
-                                { n: '2', t: 'Conferma di voler essere tester', d: 'apri il link e accetta', href: 'https://play.google.com/apps/testing/app.lultimo.twa' },
-                                { n: '3', t: "Scarica l'app e gioca", d: 'dal Play Store', href: 'https://play.google.com/store/apps/details?id=app.lultimo.twa' },
-                            ].map(step => (
-                                <li key={step.n}>
-                                    <a
-                                        href={step.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="group flex items-center gap-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl px-4 py-3 transition-colors"
-                                    >
-                                        <span className="w-8 h-8 flex-shrink-0 rounded-xl bg-lime-300 text-slate-900 font-black flex items-center justify-center">{step.n}</span>
-                                        <span className="flex-1 min-w-0">
-                                            <span className="block font-bold text-sm leading-tight">{step.t}</span>
-                                            <span className="block text-xs text-slate-300">{step.d}</span>
-                                        </span>
-                                        <ArrowRight size={16} className="text-slate-500 group-hover:text-lime-300 transition-colors flex-shrink-0" />
-                                    </a>
-                                </li>
-                            ))}
-                        </ol>
-                        <a
-                            href="https://groups.google.com/g/ultimo-app-testers"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-lime-300 text-slate-900 font-black px-6 py-3.5 rounded-2xl hover:bg-lime-200 transition-colors"
-                        >
-                            Entra nella beta <ArrowRight size={18} />
-                        </a>
-                    </div>
 
-                    {/* Badge Tester Interno */}
-                    <div className="flex justify-center md:justify-end">
-                        <svg viewBox="0 0 128 150" className="w-36 sm:w-44 drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M64 3 L121 23 V76 C121 114 96 137 64 147 C32 137 7 114 7 76 V23 Z" fill="#3166E2" />
-                            <path d="M64 3 L121 23 V76 C121 114 96 137 64 147 C32 137 7 114 7 76 V23 Z" fill="none" stroke="#16368F" strokeWidth="3" />
-                            <text x="64" y="86" textAnchor="middle" fontFamily="system-ui, Arial" fontWeight="900" fontSize="60" fill="#ffffff">U</text>
-                            <text x="65" y="114" textAnchor="middle" fontFamily="system-ui, Arial" fontWeight="800" fontSize="13" letterSpacing="3" fill="#C7EE62">TESTER</text>
-                        </svg>
+            {/* SQUADRE E RECENSIONI */}
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
+                <div className="mb-8">
+                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Squadra tua, partite su misura.</h2>
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-md">
+                        Non solo match aperti a tutti: costruisci il tuo gruppo fisso, crea la tua partita ricorrente e gioca con chi conosci.
+                    </p>
+                </div>
+
+                {/* Highlight: partite ricorrenti */}
+                <div className="mb-8 rounded-3xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-lg shadow-blue-200/60">
+                    <div className="w-14 h-14 flex-shrink-0 bg-white/15 rounded-2xl flex items-center justify-center">
+                        <Repeat size={26} />
                     </div>
+                    <div className="flex-1">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-900 bg-lime-300 px-2.5 py-1 rounded-full mb-2">
+                            ✦ Novità
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black mb-1.5">Partite ricorrenti</h3>
+                        <p className="text-blue-50 text-sm sm:text-base leading-relaxed max-w-2xl">
+                            Il calcetto del martedì? Lo imposti <span className="font-bold text-white">una volta sola</span> come partita fissa del gruppo, poi lo riprogrammi ogni settimana con un tap: cambi solo giorno e ora.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid sm:grid-cols-3 gap-6">
+                    {TEAM_FEATURES.map(item => (
+                        <div key={item.title}>
+                            <div className="w-11 h-11 flex items-center justify-center bg-blue-50 text-blue-600 rounded-2xl mb-3">
+                                <item.icon size={20} />
+                            </div>
+                            <h3 className="font-black text-lg mb-2 text-slate-800">{item.title}</h3>
+                            <p className="text-sm text-slate-600 leading-relaxed">{item.text}</p>
+                        </div>
+                    ))}
                 </div>
             </section>
 
             {/* AZIONI RAPIDE: CALENDARIO + NAVIGAZIONE */}
-            <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 md:pb-20">
+            <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
                 <div className="grid sm:grid-cols-2 gap-4">
                     {QUICK_ACTIONS.map(item => (
                         <div key={item.title} className="flex items-start gap-4 bg-blue-50 border border-blue-100 rounded-3xl p-5 sm:p-6">
@@ -199,7 +182,7 @@ export default function LandingPage() {
             </section>
 
             {/* DOVE GIOCARE: CENTRI + CAMPI PUBBLICI */}
-            <section id="dove-giocare" className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 md:pb-20">
+            <section id="dove-giocare" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
                 <div className="mb-8">
                     <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-green-600 bg-green-50 px-3 py-1.5 rounded-full mb-4">
                         <Sparkles size={13} /> Novità
@@ -313,43 +296,6 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* SQUADRE E RECENSIONI */}
-            <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 md:pb-20">
-                <div className="mb-8">
-                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Squadra tua, partite su misura.</h2>
-                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-md">
-                        Non solo match aperti a tutti: costruisci il tuo gruppo fisso, crea la tua partita ricorrente e gioca con chi conosci.
-                    </p>
-                </div>
-
-                {/* Highlight: partite ricorrenti */}
-                <div className="mb-8 rounded-3xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-lg shadow-blue-200/60">
-                    <div className="w-14 h-14 flex-shrink-0 bg-white/15 rounded-2xl flex items-center justify-center">
-                        <Repeat size={26} />
-                    </div>
-                    <div className="flex-1">
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-900 bg-lime-300 px-2.5 py-1 rounded-full mb-2">
-                            ✦ Novità
-                        </span>
-                        <h3 className="text-xl sm:text-2xl font-black mb-1.5">Partite ricorrenti</h3>
-                        <p className="text-blue-50 text-sm sm:text-base leading-relaxed max-w-2xl">
-                            Il calcetto del martedì? Lo imposti <span className="font-bold text-white">una volta sola</span> come partita fissa del gruppo, poi lo riprogrammi ogni settimana con un tap: cambi solo giorno e ora.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid sm:grid-cols-3 gap-6">
-                    {TEAM_FEATURES.map(item => (
-                        <div key={item.title}>
-                            <div className="w-11 h-11 flex items-center justify-center bg-blue-50 text-blue-600 rounded-2xl mb-3">
-                                <item.icon size={20} />
-                            </div>
-                            <h3 className="font-black text-lg mb-2 text-slate-800">{item.title}</h3>
-                            <p className="text-sm text-slate-600 leading-relaxed">{item.text}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
 
             {/* LISTA D'ATTESA */}
             <section id="lista-attesa" className="bg-slate-900 text-white py-14 md:py-20">
@@ -402,6 +348,62 @@ export default function LandingPage() {
                     <p className="text-blue-100 mb-8">Gratis. Il tuo prossimo match ti aspetta.</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <ComingSoonPill dark large />
+                    </div>
+                </div>
+            </section>
+
+            {/* BETA TESTER (Android closed beta) */}
+            <section id="beta" className="bg-slate-900 text-white py-14 md:py-20">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-10 md:gap-12 items-center">
+                    <div>
+                        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-lime-300 bg-lime-300/10 px-3 py-1.5 rounded-full mb-5">
+                            ● Beta chiusa · Android
+                        </span>
+                        <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">Provala in anteprima. Diventa tester.</h2>
+                        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
+                            Cerchiamo tester Android. La provi prima di tutti e ti resta il badge <span className="text-lime-300 font-bold">Tester Interno</span> — che poi non si potrà più ottenere.
+                        </p>
+                        <ol className="space-y-2.5 mb-8">
+                            {[
+                                { n: '1', t: 'Iscriviti al gruppo tester', d: 'due click, self-service', href: 'https://groups.google.com/g/ultimo-app-testers' },
+                                { n: '2', t: 'Conferma di voler essere tester', d: 'apri il link e accetta', href: 'https://play.google.com/apps/testing/app.lultimo.twa' },
+                                { n: '3', t: "Scarica l'app e gioca", d: 'dal Play Store', href: 'https://play.google.com/store/apps/details?id=app.lultimo.twa' },
+                            ].map(step => (
+                                <li key={step.n}>
+                                    <a
+                                        href={step.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="group flex items-center gap-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl px-4 py-3 transition-colors"
+                                    >
+                                        <span className="w-8 h-8 flex-shrink-0 rounded-xl bg-lime-300 text-slate-900 font-black flex items-center justify-center">{step.n}</span>
+                                        <span className="flex-1 min-w-0">
+                                            <span className="block font-bold text-sm leading-tight">{step.t}</span>
+                                            <span className="block text-xs text-slate-300">{step.d}</span>
+                                        </span>
+                                        <ArrowRight size={16} className="text-slate-500 group-hover:text-lime-300 transition-colors flex-shrink-0" />
+                                    </a>
+                                </li>
+                            ))}
+                        </ol>
+                        <a
+                            href="https://groups.google.com/g/ultimo-app-testers"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-lime-300 text-slate-900 font-black px-6 py-3.5 rounded-2xl hover:bg-lime-200 transition-colors"
+                        >
+                            Entra nella beta <ArrowRight size={18} />
+                        </a>
+                    </div>
+
+                    {/* Badge Tester Interno */}
+                    <div className="flex justify-center md:justify-end">
+                        <svg viewBox="0 0 128 150" className="w-36 sm:w-44 drop-shadow-2xl" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M64 3 L121 23 V76 C121 114 96 137 64 147 C32 137 7 114 7 76 V23 Z" fill="#3166E2" />
+                            <path d="M64 3 L121 23 V76 C121 114 96 137 64 147 C32 137 7 114 7 76 V23 Z" fill="none" stroke="#16368F" strokeWidth="3" />
+                            <text x="64" y="86" textAnchor="middle" fontFamily="system-ui, Arial" fontWeight="900" fontSize="60" fill="#ffffff">U</text>
+                            <text x="65" y="114" textAnchor="middle" fontFamily="system-ui, Arial" fontWeight="800" fontSize="13" letterSpacing="3" fill="#C7EE62">TESTER</text>
+                        </svg>
                     </div>
                 </div>
             </section>

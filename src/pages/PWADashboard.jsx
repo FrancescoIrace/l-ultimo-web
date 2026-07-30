@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen, ShieldCheck, Sparkles } from 'lucide-react';
+import { Zap, MapPin, UserPlus, User, LogOut, Puzzle, Trophy, Building2, ChevronRight, ClipboardClock, MessageCircle, Loader, Clock, X, BookOpen, ShieldCheck, Sparkles, Rocket } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -11,6 +11,11 @@ import { useDailyQuizStatus } from '../hooks/useDailyQuizStatus';
 import { useCurrentSeason } from '../hooks/useCurrentSeason';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
+
+// Countdown al lancio pubblico: dà un traguardo comune ai tester della closed
+// beta (i 14 giorni continuativi richiesti da Google) senza fingere un conteggio
+// per-utente. Sparisce da solo dopo questa data.
+const LAUNCH_DATE = new Date('2026-09-01T00:00:00');
 
 export default function PWADashboard({ user, onLogout, isSupported, isSubscribed, subscribeToPushNotifications, isPWA, isAdmin }) {
   const navigate = useNavigate();
@@ -23,6 +28,18 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
   const [isMatchesModalOpen, setIsMatchesModalOpen] = useState(false);
   const [, setTick] = useState(0); // forza il re-render per aggiornare countdown/stato live
   const [contactModalType, setContactModalType] = useState(null); // 'advertising' | 'suggestion' | null
+
+  // Banner countdown al lancio (1° settembre). Calcolato una volta all'apertura
+  // (granularità giornaliera, non serve aggiornarlo live). Dismissibile per la
+  // giornata: si richiude e riappare il giorno successivo.
+  const [launchDaysLeft] = useState(() => Math.ceil((LAUNCH_DATE.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+  const [launchBannerDismissed, setLaunchBannerDismissed] = useState(() => {
+    try { return localStorage.getItem('launchBannerDismissedOn') === new Date().toDateString(); } catch { return false; }
+  });
+  const dismissLaunchBanner = () => {
+    try { localStorage.setItem('launchBannerDismissedOn', new Date().toDateString()); } catch { /* storage non disponibile */ }
+    setLaunchBannerDismissed(true);
+  };
   // Su iOS le notifiche push funzionano solo se l'app è stata aggiunta alla Home
   // (standalone mode, iOS 16.4+): chiedere il permesso da una tab Safari normale fallisce sempre.
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -207,6 +224,32 @@ export default function PWADashboard({ user, onLogout, isSupported, isSubscribed
             <span className="flex-1 text-left font-bold text-sm">Pannello Admin</span>
             <ChevronRight size={20} className="text-white/60" />
           </button>
+        )}
+
+        {/* Banner countdown al lancio (tester closed beta) */}
+        {launchDaysLeft > 0 && !launchBannerDismissed && (
+          <div className="relative overflow-hidden flex items-center gap-3 p-4 rounded-2xl shadow-lg bg-gradient-to-r from-blue-600 to-blue-500">
+            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent 0 22px, rgba(255,255,255,0.18) 22px 23px)' }} />
+            <div className="relative w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Rocket className="text-lime-300" size={20} />
+            </div>
+            <div className="relative flex-1 min-w-0 pr-6">
+              <p className="text-white font-black text-sm leading-tight">
+                {launchDaysLeft === 1 ? 'Manca 1 giorno al lancio! 🚀' : `Mancano ${launchDaysLeft} giorni al lancio! 🚀`}
+              </p>
+              <p className="text-blue-50/90 text-xs font-medium mt-0.5 leading-snug">
+                Grazie per testare L'Ultimo. Tieni l'app installata e resta iscritto: portiamo il lancio al traguardo insieme 💪
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissLaunchBanner}
+              aria-label="Chiudi"
+              className="absolute top-2 right-2 text-white/70 hover:text-white p-1"
+            >
+              <X size={16} />
+            </button>
+          </div>
         )}
 
         {/* Banner stagione classifica */}

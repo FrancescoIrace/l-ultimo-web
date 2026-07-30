@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Zap, Clock, Bell, CalendarPlus, Navigation, Users, Lock, Star, Building2, Trees, MapPin, Sparkles, Trophy, Award, Flame, ArrowRight } from 'lucide-react';
+import { Zap, Clock, Bell, CalendarPlus, Navigation, Users, Lock, Star, Building2, Trees, MapPin, Sparkles, Trophy, Award, Flame, ArrowRight, Repeat } from 'lucide-react';
 
 const QUICK_ACTIONS = [
     { icon: CalendarPlus, title: 'Sul calendario in un tap', text: "Data e ora della partita finiscono su Google Calendar o iCal con un solo tocco. Promemoria automatico, zero rischio di dimenticarla." },
@@ -80,7 +80,7 @@ export default function LandingPage() {
                     <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05] mb-5">
                         La partita è a un <span className="text-blue-600">tap</span> di distanza.
                     </h1>
-                    <p className="text-slate-500 text-base sm:text-lg leading-relaxed mb-8 max-w-md">
+                    <p className="text-slate-600 text-base sm:text-lg leading-relaxed mb-8 max-w-md">
                         Trova match vicino a te, organizza il tuo in 30 secondi e riempi la squadra — nei centri o nei campetti pubblici gratuiti. Otto sport, una sola app.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -94,7 +94,7 @@ export default function LandingPage() {
                         </a>
                         <ComingSoonPill large />
                     </div>
-                    <p className="text-sm text-slate-400 font-medium">
+                    <p className="text-sm text-slate-500 font-medium">
                         Gratis e senza pubblicità invadenti. Ora in <a href="#beta" className="text-blue-600 font-bold hover:underline">accesso anticipato su Android</a>.
                     </p>
                 </div>
@@ -133,7 +133,7 @@ export default function LandingPage() {
                             ● Beta chiusa · Android
                         </span>
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">Provala in anteprima. Diventa tester.</h2>
-                        <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
+                        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-7 max-w-md">
                             Cerchiamo tester Android. La provi prima di tutti e ti resta il badge <span className="text-lime-300 font-bold">Tester Interno</span> — che poi non si potrà più ottenere.
                         </p>
                         <ol className="space-y-2.5 mb-8">
@@ -152,7 +152,7 @@ export default function LandingPage() {
                                         <span className="w-8 h-8 flex-shrink-0 rounded-xl bg-lime-300 text-slate-900 font-black flex items-center justify-center">{step.n}</span>
                                         <span className="flex-1 min-w-0">
                                             <span className="block font-bold text-sm leading-tight">{step.t}</span>
-                                            <span className="block text-xs text-slate-400">{step.d}</span>
+                                            <span className="block text-xs text-slate-300">{step.d}</span>
                                         </span>
                                         <ArrowRight size={16} className="text-slate-500 group-hover:text-lime-300 transition-colors flex-shrink-0" />
                                     </a>
@@ -191,7 +191,7 @@ export default function LandingPage() {
                             </div>
                             <div>
                                 <h3 className="font-black text-slate-800 mb-1">{item.title}</h3>
-                                <p className="text-sm text-slate-500 leading-relaxed">{item.text}</p>
+                                <p className="text-sm text-slate-600 leading-relaxed">{item.text}</p>
                             </div>
                         </div>
                     ))}
@@ -205,7 +205,7 @@ export default function LandingPage() {
                         <Sparkles size={13} /> Novità
                     </span>
                     <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Trova dove giocare.</h2>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-md">
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-md">
                         Centri sportivi affiliati e campetti pubblici gratuiti dei parchi, tutti sulla stessa mappa.
                     </p>
                 </div>
@@ -219,7 +219,7 @@ export default function LandingPage() {
                                 {item.title}
                                 {item.free && <span className="text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Gratis</span>}
                             </h3>
-                            <p className="text-sm text-slate-500 leading-relaxed">{item.text}</p>
+                            <p className="text-sm text-slate-600 leading-relaxed">{item.text}</p>
                         </div>
                     ))}
                 </div>
@@ -230,7 +230,7 @@ export default function LandingPage() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight">Uno per ogni gioco.</h2>
-                        <p className="text-slate-400 max-w-sm text-sm leading-relaxed">
+                        <p className="text-slate-300 max-w-sm text-sm leading-relaxed">
                             Dal calcetto del martedì al padel del weekend, ogni sport ha la sua community.
                         </p>
                     </div>
@@ -251,7 +251,7 @@ export default function LandingPage() {
                         <div key={step.n}>
                             <span className="text-3xl font-black text-blue-600">{step.n}</span>
                             <h3 className="font-black text-lg mt-3 mb-2 text-slate-800">{step.title}</h3>
-                            <p className="text-sm text-slate-500 leading-relaxed">{step.text}</p>
+                            <p className="text-sm text-slate-600 leading-relaxed">{step.text}</p>
                         </div>
                     ))}
                 </div>
@@ -265,7 +265,7 @@ export default function LandingPage() {
                             <Trophy size={13} /> Sfida & Classifica
                         </span>
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">Non solo partite: una sfida al giorno.</h2>
-                        <p className="text-slate-500 text-sm sm:text-base leading-relaxed mb-6 max-w-md">
+                        <p className="text-slate-600 text-sm sm:text-base leading-relaxed mb-6 max-w-md">
                             Rispondi al quiz giornaliero, fai punti e scala la classifica. Ogni stagione riparte da zero: chi vince finisce nell'Albo d'Oro.
                         </p>
                         <div className="space-y-4">
@@ -276,7 +276,7 @@ export default function LandingPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-black text-slate-800 leading-tight">{item.title}</h3>
-                                        <p className="text-sm text-slate-500 leading-relaxed">{item.text}</p>
+                                        <p className="text-sm text-slate-600 leading-relaxed">{item.text}</p>
                                     </div>
                                 </div>
                             ))}
@@ -317,10 +317,27 @@ export default function LandingPage() {
             <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 md:pb-20">
                 <div className="mb-8">
                     <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Squadra tua, partite su misura.</h2>
-                    <p className="text-slate-500 text-sm sm:text-base leading-relaxed max-w-md">
-                        Non solo match aperti a tutti: costruisci il tuo gruppo fisso e gioca con chi conosci.
+                    <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-md">
+                        Non solo match aperti a tutti: costruisci il tuo gruppo fisso, crea la tua partita ricorrente e gioca con chi conosci.
                     </p>
                 </div>
+
+                {/* Highlight: partite ricorrenti */}
+                <div className="mb-8 rounded-3xl bg-gradient-to-r from-blue-600 to-blue-500 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-lg shadow-blue-200/60">
+                    <div className="w-14 h-14 flex-shrink-0 bg-white/15 rounded-2xl flex items-center justify-center">
+                        <Repeat size={26} />
+                    </div>
+                    <div className="flex-1">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-900 bg-lime-300 px-2.5 py-1 rounded-full mb-2">
+                            ✦ Novità
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black mb-1.5">Partite ricorrenti</h3>
+                        <p className="text-blue-50 text-sm sm:text-base leading-relaxed max-w-2xl">
+                            Il calcetto del martedì? Lo imposti <span className="font-bold text-white">una volta sola</span> come partita fissa del gruppo, poi lo riprogrammi ogni settimana con un tap: cambi solo giorno e ora.
+                        </p>
+                    </div>
+                </div>
+
                 <div className="grid sm:grid-cols-3 gap-6">
                     {TEAM_FEATURES.map(item => (
                         <div key={item.title}>
@@ -328,7 +345,7 @@ export default function LandingPage() {
                                 <item.icon size={20} />
                             </div>
                             <h3 className="font-black text-lg mb-2 text-slate-800">{item.title}</h3>
-                            <p className="text-sm text-slate-500 leading-relaxed">{item.text}</p>
+                            <p className="text-sm text-slate-600 leading-relaxed">{item.text}</p>
                         </div>
                     ))}
                 </div>
@@ -342,7 +359,7 @@ export default function LandingPage() {
                             ● Lista d'attesa
                         </span>
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">Nessuno resta fuori.</h2>
-                        <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6 max-w-md">
+                        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-md">
                             Partita al completo? Ti metti in coda. Appena un giocatore lascia, entra automaticamente il primo della lista — in ordine cronologico — con notifica immediata.
                         </p>
                         <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold text-slate-300">

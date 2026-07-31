@@ -27,6 +27,7 @@ export default function Home({ session, isPWA }) {
   const [selectedSport, setSelectedSport] = useState(''); // Nuovo: filtro sport
   const [selectedDay, setSelectedDay] = useState(''); // Nuovo: filtro giorno
   const [showOnlyMyMatches, setShowOnlyMyMatches] = useState(false); // Solo le partite create da me
+  const [myMatchIds, setMyMatchIds] = useState([]); // partite a cui l'utente è iscritto (mostrate anche fuori raggio)
   const navigate = useNavigate();
 
   const fetchMatches = async () => {
@@ -53,6 +54,7 @@ export default function Home({ session, isPWA }) {
           .eq('user_id', session.user.id);
         myMatchIds = myParts?.map(p => p.match_id) || [];
       }
+      setMyMatchIds(myMatchIds);
 
       // 2. Fetch matches: aperte (team_id null) OR delle mie squadre OR a cui
       // sono iscritto.
@@ -232,7 +234,7 @@ export default function Home({ session, isPWA }) {
   const nearbyMatches = useMemo(() => {
     if (!position) return [];
     let filtered = distances
-      .filter((match) => match.distance <= radiusKm)
+      .filter((match) => match.distance <= radiusKm || myMatchIds.includes(match.id))
       .sort((a, b) => a.distance - b.distance);
 
     // Supabase restituisce datetime con spazio ("2026-05-11 17:00:00") che i browser
@@ -263,7 +265,7 @@ export default function Home({ session, isPWA }) {
     }
 
     return filtered;
-  }, [distances, position, radiusKm, showOngoingMatches, showTodayMatches, matches]);
+  }, [distances, position, radiusKm, showOngoingMatches, showTodayMatches, matches, myMatchIds]);
 
   // Calcola il count di partite per ogni sport (senza il filtro sport, ma con gli altri filtri)
   const sportsCounts = useMemo(() => {

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap, Clock, Bell, CalendarPlus, Navigation, Users, Lock, Star, Building2, Trees, MapPin, Sparkles, Trophy, Award, Flame, ArrowRight, Repeat } from 'lucide-react';
 
@@ -50,6 +51,18 @@ function ComingSoonPill({ label = '▶ Google Play', dark = false, large = false
 }
 
 export default function LandingPage() {
+    // Scroll all'ancora (#beta, #dove-giocare, ...) quando si arriva sulla
+    // landing da un altro percorso: la pagina è lazy, quindi lo scroll nativo
+    // del browser può scattare prima che la sezione sia montata.
+    useEffect(() => {
+        const id = decodeURIComponent(window.location.hash.slice(1));
+        if (!id) return;
+        const el = document.getElementById(id);
+        if (!el) return;
+        const t = setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+        return () => clearTimeout(t);
+    }, []);
+
     return (
         <div className="w-full min-h-screen bg-white text-slate-900 overflow-x-hidden">
             {/* HEADER */}

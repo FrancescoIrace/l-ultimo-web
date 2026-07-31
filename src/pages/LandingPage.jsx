@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Clock, Bell, CalendarPlus, Navigation, Users, Lock, Star, Building2, Trees, MapPin, Sparkles, Trophy, Award, Flame, ArrowRight, Repeat } from 'lucide-react';
+import { Zap, Clock, Bell, CalendarPlus, Navigation, Users, Lock, Star, Building2, Trees, MapPin, Sparkles, Trophy, Award, Flame, ArrowRight, Repeat, UserCheck } from 'lucide-react';
 
 const QUICK_ACTIONS = [
     { icon: CalendarPlus, title: 'Sul calendario in un tap', text: "Data e ora della partita finiscono su Google Calendar o iCal con un solo tocco. Promemoria automatico, zero rischio di dimenticarla." },
@@ -9,7 +9,8 @@ const QUICK_ACTIONS = [
 
 const TEAM_FEATURES = [
     { icon: Users, title: 'Crea la tua squadra', text: 'Raduna i tuoi amici in una squadra permanente e gestisci la rosa in un posto solo.' },
-    { icon: Lock, title: 'Partite riservate', text: 'Organizza match visibili e prenotabili solo dai componenti della tua squadra.' },
+    { icon: Lock, title: 'Riservate, o aperte col link', text: 'Match visibili solo alla squadra. Manca un giocatore? Aprila agli esterni con un link, senza renderla pubblica.' },
+    { icon: UserCheck, title: 'Sai chi scende in campo', text: 'Chi si unisce può presentarsi con una nota — "Sono Marco, centrocampista" — così giochi tranquillo anche con chi non conosci.' },
     { icon: Star, title: 'Recensioni a fine partita', text: 'A fine match vota gli altri giocatori: la community resta corretta e affidabile.' },
 ];
 
@@ -164,7 +165,7 @@ export default function LandingPage() {
                     </div>
                 </div>
 
-                <div className="grid sm:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {TEAM_FEATURES.map(item => (
                         <div key={item.title}>
                             <div className="w-11 h-11 flex items-center justify-center bg-blue-50 text-blue-600 rounded-2xl mb-3">

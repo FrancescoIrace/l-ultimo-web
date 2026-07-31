@@ -42,17 +42,29 @@ export default function Home({ session, isPWA }) {
         myTeamIds = userTeams?.map(t => t.team_id) || [];
       }
 
-      // 2. Fetch matches (public OR belonging to user's teams)
+      // 1b. Match ids a cui l'utente è già iscritto: così vede anche le
+      // partite di squadra a cui si è unito da esterno (non essendone membro,
+      // il solo filtro per squadra le escluderebbe dal feed).
+      let myMatchIds = [];
+      if (session?.user?.id) {
+        const { data: myParts } = await supabase
+          .from('participants')
+          .select('match_id')
+          .eq('user_id', session.user.id);
+        myMatchIds = myParts?.map(p => p.match_id) || [];
+      }
+
+      // 2. Fetch matches: aperte (team_id null) OR delle mie squadre OR a cui
+      // sono iscritto.
       let query = supabase
         .from('matches')
         .select('*')
         .order('datetime', { ascending: true });
 
-      if (myTeamIds.length > 0) {
-        query = query.or(`team_id.is.null,team_id.in.(${myTeamIds.join(',')})`);
-      } else {
-        query = query.is('team_id', null);
-      }
+      const orParts = ['team_id.is.null'];
+      if (myTeamIds.length > 0) orParts.push(`team_id.in.(${myTeamIds.join(',')})`);
+      if (myMatchIds.length > 0) orParts.push(`id.in.(${myMatchIds.join(',')})`);
+      query = query.or(orParts.join(','));
 
       const { data, error } = await query;
 

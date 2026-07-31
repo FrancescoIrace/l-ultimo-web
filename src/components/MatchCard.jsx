@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAlert } from './AlertComponent';
 import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import Loader from './Loader';
+import JoinNoteModal from './JoinNoteModal';
 import { notifyMatchJoin, notifyMatchFull } from '../lib/notificationService';
 
 
@@ -19,6 +20,7 @@ export default function MatchCard({ match, user }) {
   const [weatherData, setWeatherData] = useState(null);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   const [team, setTeam] = useState(null);
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
 
   // La partita è piena solo se i CONFERMATI raggiungono il limite
   const isFull = confirmedPlayers.length >= match.max_players;
@@ -141,20 +143,26 @@ export default function MatchCard({ match, user }) {
   //   fetchWeather();
   // }, [match.location_lat, match.location_lng, match.datetime]);
 
-  const handleJoin = async () => {
-    // Avviso se la partita è lontana (utile nella vista "Tutte", dove si
-    // vedono anche match oltre il raggio delle vicinanze).
+  // Passo 1: eventuale avviso distanza (vista "Tutte"), poi apre la modale
+  // della nota di presentazione.
+  const startJoin = async () => {
     if (match.distance != null && match.distance > 25) {
       const ok = await confirm(`Questa partita è a ${match.distance.toFixed(0)} km da te (${match.location}). Sei sicuro di volerti unire?`);
       if (!ok) return;
     }
+    setJoinModalOpen(true);
+  };
 
+  // Passo 2: iscrizione effettiva con l'eventuale nota di presentazione.
+  const doJoin = async (note) => {
+    setJoinModalOpen(false);
     const playerName = user.user_metadata?.username || 'Un giocatore';
 
     const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
       p_match_id: match.id,
       p_user_id: user.id,
-      p_username: playerName
+      p_username: playerName,
+      p_note: note || null
     });
 
     if (rpcError) {
@@ -379,7 +387,7 @@ export default function MatchCard({ match, user }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleJoin();
+              startJoin();
             }}
             className="w-full py-3 rounded-2xl font-bold text-sm bg-slate-800 text-white shadow-lg shadow-slate-200 hover:bg-slate-900 active:scale-95 transition-all"
           >
@@ -390,7 +398,7 @@ export default function MatchCard({ match, user }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleJoin();
+              startJoin();
             }}
             className="w-full py-3 rounded-2xl font-bold text-sm bg-blue-600 text-white shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all"
           >
@@ -399,6 +407,12 @@ export default function MatchCard({ match, user }) {
         )}
       </div>
 
+      <JoinNoteModal
+        open={joinModalOpen}
+        onClose={() => setJoinModalOpen(false)}
+        onConfirm={doJoin}
+        matchTitle={match.title}
+      />
 
     </div >
   );

@@ -12,6 +12,7 @@ import { getWeather, isWithinSevenDays } from '../lib/weatherService';
 import { getSportFamily } from '../lib/sportRoles';
 import { teamLabel } from './PagesUtils/utils';
 import Loader from '../components/Loader';
+import JoinNoteModal from '../components/JoinNoteModal';
 
 export default function MatchDetail({ user }) {
     const { id } = useParams();
@@ -47,6 +48,7 @@ export default function MatchDetail({ user }) {
     const [rescheduleRequest, setRescheduleRequest] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [joinModalOpen, setJoinModalOpen] = useState(false);
     const [inviteFriends, setInviteFriends] = useState([]);
     const [selectedInviteFriends, setSelectedInviteFriends] = useState(new Set());
     const [isSendingInvites, setIsSendingInvites] = useState(false);
@@ -105,7 +107,7 @@ export default function MatchDetail({ user }) {
         // 2. Partecipanti + Dati del Profilo
         const { data: partData, error: partError } = await supabase
             .from('participants')
-            .select(`id, user_id, status, waitlist_order, final_attendance, team_number, profiles (username, avatar_url, gender)`)
+            .select(`id, user_id, status, waitlist_order, final_attendance, team_number, join_note, profiles (username, avatar_url, gender)`)
             .eq('match_id', id);
 
         if (partError) {
@@ -779,19 +781,25 @@ Scopri di più qui: ${window.location.href}`;
         });
     };
 
-    const handleJoin = async () => {
+    // Apre la modale della nota di presentazione (se la partita non è iniziata).
+    const startJoin = () => {
         if (checkMatchStatus(match.datetime).isMatchStarted) {
             error('La partita è già iniziata: non puoi più iscriverti.');
             return;
         }
+        setJoinModalOpen(true);
+    };
 
+    const handleJoin = async (note) => {
+        setJoinModalOpen(false);
         const playerName = user.user_metadata?.username || 'Un giocatore';
 
         // Chiamiamo la RPC che gestisce tutto: controllo posti, inserimento e incremento
         const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {
             p_match_id: match.id,
             p_user_id: user.id,
-            p_username: playerName
+            p_username: playerName,
+            p_note: note || null
         });
 
         if (rpcError) {
@@ -1840,6 +1848,9 @@ Scopri di più qui: ${window.location.href}`;
                                             </span>
                                         )}
                                     </div>
+                                    {p.join_note && (
+                                        <p className="text-[11px] text-slate-500 italic mt-1 line-clamp-2 break-words">"{p.join_note}"</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -2009,7 +2020,7 @@ Scopri di più qui: ${window.location.href}`;
                     </button>
                 ) : !isJoined && match?.creator_id !== user.id ? (
                     <button
-                        onClick={handleJoin}
+                        onClick={startJoin}
                         className={`w-full text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-[0.99] flex items-center justify-center gap-2 ${confirmedPlayers.length >= match.max_players
                             ? 'bg-slate-800 hover:bg-slate-900 shadow-lg shadow-slate-500/20'
                             : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20'
@@ -2111,6 +2122,13 @@ Scopri di più qui: ${window.location.href}`;
                     </div>
                 </>
             )}
+
+            <JoinNoteModal
+                open={joinModalOpen}
+                onClose={() => setJoinModalOpen(false)}
+                onConfirm={handleJoin}
+                matchTitle={match?.title}
+            />
         </>
     );
 }

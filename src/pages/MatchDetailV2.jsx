@@ -979,7 +979,7 @@ Scopri di più qui: ${window.location.href}`;
     const FIELD_BOOKING_META = {
         booked: { label: 'Prenotato', icon: '✅', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
         to_book: { label: 'Da prenotare', icon: '⏳', className: 'bg-amber-50 text-amber-700 border-amber-200' },
-        not_needed: { label: 'Non serve prenotare', icon: '➖', className: 'bg-slate-50 text-slate-600 border-slate-200' },
+        not_needed: { label: 'Non serve prenotare', icon: '➖', className: 'bg-slate-700 text-white border-slate-700' },
     };
 
     // Stampa/esporta la lista giocatori (titolari + coda) in una finestra
@@ -1076,6 +1076,14 @@ Scopri di più qui: ${window.location.href}`;
                             title="Invita amici"
                         >
                             <UserPlus size={18} />
+                        </button>
+                        <button
+                            onClick={handleShare}
+                            disabled={isMatchFinished}
+                            className="p-2 text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-blue-50"
+                            title="Condividi"
+                        >
+                            <Share2 size={18} />
                         </button>
                         <button
                             onClick={() => navigate(`/modifica/${match.id}`)}

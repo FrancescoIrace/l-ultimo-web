@@ -1,5 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ArrowRight, Smartphone, Apple } from 'lucide-react';
+
+const TESTER_STEPS = [
+  { n: '1', t: 'Iscriviti al gruppo tester', d: 'due click, self-service', href: 'https://groups.google.com/g/ultimo-app-testers' },
+  { n: '2', t: 'Conferma di voler essere tester', d: 'apri il link e accetta', href: 'https://play.google.com/apps/testing/app.lultimo.twa' },
+  { n: '3', t: "Scarica l'app dal Play Store", d: 'installala come una normale app', href: 'https://play.google.com/store/apps/details?id=app.lultimo.twa' },
+];
 
 export default function InstallGuide() {
   return (
@@ -13,20 +19,49 @@ export default function InstallGuide() {
         Indietro
       </button>
 
-      <h1 className="text-3xl font-black text-slate-900 mb-6">Guida all'installazione</h1>
+      <h1 className="text-3xl font-black text-slate-900 mb-4">Guida all'installazione</h1>
 
+      {/* Avviso BETA */}
+      <div className="mb-6 rounded-3xl bg-slate-900 text-white p-5">
+        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-lime-300 bg-lime-300/10 px-3 py-1.5 rounded-full mb-3">
+          ● Beta chiusa
+        </span>
+        <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
+          L'Ultimo è ancora in <span className="font-bold text-white">beta</span>. Per ora ci si accede così:
+          su <span className="font-bold text-white">Android</span> entrando come tester, su <span className="font-bold text-white">iPhone</span> installando l'app dal browser (i passaggi qui sotto).
+          Dal <span className="font-bold text-lime-300">1° settembre</span> sarà disponibile per tutti negli store.
+        </p>
+      </div>
+
+      {/* Android — accesso tester */}
       <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-        <h2 className="text-2xl font-bold mb-3">Android</h2>
-        <ol className="list-decimal pl-5 space-y-3 text-slate-700">
-          <li>Apri il menu del browser (di solito i tre puntini in alto a destra).</li>
-          <li>Seleziona <span className="font-bold">Aggiungi a schermata Home</span> o <span className="font-bold">Installa app</span>.</li>
-          <li>Conferma l'installazione e trova l'app tra le tue app o sulla schermata iniziale.</li>
-          <li>Da lì puoi aprire l'app direttamente, senza usare il browser.</li>
+        <h2 className="text-2xl font-bold mb-1 flex items-center gap-2"><Smartphone size={22} className="text-blue-600" /> Android</h2>
+        <p className="text-sm text-slate-500 mb-4">In beta l'app si scarica dal Play Store come tester, in 3 passi:</p>
+        <ol className="space-y-2.5">
+          {TESTER_STEPS.map((step) => (
+            <li key={step.n}>
+              <a
+                href={step.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-2xl px-4 py-3 transition-colors"
+              >
+                <span className="w-8 h-8 flex-shrink-0 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center">{step.n}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block font-bold text-sm leading-tight text-slate-800">{step.t}</span>
+                  <span className="block text-xs text-slate-500">{step.d}</span>
+                </span>
+                <ArrowRight size={16} className="text-slate-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
+              </a>
+            </li>
+          ))}
         </ol>
       </section>
 
+      {/* iPhone — installazione PWA */}
       <section className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-        <h2 className="text-2xl font-bold mb-3">iPhone / iPad</h2>
+        <h2 className="text-2xl font-bold mb-1 flex items-center gap-2"><Apple size={22} className="text-slate-800" /> iPhone / iPad</h2>
+        <p className="text-sm text-slate-500 mb-4">Per ora su iPhone l'app si installa dal browser (PWA):</p>
         <ol className="list-decimal pl-5 space-y-3 text-slate-700">
           <li>Apri il sito con Safari.</li>
           <li>Tocca il pulsante <span className="font-bold">Condividi</span> (l'icona con la freccia verso l'alto).</li>
@@ -37,7 +72,7 @@ export default function InstallGuide() {
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-        <h2 className="text-2xl font-bold mb-3">Perché usare la PWA</h2>
+        <h2 className="text-2xl font-bold mb-3">Perché installarla</h2>
         <ul className="list-disc pl-5 space-y-2 text-slate-700">
           <li>Accesso più rapido dal telefono.</li>
           <li>Interfaccia più pulita senza la barra degli indirizzi.</li>
@@ -47,7 +82,7 @@ export default function InstallGuide() {
       </section>
 
       <p className="mt-6 text-sm text-slate-500">
-        Se non trovi l'opzione, prova ad aggiornare il browser o a chiudere e riaprire la pagina. Su Android la voce può comparire solo dopo qualche secondo dal caricamento.
+        Su iPhone, se non trovi l'opzione, prova ad aggiornare Safari o a chiudere e riaprire la pagina. La voce può comparire solo dopo qualche secondo dal caricamento.
       </p>
 
       <p className="mt-4 text-sm text-blue-600">

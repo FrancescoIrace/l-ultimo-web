@@ -56,6 +56,12 @@ export default function InstallGuide() {
             </li>
           ))}
         </ol>
+        <a
+          href="/#beta"
+          className="mt-4 flex items-center justify-center gap-2 w-full rounded-2xl bg-blue-600 text-white font-black uppercase text-sm tracking-wide px-4 py-3.5 hover:bg-blue-700 transition-colors"
+        >
+          Vuoi diventare un nostro tester? <ArrowRight size={18} />
+        </a>
       </section>
 
       {/* iPhone — installazione PWA */}

@@ -142,6 +142,13 @@ export default function MatchCard({ match, user }) {
   // }, [match.location_lat, match.location_lng, match.datetime]);
 
   const handleJoin = async () => {
+    // Avviso se la partita è lontana (utile nella vista "Tutte", dove si
+    // vedono anche match oltre il raggio delle vicinanze).
+    if (match.distance != null && match.distance > 25) {
+      const ok = await confirm(`Questa partita è a ${match.distance.toFixed(0)} km da te (${match.location}). Sei sicuro di volerti unire?`);
+      if (!ok) return;
+    }
+
     const playerName = user.user_metadata?.username || 'Un giocatore';
 
     const { data: status, error: rpcError } = await supabase.rpc('join_match_v2', {

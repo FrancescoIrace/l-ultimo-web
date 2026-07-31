@@ -598,6 +598,14 @@ export default function MatchDetail({ user }) {
 
     const handleShare = async () => {
         if (!match?.is_public) {
+            // Le partite di squadra sono chiuse ai soli membri. Aprire il link
+            // le rende raggiungibili da chiunque ce l'abbia (restano comunque
+            // fuori dal feed pubblico): chiediamo conferma esplicita.
+            if (match?.team_id) {
+                const ok = await confirm('Questa è una partita di squadra. Aprendo il link chiunque lo riceve potrà unirsi — resta comunque fuori dal feed pubblico. Vuoi aprirla agli esterni?');
+                if (!ok) return;
+            }
+
             const { error: publicError } = await supabase
                 .from('matches')
                 .update({ is_public: true })
@@ -652,6 +660,20 @@ Scopri di più qui: ${window.location.href}`;
         };
 
         await shareFallback();
+    };
+
+    // Richiude una partita di squadra precedentemente aperta con il link:
+    // torna visibile/iscrivibile ai soli membri. Chi è già iscritto resta.
+    const closeMatchToExternals = async () => {
+        const ok = await confirm('Richiudere la partita? Il link non farà più entrare esterni. Chi è già iscritto resta in partita.');
+        if (!ok) return;
+        const { error: err } = await supabase
+            .from('matches')
+            .update({ is_public: false })
+            .eq('id', match.id);
+        if (err) { error('Non è stato possibile richiudere la partita.'); return; }
+        setMatch(prev => (prev ? { ...prev, is_public: false } : prev));
+        success('Partita richiusa: ora possono unirsi solo i membri della squadra.');
     };
 
     // Carica gli amici accettati dell'utente per il modale "Invita amici".
@@ -1326,6 +1348,26 @@ Scopri di più qui: ${window.location.href}`;
                     )
                     }
 
+
+                    {/* PARTITA DI SQUADRA APERTA CON LINK (solo creatore) */}
+                    {match?.creator_id === user.id && match?.team_id && match?.is_public && (
+                        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
+                            <div className="w-9 h-9 flex-shrink-0 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                                <Share2 size={16} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-black text-slate-800 leading-tight">Aperta agli esterni con il link</p>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Chi ha il link può unirsi. Resta fuori dal feed pubblico.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeMatchToExternals}
+                                className="flex-shrink-0 text-xs font-black uppercase tracking-wide text-blue-700 bg-white border border-blue-200 rounded-xl px-3 py-2 hover:bg-blue-100 transition-colors"
+                            >
+                                Richiudi
+                            </button>
+                        </div>
+                    )}
 
                     {/* STATO PRENOTAZIONE CAMPO (solo campi non affiliati) */}
                     {!match?.court_id && (match?.creator_id === user.id || match?.field_booking_status) && (

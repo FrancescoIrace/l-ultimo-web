@@ -1164,6 +1164,14 @@ Scopri di più qui: ${window.location.href}`;
                                 ● In corso
                             </span>
                         )}
+                        {match.team_id && (
+                            <span
+                                title={match.is_public ? 'Partita di squadra aperta agli esterni col link' : 'Partita riservata alla squadra'}
+                                className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${match.is_public ? 'bg-blue-50 text-blue-600' : 'bg-slate-800 text-white'}`}
+                            >
+                                {match.is_public ? '🔗 Aperta col link' : '🔒 Solo squadra'}
+                            </span>
+                        )}
                     </div>
                     {!match.title && (
                         <span className="text-sm text-slate-400">Titolo autogenerato</span>

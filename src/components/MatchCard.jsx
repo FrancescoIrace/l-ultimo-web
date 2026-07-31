@@ -18,6 +18,7 @@ export default function MatchCard({ match, user }) {
   const [confirmedPlayers, setConfirmedPlayers] = useState([]);
   const [weatherData, setWeatherData] = useState(null);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+  const [team, setTeam] = useState(null);
 
   // La partita è piena solo se i CONFERMATI raggiungono il limite
   const isFull = confirmedPlayers.length >= match.max_players;
@@ -102,6 +103,20 @@ export default function MatchCard({ match, user }) {
     };
   }, [match.id, user.id]);
 
+  // Dati della squadra (nome + logo) per l'indicatore "di squadra" e il
+  // watermark del logo in sfondo. Solo per le partite di squadra.
+  useEffect(() => {
+    if (!match.team_id) return;
+    let active = true;
+    supabase
+      .from('teams')
+      .select('name, logo_url')
+      .eq('id', match.team_id)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setTeam(data); });
+    return () => { active = false; };
+  }, [match.team_id]);
+
   // Fetch dati meteo se la partita è entro i prossimi 7 giorni
   // useEffect(() => {
   //   if (!match.location_lat || !match.location_lng || !match.datetime) return;
@@ -180,7 +195,17 @@ export default function MatchCard({ match, user }) {
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all ${isPast ? 'opacity-60' : ''} ${timeInfo?.pulse ? 'animate-pulse' : ''}`} onClick={() => navigate(`/match/${match.id} `)}>      {/* Badge IN CORSO */}
+    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all ${isPast ? 'opacity-60' : ''} ${timeInfo?.pulse ? 'animate-pulse' : ''}`} onClick={() => navigate(`/match/${match.id} `)}>
+      {/* Watermark logo squadra nell'area libera della card */}
+      {team?.logo_url && !isPast && (
+        <img
+          src={team.logo_url}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute right-3 top-1/2 -translate-y-1/2 w-28 h-28 object-contain opacity-[0.06]"
+        />
+      )}
+      {/* Badge IN CORSO */}
       {isOngoing && (
         <div className="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full shadow-md animate-pulse z-10">
           🟢 IN CORSO
@@ -211,8 +236,19 @@ export default function MatchCard({ match, user }) {
         </span>
       )}
       <div className="flex justify-between items-start mb-3">
-        <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase">
-          {match.sport}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase">
+            {match.sport}
+          </div>
+          {match.team_id && (
+            <span
+              title={match.is_public ? 'Partita di squadra aperta agli esterni col link' : 'Partita riservata alla squadra'}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold max-w-[10rem] ${match.is_public ? 'bg-blue-50 text-blue-600' : 'bg-slate-800 text-white'}`}
+            >
+              {match.is_public ? '🔗' : '🔒'}
+              <span className="truncate">{team?.name || (match.is_public ? 'Aperta col link' : 'Solo squadra')}</span>
+            </span>
+          )}
         </div>
         <div className="flex flex-col items-end gap-1">
           {timeLabel && (

@@ -553,23 +553,28 @@ export default function CreateMatch() {
     const joinNoteConfig = (
         <div>
             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota d'ingresso</label>
-            <input
-                className="w-full p-3 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium"
-                placeholder="Cosa chiedere a chi si unisce (es. 'Nome + cellulare per il gruppo', 'Il tuo Instagram')"
-                maxLength={120}
-                value={formData.join_note_prompt || ''}
-                onChange={(e) => setFormData((prev) => ({ ...prev, join_note_prompt: e.target.value }))}
-            />
-            <label className="mt-2 flex items-center justify-between gap-2 p-3 bg-white border border-gray-100 rounded-xl shadow-sm cursor-pointer">
-                <span className="text-sm font-bold text-slate-700">Nota obbligatoria per iscriversi</span>
-                <input
-                    type="checkbox"
-                    className="w-5 h-5 accent-blue-600"
-                    checked={!!formData.require_join_note}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, require_join_note: e.target.checked }))}
-                />
-            </label>
-            <p className="mt-1.5 text-[11px] text-slate-400">Chi si unisce può presentarsi. Se lasci vuoto il testo, ne usiamo uno predefinito.</p>
+            <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-3 space-y-3">
+                <div>
+                    <p className="text-xs font-bold text-slate-500 mb-1.5">Cosa chiedere a chi si unisce</p>
+                    <input
+                        className="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium"
+                        placeholder="Es. Nome + cellulare, o Instagram"
+                        maxLength={120}
+                        value={formData.join_note_prompt || ''}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, join_note_prompt: e.target.value }))}
+                    />
+                    <p className="mt-1 text-[11px] text-slate-400">Se lo lasci vuoto, usiamo un testo predefinito.</p>
+                </div>
+                <label className="flex items-center justify-between gap-2 pt-1 cursor-pointer">
+                    <span className="text-sm font-bold text-slate-700">Obbligatoria per iscriversi</span>
+                    <input
+                        type="checkbox"
+                        className="w-5 h-5 accent-blue-600 flex-shrink-0"
+                        checked={!!formData.require_join_note}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, require_join_note: e.target.checked }))}
+                    />
+                </label>
+            </div>
         </div>
     );
 

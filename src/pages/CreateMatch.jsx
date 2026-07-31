@@ -556,8 +556,9 @@ export default function CreateMatch() {
             <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-3 space-y-3">
                 <div>
                     <p className="text-xs font-bold text-slate-500 mb-1.5">Cosa chiedere a chi si unisce</p>
-                    <input
-                        className="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium"
+                    <textarea
+                        rows={2}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium resize-none break-words"
                         placeholder="Es. Nome + cellulare, o Instagram"
                         maxLength={120}
                         value={formData.join_note_prompt || ''}

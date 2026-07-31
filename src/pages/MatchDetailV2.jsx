@@ -810,6 +810,9 @@ Scopri di più qui: ${window.location.href}`;
             case 'already_registered':
                 error("Sei già iscritto a questa partita.");
                 break;
+            case 'not_allowed':
+                error("Questa partita è riservata alla squadra. Chiedi all'organizzatore di condividerti il link per entrare.");
+                return;
             default:
                 success("Richiesta elaborata.");
         }

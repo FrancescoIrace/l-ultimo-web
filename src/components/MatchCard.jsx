@@ -412,6 +412,8 @@ export default function MatchCard({ match, user }) {
         onClose={() => setJoinModalOpen(false)}
         onConfirm={doJoin}
         matchTitle={match.title}
+        prompt={match.join_note_prompt}
+        required={match.require_join_note}
       />
 
     </div >

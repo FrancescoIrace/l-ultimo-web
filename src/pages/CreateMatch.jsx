@@ -33,7 +33,9 @@ export default function CreateMatch() {
         description: '',
         team_id: null,
         field_booking_status: '', // '' | 'booked' | 'to_book' | 'not_needed' (solo per campi non affiliati)
-        field_booking_note: ''
+        field_booking_note: '',
+        require_join_note: false, // nota d'ingresso obbligatoria?
+        join_note_prompt: '' // testo custom sopra la nota (vuoto = default)
     });
     const [centers, setCenters] = useState([]);
     const [selectedCenter, setSelectedCenter] = useState(null); // sempre l'id (stringa) del centro, mai l'oggetto
@@ -326,7 +328,10 @@ export default function CreateMatch() {
                 // Stato prenotazione manuale: solo per campi NON affiliati (per i
                 // centri c'è già reservation_status). Con un campo affiliato si azzera.
                 field_booking_status: formData.court_id ? null : (formData.field_booking_status || null),
-                field_booking_note: formData.court_id ? null : (formData.field_booking_note?.trim() || null)
+                field_booking_note: formData.court_id ? null : (formData.field_booking_note?.trim() || null),
+                // Nota d'ingresso: obbligatoria/facoltativa + testo personalizzato
+                require_join_note: !!formData.require_join_note,
+                join_note_prompt: formData.join_note_prompt?.trim() || null
                 // Nota: se è un update, potresti voler NON sovrascrivere lo stato della prenotazione
             };
 
@@ -545,6 +550,29 @@ export default function CreateMatch() {
         </div>
     ) : null;
 
+    const joinNoteConfig = (
+        <div>
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nota d'ingresso</label>
+            <input
+                className="w-full p-3 bg-white border border-gray-100 rounded-xl outline-none shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-medium"
+                placeholder="Cosa chiedere a chi si unisce (es. 'Nome + cellulare per il gruppo', 'Il tuo Instagram')"
+                maxLength={120}
+                value={formData.join_note_prompt || ''}
+                onChange={(e) => setFormData((prev) => ({ ...prev, join_note_prompt: e.target.value }))}
+            />
+            <label className="mt-2 flex items-center justify-between gap-2 p-3 bg-white border border-gray-100 rounded-xl shadow-sm cursor-pointer">
+                <span className="text-sm font-bold text-slate-700">Nota obbligatoria per iscriversi</span>
+                <input
+                    type="checkbox"
+                    className="w-5 h-5 accent-blue-600"
+                    checked={!!formData.require_join_note}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, require_join_note: e.target.checked }))}
+                />
+            </label>
+            <p className="mt-1.5 text-[11px] text-slate-400">Chi si unisce può presentarsi. Se lasci vuoto il testo, ne usiamo uno predefinito.</p>
+        </div>
+    );
+
     // SE C'È UN ID, MOSTRIAMO IL FORM DI MODIFICA
     if (id !== undefined && id !== null) {
         return (
@@ -734,6 +762,8 @@ export default function CreateMatch() {
                     </div>
 
                     {fieldBookingSelector}
+
+                    {joinNoteConfig}
 
                     <div>
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
@@ -997,6 +1027,8 @@ export default function CreateMatch() {
                 </div>
 
                 {fieldBookingSelector}
+
+                {joinNoteConfig}
 
                 <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">

@@ -2128,6 +2128,8 @@ Scopri di più qui: ${window.location.href}`;
                 onClose={() => setJoinModalOpen(false)}
                 onConfirm={handleJoin}
                 matchTitle={match?.title}
+                prompt={match?.join_note_prompt}
+                required={match?.require_join_note}
             />
         </>
     );

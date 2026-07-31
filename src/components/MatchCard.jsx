@@ -196,14 +196,24 @@ export default function MatchCard({ match, user }) {
 
   return (
     <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-shadow relative cursor-pointer active:scale-95 transition-all ${isPast ? 'opacity-60' : ''} ${timeInfo?.pulse ? 'animate-pulse' : ''}`} onClick={() => navigate(`/match/${match.id} `)}>
-      {/* Watermark logo squadra nell'area libera della card */}
-      {team?.logo_url && !isPast && (
-        <img
-          src={team.logo_url}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute right-3 top-1/2 -translate-y-1/2 w-28 h-28 object-contain opacity-[0.06]"
-        />
+      {/* Watermark squadra nell'area libera della card: logo se disponibile,
+          altrimenti l'iniziale del nome squadra. */}
+      {!isPast && match.team_id && (
+        team?.logo_url ? (
+          <img
+            src={team.logo_url}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute right-3 top-1/2 -translate-y-1/2 w-28 h-28 object-contain opacity-10"
+          />
+        ) : team?.name ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute right-5 top-1/2 -translate-y-1/2 text-8xl font-black text-slate-900 opacity-[0.05]"
+          >
+            {team.name.charAt(0).toUpperCase()}
+          </span>
+        ) : null
       )}
       {/* Badge IN CORSO */}
       {isOngoing && (
@@ -230,11 +240,6 @@ export default function MatchCard({ match, user }) {
           </div>
         </div>
       )}
-      {isCreator && (
-        <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
-          TUO MATCH
-        </span>
-      )}
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-2 flex-wrap">
           <div className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase">
@@ -251,6 +256,11 @@ export default function MatchCard({ match, user }) {
           )}
         </div>
         <div className="flex flex-col items-end gap-1">
+          {isCreator && (
+            <span className="bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-1 rounded-full shadow-sm">
+              TUO MATCH
+            </span>
+          )}
           {timeLabel && (
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${timeInfo?.urgent ? 'text-red-600 bg-red-50' : 'text-indigo-600 bg-indigo-50'}`}>
               {timeLabel}

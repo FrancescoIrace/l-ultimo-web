@@ -86,6 +86,77 @@ export default function AdminDashboard({ session }) {
     const emptyCenterForm = { email: '', password: '', username: '', full_name: '', business_address: '', lat: null, lng: null, cellulare: '' };
     const [centerForm, setCenterForm] = useState(emptyCenterForm);
 
+    // ── Stagioni quiz ──
+    const [seasons, setSeasons] = useState([]);
+    const [seasonsLoading, setSeasonsLoading] = useState(false);
+    const [seasonActionId, setSeasonActionId] = useState(null);
+    const emptySeasonForm = { name: '', starts_on: '', ends_on: '' };
+    const [seasonForm, setSeasonForm] = useState(emptySeasonForm);
+    const [creatingSeason, setCreatingSeason] = useState(false);
+
+    const fetchSeasons = async () => {
+        setSeasonsLoading(true);
+        try {
+            const { data: s } = await supabase
+                .from('quiz_seasons')
+                .select('id, name, season_number, starts_on, ends_on')
+                .order('season_number', { ascending: false });
+            const { data: r } = await supabase.from('quiz_season_results').select('season_id');
+            const closed = new Set((r || []).map((x) => x.season_id));
+            setSeasons((s || []).map((x) => ({ ...x, closed: closed.has(x.id) })));
+        } catch (err) {
+            console.error('Errore fetch stagioni:', err);
+        } finally {
+            setSeasonsLoading(false);
+        }
+    };
+
+    const handleCloseSeason = (season) => {
+        confirmDangerous(
+            `Chiudere "${season.name}"? Verranno assegnati i badge (podio + partecipanti) e AZZERATI i punti di tutti. Operazione irreversibile.`,
+            async () => {
+                setSeasonActionId(season.id);
+                try {
+                    const { data, error: rpcErr } = await supabase.rpc('admin_close_season', { p_season_id: season.id });
+                    if (rpcErr) throw rpcErr;
+                    success(`Stagione chiusa: ${data?.inserted ?? 0} risultati assegnati, punti azzerati.`);
+                    fetchSeasons();
+                } catch (err) {
+                    showError('Errore: ' + (err.message || 'chiusura non riuscita'));
+                } finally {
+                    setSeasonActionId(null);
+                }
+            }
+        );
+    };
+
+    const handleCreateSeason = async () => {
+        if (!seasonForm.name.trim() || !seasonForm.starts_on || !seasonForm.ends_on) {
+            showError('Compila nome, inizio e fine.');
+            return;
+        }
+        setCreatingSeason(true);
+        try {
+            const { data, error: rpcErr } = await supabase.rpc('admin_create_season', {
+                p_name: seasonForm.name.trim(),
+                p_starts_on: seasonForm.starts_on,
+                p_ends_on: seasonForm.ends_on,
+            });
+            if (rpcErr) throw rpcErr;
+            success(`Creata "${seasonForm.name.trim()}" (Stagione ${data?.season_number}).`);
+            setSeasonForm(emptySeasonForm);
+            fetchSeasons();
+        } catch (err) {
+            showError('Errore: ' + (err.message || 'creazione non riuscita'));
+        } finally {
+            setCreatingSeason(false);
+        }
+    };
+
+    useEffect(() => {
+        if (isAdmin && activeTab === 'seasons') fetchSeasons();
+    }, [isAdmin, activeTab]);
+
     useEffect(() => {
         async function checkAdmin() {
             if (!session?.user?.id) {
@@ -573,7 +644,16 @@ export default function AdminDashboard({ session }) {
         { key: 'users', label: 'Utenti', count: null },
         { key: 'centers', label: 'Centri', count: centers.length },
         { key: 'publicCourts', label: 'Campi Pubblici', count: null },
+        { key: 'seasons', label: 'Stagioni', count: null },
     ];
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const seasonStatus = (s) => {
+        if (s.closed) return { label: 'Chiusa', cls: 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300' };
+        if (s.ends_on < todayStr) return { label: 'Da chiudere', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' };
+        if (s.starts_on > todayStr) return { label: 'In arrivo', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' };
+        return { label: 'In corso', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' };
+    };
 
     return (
         <main className={`w-full p-6 pb-24 bg-slate-50 min-h-screen dark:bg-slate-900 ${isDarkMode ? 'dark' : ''}`}>
@@ -990,6 +1070,79 @@ export default function AdminDashboard({ session }) {
             {activeTab === 'publicCourts' && (
                 <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden dark:bg-slate-800 dark:border-slate-700">
                     <GestisciCampiPubblici />
+                </div>
+            )}
+
+            {activeTab === 'seasons' && (
+                <div className="space-y-6">
+                    <section className="bg-white border border-slate-100 rounded-3xl p-5 dark:bg-slate-800 dark:border-slate-700">
+                        <h2 className="text-lg font-black uppercase text-slate-700 mb-3 dark:text-slate-200">Crea nuova stagione</h2>
+                        <div className="space-y-3">
+                            <input
+                                placeholder="Nome (es. Settembre 2026)"
+                                value={seasonForm.name}
+                                onChange={(e) => setSeasonForm((f) => ({ ...f, name: e.target.value }))}
+                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100"
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                                <label className="block">
+                                    <span className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Inizio</span>
+                                    <input type="date" value={seasonForm.starts_on} onChange={(e) => setSeasonForm((f) => ({ ...f, starts_on: e.target.value }))} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" />
+                                </label>
+                                <label className="block">
+                                    <span className="block text-[11px] font-bold uppercase text-slate-400 mb-1">Fine</span>
+                                    <input type="date" value={seasonForm.ends_on} onChange={(e) => setSeasonForm((f) => ({ ...f, ends_on: e.target.value }))} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100" />
+                                </label>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCreateSeason}
+                                disabled={creatingSeason}
+                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase text-xs tracking-widest rounded-xl transition-colors disabled:opacity-50"
+                            >
+                                {creatingSeason ? 'Creazione…' : 'Crea stagione'}
+                            </button>
+                            <p className="text-[11px] text-slate-400">Il numero di stagione è assegnato in automatico (progressivo).</p>
+                        </div>
+                    </section>
+
+                    <section className="bg-white border border-slate-100 rounded-3xl p-5 dark:bg-slate-800 dark:border-slate-700">
+                        <h2 className="text-lg font-black uppercase text-slate-700 mb-3 dark:text-slate-200">Stagioni</h2>
+                        {seasonsLoading ? (
+                            <p className="text-sm text-slate-400">Caricamento…</p>
+                        ) : seasons.length === 0 ? (
+                            <p className="text-sm text-slate-400">Nessuna stagione.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {seasons.map((s) => {
+                                    const st = seasonStatus(s);
+                                    return (
+                                        <div key={s.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="text-xs font-black text-slate-400">S{s.season_number}</span>
+                                                    <span className="font-black text-slate-800 truncate dark:text-slate-100">{s.name}</span>
+                                                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${st.cls}`}>{st.label}</span>
+                                                </div>
+                                                <p className="text-xs text-slate-400 mt-0.5">{s.starts_on} → {s.ends_on}</p>
+                                            </div>
+                                            {!s.closed && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCloseSeason(s)}
+                                                    disabled={seasonActionId === s.id}
+                                                    className="flex-shrink-0 px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors disabled:opacity-50"
+                                                >
+                                                    {seasonActionId === s.id ? '…' : 'Chiudi'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        <p className="mt-3 text-[11px] text-slate-400">"Chiudi" assegna i badge (podio + partecipanti) e azzera i punti di tutti. Fallo alla fine della stagione.</p>
+                    </section>
                 </div>
             )}
 

@@ -74,7 +74,7 @@ export default function SeasonRecapModal({ userId }) {
           <div className="flex justify-center items-start gap-4 mb-5">
             {podium.map((p) => (
               <div key={p.profile_id} className="flex flex-col items-center gap-1 w-20">
-                <SeasonBadge rank={p.rank} seasonNumber={season.season_number} showName={false} size={52} />
+                <SeasonBadge rank={p.rank} seasonNumber={season.season_number} seasonName={season.name} showName={false} size={52} />
                 <span className="text-xs font-black text-slate-800 truncate max-w-full">{p.profiles?.username || '—'}</span>
                 <span className="text-[11px] text-slate-400 font-bold">{p.points} pt</span>
               </div>
@@ -85,7 +85,7 @@ export default function SeasonRecapModal({ userId }) {
         <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 text-center mb-5">
           {myResult ? (
             <div className="flex flex-col items-center gap-2">
-              <SeasonBadge rank={myResult.rank} seasonNumber={season.season_number} showName={false} size={48} />
+              <SeasonBadge rank={myResult.rank} seasonNumber={season.season_number} seasonName={season.name} showName={false} size={48} />
               {myResult.rank ? (
                 <p className="text-sm font-bold text-slate-700">
                   Ti sei classificato <span className="text-blue-600 font-black">{myResult.rank}°</span> con {myResult.points} punti. Badge sbloccato! 🎉

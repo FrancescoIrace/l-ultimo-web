@@ -2,7 +2,7 @@
 // (1/2/3 = podio, nullo = partecipante) + il season_number della stagione al
 // file SVG corrispondente in public/badges/. I badge sono per-stagione (hanno
 // "STAGIONE N" inciso), generati con scripts/gen-season-badges.mjs.
-const RANK_LABEL = { 1: 'Oro', 2: 'Argento', 3: 'Bronzo' };
+const RANK_LABEL = { 1: 'Vincitore', 2: 'Secondo posto', 3: 'Terzo posto' };
 
 export default function SeasonBadge({ rank, seasonNumber, seasonName, size = 56, showName = true }) {
     // Senza numero stagione non sappiamo quale set usare: non mostriamo nulla

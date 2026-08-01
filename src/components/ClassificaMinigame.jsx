@@ -277,7 +277,7 @@ export default function ClassificaMinigame() {
                     <div className="space-y-2">
                       {season.podium.map(entry => (
                         <div key={entry.rank} className="flex items-center gap-3">
-                          <SeasonBadge rank={entry.rank} seasonNumber={season.season_number} showName={false} size={32} />
+                          <SeasonBadge rank={entry.rank} seasonNumber={season.season_number} seasonName={season.name} showName={false} size={32} />
                           <span className="flex-1 font-bold text-sm text-slate-800 truncate">{entry.profiles?.username || 'Utente eliminato'}</span>
                           <span className="text-xs font-bold text-slate-400">{entry.points} PT</span>
                         </div>

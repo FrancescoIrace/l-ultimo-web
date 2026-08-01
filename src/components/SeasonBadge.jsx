@@ -14,18 +14,25 @@ export default function SeasonBadge({ rank, seasonNumber, seasonName, size = 56,
     const src = `/badges/badge-${seg}-s${seasonNumber}.svg`;
     const label = RANK_LABEL[rank] || 'Partecipante';
     const title = seasonName ? `${label} · ${seasonName}` : label;
+    // Su desktop il tooltip è il title nativo; su mobile (dove il title non
+    // compare) lo mostriamo al tap con un alert, come per il badge Tester.
+    const showInfo = () => window.alert(title);
 
     // Solo medaglia (per liste compatte, es. Albo d'Oro).
     if (!showName) {
-        return <img src={src} alt={title} title={title} style={{ width: size, height: size }} className="object-contain flex-shrink-0" />;
+        return (
+            <button type="button" onClick={showInfo} title={title} className="flex-shrink-0 p-0 bg-transparent border-0 leading-none">
+                <img src={src} alt={title} style={{ width: size, height: size }} className="object-contain" />
+            </button>
+        );
     }
 
     return (
-        <div className="flex flex-col items-center gap-1 w-16" title={title}>
+        <button type="button" onClick={showInfo} title={title} className="flex flex-col items-center gap-1 w-16 bg-transparent border-0 p-0">
             <img src={src} alt={title} style={{ width: size, height: size }} className="object-contain" />
             {seasonName && (
                 <span className="text-[9px] font-bold text-slate-500 text-center leading-tight line-clamp-2">{seasonName}</span>
             )}
-        </div>
+        </button>
     );
 }

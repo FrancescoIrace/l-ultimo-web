@@ -12,8 +12,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const season = parseInt(process.argv[2], 10);
-if (!Number.isInteger(season) || season < 1) {
-    console.error('Passa il numero di stagione (>=1). Es: node scripts/gen-season-badges.mjs 2');
+if (!Number.isInteger(season) || season < 0) {
+    console.error('Passa il numero di stagione (>=0). Es: node scripts/gen-season-badges.mjs 2');
     process.exit(1);
 }
 
@@ -32,7 +32,10 @@ function star(cx, cy, ro, ri) {
 }
 
 function badge({ seg, base, dark, ring, text, ribbon, ribbonText, center }) {
-    const label = `STAGIONE ${season}`;
+    // La stagione 0 è la "Pre-Stagione" (periodo beta/tester prima delle
+    // stagioni ufficiali): nastro dedicato invece di "STAGIONE 0".
+    const label = season === 0 ? 'PRE-STAGIONE' : `STAGIONE ${season}`;
+    const labelSize = season === 0 ? 6.3 : 7.2;
     const isBig = String(center).length > 2;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150" fill="none">
   <defs>
@@ -43,7 +46,7 @@ function badge({ seg, base, dark, ring, text, ribbon, ribbonText, center }) {
   </defs>
   <path d="M60 96 L92 108 L86 141 L60 129 L34 141 L28 108 Z" fill="${dark}"/>
   <path d="M60 96 L92 108 L88 124 L60 114 L32 124 L28 108 Z" fill="${ribbon}"/>
-  <text x="60" y="119.5" text-anchor="middle" font-family="'Arial Black','Segoe UI',sans-serif" font-weight="900" font-size="7.2" letter-spacing="0.3" fill="${ribbonText}">${label}</text>
+  <text x="60" y="119.5" text-anchor="middle" font-family="'Arial Black','Segoe UI',sans-serif" font-weight="900" font-size="${labelSize}" letter-spacing="0.3" fill="${ribbonText}">${label}</text>
   <circle cx="60" cy="58" r="46" fill="url(#g)"/>
   <circle cx="60" cy="58" r="46" fill="none" stroke="${dark}" stroke-width="3"/>
   <circle cx="60" cy="58" r="37" fill="none" stroke="${ring}" stroke-width="2.5"/>

@@ -6,8 +6,9 @@ const RANK_LABEL = { 1: 'Oro', 2: 'Argento', 3: 'Bronzo' };
 
 export default function SeasonBadge({ rank, seasonNumber, seasonName, size = 56, showName = true }) {
     // Senza numero stagione non sappiamo quale set usare: non mostriamo nulla
-    // (evita immagini rotte). Con la migrazione season_number è sempre valorizzato.
-    if (!seasonNumber) return null;
+    // (evita immagini rotte). Con la migrazione season_number è sempre
+    // valorizzato. Attenzione: la Pre-Stagione è la 0, quindi niente !seasonNumber.
+    if (seasonNumber == null) return null;
 
     const seg = rank === 1 || rank === 2 || rank === 3 ? rank : 'p';
     const src = `/badges/badge-${seg}-s${seasonNumber}.svg`;
